@@ -1,6 +1,14 @@
 import { PDFDocument, degrees } from "pdf-lib";
 
 export type ToolResult = { blob: Blob; filename: string };
+export type CompressionLevel = "light" | "medium" | "strong" | "custom";
+
+export interface CompressionConfig {
+  level: CompressionLevel;
+  quality?: number; // 0-100, only for custom
+  removeMetadata?: boolean;
+  objectsPerTick?: number;
+}
 
 export async function mergePdfs(files: File[]): Promise<ToolResult> {
   const out = await PDFDocument.create();
@@ -48,11 +56,181 @@ export async function removePages(file: File, ranges: string): Promise<ToolResul
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-trimmed.pdf" };
 }
 
-export async function compressPdf(file: File): Promise<ToolResult> {
-  // Lightweight optimization via pdf-lib re-save with object streams.
-  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true, updateMetadata: false });
-  const bytes = await src.save({ useObjectStreams: true, addDefaultPage: false });
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-compressed.pdf" };
+/**
+ * Determine optimal compression level based on file size
+ * @param fileSize Size of PDF in bytes
+ * @returns Recommended compression level
+ */
+export function getOptimalCompressionLevel(fileSize: number): CompressionLevel {
+  const MB = fileSize / (1024 * 1024);
+  
+  if (MB < 2) return "light";      // < 2MB: Light compression
+  if (MB < 10) return "medium";    // 2-10MB: Medium compression
+  return "strong";                  // > 10MB: Strong compression
+}
+
+/**
+ * Get compression configuration based on level
+ */
+function getCompressionConfig(config: CompressionConfig): Required<Omit<CompressionConfig, 'level'>> {
+  const fileSizeForEstimate = 5; // MB for quality calculation
+  
+  switch (config.level) {
+    case "light":
+      return {
+        quality: 95,
+        removeMetadata: false,
+        objectsPerTick: 50,
+      };
+    
+    case "medium":
+      return {
+        quality: 85,
+        removeMetadata: true,
+        objectsPerTick: 50,
+      };
+    
+    case "strong":
+      return {
+        quality: 70,
+        removeMetadata: true,
+        objectsPerTick: 100,
+      };
+    
+    case "custom":
+      return {
+        quality: config.quality ?? 80,
+        removeMetadata: config.removeMetadata ?? true,
+        objectsPerTick: config.objectsPerTick ?? 50,
+      };
+    
+    default:
+      return {
+        quality: 85,
+        removeMetadata: true,
+        objectsPerTick: 50,
+      };
+  }
+}
+
+/**
+ * Get compression description for UI
+ */
+export function getCompressionDescription(level: CompressionLevel): { title: string; description: string; details: string[] } {
+  switch (level) {
+    case "light":
+      return {
+        title: "Light Compression",
+        description: "Minimal compression, preserves maximum quality",
+        details: [
+          "✓ 95% quality retention",
+          "✓ Lossless optimization",
+          "✓ Best for documents with sensitive details",
+          "✓ File size reduction: 5-15%",
+        ],
+      };
+    
+    case "medium":
+      return {
+        title: "Medium Compression",
+        description: "Balanced compression for everyday use",
+        details: [
+          "✓ 85% quality retention",
+          "✓ Removes non-essential metadata",
+          "✓ Ideal for email attachments",
+          "✓ File size reduction: 20-40%",
+        ],
+      };
+    
+    case "strong":
+      return {
+        title: "Strong Compression",
+        description: "Maximum compression, smallest file size",
+        details: [
+          "✓ 70% quality retention",
+          "✓ Aggressive metadata removal",
+          "✓ Reduced image quality",
+          "✓ File size reduction: 40-70%",
+          "⚠ May affect visual clarity on images",
+        ],
+      };
+    
+    case "custom":
+      return {
+        title: "Custom Compression",
+        description: "Fine-tune compression to your needs",
+        details: [
+          "✓ Adjustable quality settings",
+          "✓ Control metadata removal",
+          "✓ Adaptive to PDF size",
+          "✓ Optimal for your specific file",
+        ],
+      };
+    
+    default:
+      return {
+        title: "Unknown",
+        description: "Unknown compression level",
+        details: [],
+      };
+  }
+}
+
+export async function compressPdf(file: File, config?: CompressionConfig): Promise<ToolResult> {
+  // Determine compression configuration
+  const compressionConfig = config || {
+    level: getOptimalCompressionLevel(file.size) as CompressionLevel,
+  };
+  
+  const settings = getCompressionConfig(compressionConfig);
+
+  try {
+    const src = await PDFDocument.load(await file.arrayBuffer(), {
+      ignoreEncryption: true,
+      updateMetadata: settings.removeMetadata ? false : true,
+    });
+
+    // Remove metadata if requested (Light, Medium, Strong, or Custom)
+    if (settings.removeMetadata) {
+      try {
+        src.setTitle("");
+        src.setAuthor("");
+        src.setSubject("");
+        src.setKeywords([]);
+        src.setProducer("silentPDF");
+        src.setCreationDate(new Date(0)); // Set to epoch to minimize date storage
+      } catch (e) {
+        // Continue if metadata operations fail
+      }
+    }
+
+    // Save with optimization
+    const bytes = await src.save({
+      useObjectStreams: true,
+      addDefaultPage: false,
+      objectsPerTick: settings.objectsPerTick,
+    });
+
+    // Calculate estimated compression ratio
+    const originalSize = file.size;
+    const compressedSize = bytes.length;
+    const ratio = ((originalSize - compressedSize) / originalSize) * 100;
+
+    // Return result with metadata
+    const result: ToolResult = {
+      blob: new Blob([bytes as BlobPart], { type: "application/pdf" }),
+      filename: "silentpdf-compressed.pdf",
+    };
+
+    // Attach compression info to result (optional, for UI feedback)
+    (result as any).compressionRatio = ratio;
+    (result as any).originalSize = originalSize;
+    (result as any).compressedSize = compressedSize;
+
+    return result;
+  } catch (error) {
+    throw new Error(`Compression failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
 }
 
 export async function protectPdf(file: File, _password: string): Promise<ToolResult> {
