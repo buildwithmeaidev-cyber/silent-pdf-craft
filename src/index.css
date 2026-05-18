@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -83,10 +85,23 @@
   * {
     border-color: hsl(var(--border));
   }
+
+  html, body, #root {
+    min-height: 100%;
+  }
+
+  html {
+    overflow-y: auto;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "ss01", "cv11";
+    overflow-x: hidden;
+    overflow-y: auto;
   }
+
   h1, h2, h3, h4 {
     font-family: 'Instrument Serif', 'Times New Roman', serif;
     letter-spacing: -0.02em;
@@ -116,7 +131,3 @@
     background-size: 48px 48px;
   }
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
-
-html, body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
