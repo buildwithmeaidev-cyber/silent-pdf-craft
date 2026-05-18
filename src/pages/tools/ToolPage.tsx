@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Download, Loader2, RotateCcw, AlertCircle, ChevronRight, Zap, Settings } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Download, Loader2, RotateCcw, AlertCircle, ChevronRight, ArrowUp, ArrowDown, FileText, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTool } from "@/lib/tools";
 import { PdfDropzone } from "@/components/PdfDropzone";
@@ -9,7 +9,6 @@ import { Progress } from "@/components/ui/progress";
 import {
   mergePdfs, splitPdf, rotatePdf, removePages, compressPdf, protectPdf,
   downloadBlob, formatBytes, ToolResult, CompressionLevel, getOptimalCompressionLevel,
-  getCompressionDescription,
 } from "@/lib/pdf";
 import { cn } from "@/lib/utils";
 
@@ -26,11 +25,8 @@ const ToolPage = () => {
   const [range, setRange] = useState("");
   const [password, setPassword] = useState("");
   const [rotation, setRotation] = useState<90 | 180 | 270>(90);
-  
-  // Compression-specific states
   const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>("medium");
   const [customQuality, setCustomQuality] = useState(80);
-  const [showCompressionInfo, setShowCompressionInfo] = useState(false);
 
   const optimalLevel = useMemo(() => {
     if (files.length === 0) return null;
@@ -45,6 +41,20 @@ const ToolPage = () => {
     return true;
   }, [tool, files, range, password]);
 
+  const moveFile = (index: number, direction: "up" | "down") => {
+    const updatedFiles = [...files];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+
+    if (targetIndex < 0 || targetIndex >= updatedFiles.length) return;
+
+    [updatedFiles[index], updatedFiles[targetIndex]] = [updatedFiles[targetIndex], updatedFiles[index]];
+    setFiles(updatedFiles);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(files.filter((_, i) => i !== index));
+  };
+
   if (!tool) {
     return (
       <div className="container-px mx-auto max-w-2xl py-24 text-center">
@@ -55,46 +65,54 @@ const ToolPage = () => {
   }
 
   const reset = () => {
-    setFiles([]); 
-    setResult(null); 
-    setError(null); 
-    setState("idle"); 
+    setFiles([]);
+    setResult(null);
+    setError(null);
+    setState("idle");
     setProgress(0);
     setCompressionLevel("medium");
     setCustomQuality(80);
-    setShowCompressionInfo(false);
   };
 
   const run = async () => {
-    setError(null); 
-    setResult(null); 
-    setState("uploading"); 
+    setError(null);
+    setResult(null);
+    setState("uploading");
     setProgress(15);
+
     try {
-      // simulate quick upload step for UX feedback
       await new Promise((r) => setTimeout(r, 350));
-      setState("processing"); 
+      setState("processing");
       setProgress(55);
 
       let res: ToolResult;
-      if (tool.serverOnly) {
-        await new Promise((r) => setTimeout(r, 800));
-        throw new Error("This tool runs on our hosted conversion engine. Connect Lovable Cloud to enable it.");
-      }
+
       switch (tool.kind) {
-        case "merge": res = await mergePdfs(files); break;
-        case "split": res = await splitPdf(files[0], range); break;
-        case "rotate": res = await rotatePdf(files[0], rotation); break;
-        case "remove": res = await removePages(files[0], range); break;
-        case "compress": 
+        case "merge":
+          res = await mergePdfs(files);
+          break;
+        case "split":
+          res = await splitPdf(files[0], range);
+          break;
+        case "rotate":
+          res = await rotatePdf(files[0], rotation);
+          break;
+        case "remove":
+          res = await removePages(files[0], range);
+          break;
+        case "compress":
           res = await compressPdf(files[0], {
             level: compressionLevel,
             quality: compressionLevel === "custom" ? customQuality : undefined,
-          }); 
+          });
           break;
-        case "protect": res = await protectPdf(files[0], password); break;
-        default: throw new Error("Unsupported tool");
+        case "protect":
+          res = await protectPdf(files[0], password);
+          break;
+        default:
+          throw new Error("Unsupported tool");
       }
+
       setProgress(100);
       setResult(res);
       setState("success");
@@ -105,7 +123,6 @@ const ToolPage = () => {
   };
 
   const Icon = tool.icon;
-  const compressionLevels: CompressionLevel[] = ["light", "medium", "strong", "custom"];
 
   return (
     <div className="container-px mx-auto max-w-3xl py-12 md:py-16">
@@ -120,6 +137,7 @@ const ToolPage = () => {
         )}>
           <Icon className="size-6" strokeWidth={1.8} />
         </div>
+
         <div>
           <h1 className="font-serif text-4xl md:text-5xl leading-tight text-balance">{tool.title}</h1>
           <p className="mt-2 text-muted-foreground max-w-xl">{tool.description}</p>
@@ -137,51 +155,60 @@ const ToolPage = () => {
                 multiple={tool.multiple}
               />
 
-              {(tool.needsRange || tool.needsPassword || tool.needsRotation) && files.length > 0 && (
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  {tool.needsRange && (
-                    <label className="block sm:col-span-2">
-                      <span className="text-sm font-medium">Pages</span>
-                      <input
-                        value={range}
-                        onChange={(e) => setRange(e.target.value)}
-                        placeholder="e.g. 1-3, 5, 8-10"
-                        className="mt-1.5 w-full rounded-lg border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-                      />
-                    </label>
-                  )}
-                  {tool.needsPassword && (
-                    <label className="block sm:col-span-2">
-                      <span className="text-sm font-medium">Privacy passphrase</span>
-                      <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Minimum 4 characters"
-                        className="mt-1.5 w-full rounded-lg border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-                      />
-                    </label>
-                  )}
-                  {tool.needsRotation && (
-                    <div className="sm:col-span-2">
-                      <span className="text-sm font-medium">Rotation</span>
-                      <div className="mt-1.5 flex gap-2">
-                        {[90, 180, 270].map((d) => (
+              {tool.kind === "merge" && files.length > 0 && (
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-medium text-lg">Arrange PDF Order</h3>
+                    <p className="text-sm text-muted-foreground">Files merge from top to bottom</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {files.map((file, index) => (
+                      <div
+                        key={`${file.name}-${index}`}
+                        className="flex items-center gap-4 rounded-2xl border bg-background p-4"
+                      >
+                        <div className="flex h-16 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                          <FileText className="size-7" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{file.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatBytes(file.size)}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
                           <button
-                            key={d}
                             type="button"
-                            onClick={() => setRotation(d as 90 | 180 | 270)}
-                            className={cn(
-                              "flex-1 rounded-lg border px-3 py-2 text-sm transition-colors",
-                              rotation === d ? "border-primary bg-primary-soft text-primary" : "hover:bg-secondary"
-                            )}
+                            onClick={() => moveFile(index, "up")}
+                            disabled={index === 0}
+                            className="rounded-lg border p-2 hover:bg-secondary disabled:opacity-40"
                           >
-                            {d}°
+                            <ArrowUp className="size-4" />
                           </button>
-                        ))}
+
+                          <button
+                            type="button"
+                            onClick={() => moveFile(index, "down")}
+                            disabled={index === files.length - 1}
+                            className="rounded-lg border p-2 hover:bg-secondary disabled:opacity-40"
+                          >
+                            <ArrowDown className="size-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="rounded-lg border p-2 hover:bg-accent/10 text-accent"
+                          >
+                            <X className="size-4" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -200,8 +227,11 @@ const ToolPage = () => {
                   {tool.title} now
                   <ChevronRight className="size-4 ml-1" />
                 </Button>
+
                 {files.length > 0 && (
-                  <button onClick={reset} className="text-sm text-muted-foreground hover:text-foreground">Clear</button>
+                  <button onClick={reset} className="text-sm text-muted-foreground hover:text-foreground">
+                    Clear
+                  </button>
                 )}
               </div>
             </motion.div>
@@ -221,29 +251,15 @@ const ToolPage = () => {
               <div className="mx-auto grid place-items-center size-14 rounded-full bg-primary-soft text-primary">
                 <CheckCircle2 className="size-7" />
               </div>
+
               <h3 className="mt-4 font-serif text-2xl">Your file is ready</h3>
               <p className="text-sm text-muted-foreground mt-1">{result.filename} · {formatBytes(result.blob.size)}</p>
-              
-              {/* Show compression stats if available */}
-              {tool.kind === "compress" && (result as any).compressionRatio && (
-                <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20 inline-block">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Compression Stats</p>
-                    <p className="text-sm font-semibold text-primary">
-                      {(result as any).compressionRatio.toFixed(1)}% reduction
-                    </p>
-                    <div className="text-xs text-muted-foreground space-y-0.5">
-                      <p>📦 Original: {formatBytes((result as any).originalSize)}</p>
-                      <p>📤 Compressed: {formatBytes((result as any).compressedSize)}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <Button size="lg" onClick={() => downloadBlob(result.blob, result.filename)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   <Download className="size-4 mr-1.5" /> Download
                 </Button>
+
                 <Button size="lg" variant="outline" onClick={reset}>
                   <RotateCcw className="size-4 mr-1.5" /> Process another
                 </Button>
@@ -252,21 +268,6 @@ const ToolPage = () => {
           )}
         </AnimatePresence>
       </div>
-
-      <section className="mt-14">
-        <h2 className="font-serif text-2xl mb-4">Frequently asked</h2>
-        <div className="space-y-3">
-          {tool.faq.map((f) => (
-            <details key={f.q} className="group rounded-xl border bg-card p-4 [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm font-medium">
-                {f.q}
-                <ChevronRight className="size-4 text-muted-foreground transition-transform group-open:rotate-90" />
-              </summary>
-              <p className="mt-2 text-sm text-muted-foreground">{f.a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
     </div>
   );
 };
