@@ -21,7 +21,7 @@ const Home = () => {
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 grid-bg [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_70%)]" />
-        <div className="container-px mx-auto max-w-7xl pt-16 md:pt-24 pb-20 md:pb-32 grid lg:grid-cols-12 gap-12 items-center">
+        <div className="container-px responsive-container mx-auto max-w-7xl pt-16 md:pt-24 pb-20 md:pb-32 grid lg:grid-cols-12 responsive-grid items-center">
           <div className="lg:col-span-7">
             <motion.div {...fadeUp} className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-soft">
               <span className="size-1.5 rounded-full bg-primary animate-pulse" />
@@ -38,11 +38,11 @@ const Home = () => {
             </motion.p>
 
             <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.15 }} className="mt-8 flex flex-wrap items-center gap-3">
-              <Link to="/tools/merge-pdf" className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-medium shadow-blue hover:shadow-lift transition-all">
+              <Link to="/tools/merge-pdf" className="group responsive-button inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 text-sm font-medium shadow-blue hover:shadow-lift transition-all">
                 Upload PDF
                 <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
-              <Link to="/tools" className="inline-flex items-center gap-2 rounded-full border bg-card px-5 py-3 text-sm font-medium hover:bg-secondary transition-all">
+              <Link to="/tools" className="responsive-button inline-flex items-center gap-2 rounded-full border bg-card px-5 text-sm font-medium hover:bg-secondary transition-all">
                 Explore Tools
                 <ArrowRight className="size-4" />
               </Link>
@@ -66,21 +66,21 @@ const Home = () => {
       </section>
 
       {/* TOOLS GRID */}
-      <section id="tools" className="py-20">
+      <section id="tools" className="responsive-section">
         <div className="container-px mx-auto max-w-7xl">
           <SectionHeading
             eyebrow="Toolkit"
             title="Every PDF task, one quiet workspace."
             subtitle="Eight focused tools, each tuned to do one thing exceptionally well."
           />
-          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 responsive-grid">
             {TOOLS.map((t) => {
               const Icon = t.icon;
               return (
                 <motion.div key={t.slug} {...fadeUp}>
                   <Link
                     to={`/tools/${t.slug}`}
-                    className="group block h-full rounded-2xl border bg-card p-6 shadow-soft hover:shadow-lift hover:-translate-y-1 hover:border-primary/40 transition-all"
+                    className="group block h-full rounded-2xl border bg-card responsive-card shadow-soft hover:shadow-lift hover:-translate-y-1 hover:border-primary/40 transition-all"
                   >
                     <div className={cn(
                       "grid place-items-center size-11 rounded-xl mb-5 transition-colors",
