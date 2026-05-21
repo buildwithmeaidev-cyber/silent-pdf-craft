@@ -284,3 +284,15 @@ export function formatBytes(b: number) {
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
   return `${(b / 1024 / 1024).toFixed(2)} MB`;
 }
+
+
+export function validatePdfFile(file: File) {
+  const maxSize = 100 * 1024 * 1024;
+  if (!file.name.toLowerCase().endswith(".pdf")) {
+    throw new Error("Unsupported file type. Please upload a PDF.");
+  }
+  if (file.size > maxSize) {
+    throw new Error("File too large. Maximum size is 100MB.");
+  }
+  return true;
+}

@@ -11,7 +11,7 @@ const Tools = () => (
       <p className="mt-4 text-muted-foreground">Pick a tool to start. Most run entirely in your browser.</p>
     </div>
 
-    <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="mt-12 device-grid-layout device-spacing">
       {TOOLS.map((t) => {
         const Icon = t.icon;
         return (
