@@ -290,7 +290,10 @@ export default function WordToPdf() {
             { title: 'Preserves Text', desc: 'Extracts and formats document content' },
             { title: 'Multi-format', desc: 'DOCX, DOC, TXT, RTF supported' },
           ].map(item => (
+<<<<<<< HEAD
             <div key={item.title} className="text-center">
+=======
+>>>>>>> c1274c8 (bug fix and new tools added)
               <p className="font-semibold text-sky-700 text-sm">{item.title}</p>
               <p className="text-xs text-sky-600 mt-0.5">{item.desc}</p>
             </div>
