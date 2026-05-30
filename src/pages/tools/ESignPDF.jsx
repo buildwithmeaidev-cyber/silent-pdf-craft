@@ -14,7 +14,6 @@ export default function SignPdf() {
   const [file, setFile] = useState(null);
   const [pdfPages, setPdfPages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [signMode, setSignMode] = useState(SIGN_MODES.DRAW);
   const [typedName, setTypedName] = useState('');
   const [signFont, setSignFont] = useState('cursive');
