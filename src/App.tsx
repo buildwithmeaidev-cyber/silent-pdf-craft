@@ -18,15 +18,18 @@ import MergePdf from "./pages/tools/MergePDF";
 import SplitPdf from "./pages/tools/SplitPDF";
 import RemovePagesPDF from "./pages/tools/RemovepagesPDF";
 import EditPdf from "./pages/tools/EditPDF";
-import CompressPdf from "./pages/tools/compresspdf";
+import CompressPdf from "./pages/tools/CompressPDF";
 import ProtectPdf from "./pages/tools/ProtectPDF";
 import ReorderPdf from "./pages/tools/ReorderPDF";
-import SignPdf from "./pages/tools/SignPDF";
+import ESignPdf from "./pages/tools/ESignPDF";
 import WatermarkPdf from "./pages/tools/WatermarkPDF";
 import PhotoToPdf from "./pages/tools/PhotoToPDF";
 import ExportPdf from "./pages/tools/ExportPDF";
 import PdfToWord from "./pages/tools/PdfToWord";
 import WordToPdf from "./pages/tools/WordToPDF";
+import AddpagesPdf from "./pages/tools/AddpagesPDF";
+import RemovewatermarkPdf from "./pages/tools/RemovewatermarkPDF";
+import RotatepagesPdf from "./pages/tools/RotatepagesPDF";
 
 const queryClient = new QueryClient();
 
@@ -50,12 +53,15 @@ const App = () => (
             <Route path="/tools/compress-pdf" element={<CompressPdf />} />
             <Route path="/tools/protect-pdf" element={<ProtectPdf />} />
             <Route path="/tools/reorder-pdf" element={<ReorderPdf />} />
-            <Route path="/tools/sign-pdf" element={<SignPdf />} />
+            <Route path="/tools/esign-pdf" element={<ESignPdf />} />
             <Route path="/tools/watermark-pdf" element={<WatermarkPdf />} />
             <Route path="/tools/photo-to-pdf" element={<PhotoToPdf />} />
             <Route path="/tools/export-pdf" element={<ExportPdf />} />
             <Route path="/tools/pdf-to-word" element={<PdfToWord />} />
+            <Route path="/tools/addpages-pdf" element={<AddpagesPdf />} />
             <Route path="/tools/word-to-pdf" element={<WordToPdf />} />
+            <Route path="/tools/removewatermark-pdf" element={<RemovewatermarkPdf />} />
+            <Route path="/tools/rotatepages-pdf" element={<RotatepagesPdf />} />
             
             {/* Fallback Tool Page */}
             <Route path="/tools/:slug" element={<ToolPage />} />

@@ -8,6 +8,7 @@ import ToolPageLayout from '@/components/pdf/ToolPageLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MergePdf() {
+
   const [files, setFiles] = useState([]);
   const [merging, setMerging] = useState(false);
   const [result, setResult] = useState(null);
