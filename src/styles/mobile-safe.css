@@ -1,0 +1,14 @@
+html, body {
+  overflow-x: hidden;
+}
+
+button {
+  min-height: 56px;
+}
+
+.sticky-tool-action {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: env(safe-area-inset-bottom);
+}
