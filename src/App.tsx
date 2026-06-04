@@ -39,44 +39,50 @@ import RotatepagesPdf from "./pages/tools/RotatepagesPDF";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route element={<SiteLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/tools" element={<Tools />} />
-            
-            {/* Specific PDF Tool Routes */}
-            <Route path="/tools/merge-pdf" element={<MergePdf />} />
-            <Route path="/tools/split-pdf" element={<SplitPdf />} />
-            <Route path="/tools/remove-pages" element={<RemovePagesPDF />} />
-            <Route path="/tools/edit-pdf" element={<EditPdf />} />
-            <Route path="/tools/compress-pdf" element={<CompressPdf />} />
-            <Route path="/tools/protect-pdf" element={<ProtectPdf />} />
-            <Route path="/tools/reorder-pdf" element={<ReorderPdf />} />
-            <Route path="/tools/sign-pdf" element={<SignPdf />} />
-            <Route path="/tools/watermark-pdf" element={<WatermarkPdf />} />
-            <Route path="/tools/photo-to-pdf" element={<PhotoToPdf />} />
-            <Route path="/tools/export-pdf" element={<ExportPdf />} />
-            <Route path="/tools/pdf-to-word" element={<PdfToWord />} />
-            <Route path="/tools/word-to-pdf" element={<WordToPdf />} />
-            
-            {/* Fallback Tool Page */}
-            <Route path="/tools/:slug" element={<ToolPage />} />
-            
-            <Route path="/guides" element={<Guides />} />
-            <Route path="/use-cases" element={<UseCases />} />
-            <Route path="/privacy" element={<Privacy />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <AppErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+
+        <BrowserRouter>
+          <ScrollToTop />
+
+          <Routes>
+            <Route element={<SiteLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/tools" element={<Tools />} />
+
+              <Route path="/tools/merge-pdf" element={<MergePdf />} />
+              <Route path="/tools/split-pdf" element={<SplitPdf />} />
+              <Route path="/tools/remove-pages" element={<RemovePagesPDF />} />
+              <Route path="/tools/edit-pdf" element={<EditPdf />} />
+              <Route path="/tools/compress-pdf" element={<CompressPdf />} />
+              <Route path="/tools/protect-pdf" element={<ProtectPdf />} />
+              <Route path="/tools/reorder-pdf" element={<ReorderPdf />} />
+              <Route path="/tools/esign-pdf" element={<ESignPdf />} />
+              <Route path="/tools/watermark-pdf" element={<WatermarkPdf />} />
+              <Route path="/tools/photo-to-pdf" element={<PhotoToPdf />} />
+              <Route path="/tools/export-pdf" element={<ExportPdf />} />
+              <Route path="/tools/pdf-to-word" element={<PdfToWord />} />
+              <Route path="/tools/word-to-pdf" element={<WordToPdf />} />
+              <Route path="/tools/addpages-pdf" element={<AddpagesPdf />} />
+              <Route path="/tools/removewatermark-pdf" element={<RemovewatermarkPdf />} />
+              <Route path="/tools/rotatepages-pdf" element={<RotatepagesPdf />} />
+
+              <Route path="/tools/:slug" element={<ToolPage />} />
+
+              <Route path="/guides" element={<Guides />} />
+              <Route path="/use-cases" element={<UseCases />} />
+              <Route path="/privacy" element={<Privacy />} />
+            </Route>
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </AppErrorBoundary>
 );
 
 export default App;
