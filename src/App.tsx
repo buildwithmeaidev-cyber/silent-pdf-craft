@@ -1,10 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import ScrollToTop from "@/components/ScrollToTop";
+
+import AppErrorBoundary from "@/core/AppErrorBoundary";
+
 import Home from "./pages/Home";
 import Tools from "./pages/Tools";
 import Guides from "./pages/Guides";
@@ -53,15 +58,12 @@ const App = () => (
             <Route path="/tools/compress-pdf" element={<CompressPdf />} />
             <Route path="/tools/protect-pdf" element={<ProtectPdf />} />
             <Route path="/tools/reorder-pdf" element={<ReorderPdf />} />
-            <Route path="/tools/esign-pdf" element={<ESignPdf />} />
+            <Route path="/tools/sign-pdf" element={<SignPdf />} />
             <Route path="/tools/watermark-pdf" element={<WatermarkPdf />} />
             <Route path="/tools/photo-to-pdf" element={<PhotoToPdf />} />
             <Route path="/tools/export-pdf" element={<ExportPdf />} />
             <Route path="/tools/pdf-to-word" element={<PdfToWord />} />
-            <Route path="/tools/addpages-pdf" element={<AddpagesPdf />} />
             <Route path="/tools/word-to-pdf" element={<WordToPdf />} />
-            <Route path="/tools/removewatermark-pdf" element={<RemovewatermarkPdf />} />
-            <Route path="/tools/rotatepages-pdf" element={<RotatepagesPdf />} />
             
             {/* Fallback Tool Page */}
             <Route path="/tools/:slug" element={<ToolPage />} />
@@ -78,4 +80,3 @@ const App = () => (
 );
 
 export default App;
-
