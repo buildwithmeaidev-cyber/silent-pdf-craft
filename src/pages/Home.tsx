@@ -69,9 +69,9 @@ const Home = () => {
       <section id="tools" className="responsive-section">
         <div className="container-px mx-auto max-w-7xl">
           <SectionHeading
-            eyebrow="Toolkit"
+            eyebrow="Silent tools"
             title="Every PDF task, one quiet workspace."
-            subtitle="Eight focused tools, each tuned to do one thing exceptionally well."
+            subtitle="Every tool is focused with pricvacy in head, each tuned to do one thing exceptionally well."
           />
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 responsive-grid">
             {TOOLS.map((t) => {
@@ -191,7 +191,7 @@ const Home = () => {
             ["2.4M+", "PDFs processed"],
             ["180k", "Active users"],
             ["100%", "Browser-based core"],
-            ["8", "Focused tools"],
+            ["16", "Focused tools"],
           ].map(([k, v]) => (
             <div key={v} className="text-center sm:text-left">
               <div className="font-serif text-5xl">{k}</div>
