@@ -58,7 +58,7 @@ const App = () => (
             <Route path="/tools/compress-pdf" element={<CompressPdf />} />
             <Route path="/tools/protect-pdf" element={<ProtectPdf />} />
             <Route path="/tools/reorder-pdf" element={<ReorderPdf />} />
-            <Route path="/tools/sign-pdf" element={<SignPdf />} />
+            <Route path="/tools/esign-pdf" element={<ESignPdf />} />
             <Route path="/tools/watermark-pdf" element={<WatermarkPdf />} />
             <Route path="/tools/photo-to-pdf" element={<PhotoToPdf />} />
             <Route path="/tools/export-pdf" element={<ExportPdf />} />
