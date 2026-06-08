@@ -21,7 +21,7 @@ const UseCases = () => (
           <div className={`grid place-items-center size-12 rounded-xl ${u.color}`}>
             <u.i className="size-6" strokeWidth={1.7} />
           </div>
-          <h3 className="mt-6 font-serif text-2xl">{u.t}</h3>
+          <h2 className="mt-6 font-serif text-2xl">{u.t}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{u.d}</p>
         </div>
       ))}

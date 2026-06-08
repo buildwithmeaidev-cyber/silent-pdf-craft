@@ -158,7 +158,7 @@ const ToolPage = () => {
               {tool.kind === "merge" && files.length > 0 && (
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-medium text-lg">Arrange PDF Order</h3>
+                    <h2 className="font-medium text-lg">Arrange PDF Order</h2>
                     <p className="text-sm text-muted-foreground">Files merge from top to bottom</p>
                   </div>
 
@@ -184,6 +184,7 @@ const ToolPage = () => {
                             type="button"
                             onClick={() => moveFile(index, "up")}
                             disabled={index === 0}
+                            aria-label={`Move ${file.name} up`}
                             className="rounded-lg border p-2 hover:bg-secondary disabled:opacity-40"
                           >
                             <ArrowUp className="size-4" />
@@ -193,6 +194,7 @@ const ToolPage = () => {
                             type="button"
                             onClick={() => moveFile(index, "down")}
                             disabled={index === files.length - 1}
+                            aria-label={`Move ${file.name} down`}
                             className="rounded-lg border p-2 hover:bg-secondary disabled:opacity-40"
                           >
                             <ArrowDown className="size-4" />
@@ -201,6 +203,7 @@ const ToolPage = () => {
                           <button
                             type="button"
                             onClick={() => removeFile(index)}
+                            aria-label={`Remove ${file.name}`}
                             className="rounded-lg border p-2 hover:bg-accent/10 text-accent"
                           >
                             <X className="size-4" />
@@ -252,7 +255,7 @@ const ToolPage = () => {
                 <CheckCircle2 className="size-7" />
               </div>
 
-              <h3 className="mt-4 font-serif text-2xl">Your file is ready</h3>
+              <h2 className="mt-4 font-serif text-2xl">Your file is ready</h2>
               <p className="text-sm text-muted-foreground mt-1">{result.filename} · {formatBytes(result.blob.size)}</p>
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

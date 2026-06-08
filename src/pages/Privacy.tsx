@@ -19,7 +19,7 @@ const Privacy = () => (
           <div className="grid place-items-center size-10 rounded-xl bg-primary-soft text-primary">
             <p.i className="size-5" strokeWidth={1.8} />
           </div>
-          <h3 className="mt-5 font-medium">{p.t}</h3>
+          <h2 className="mt-5 font-medium">{p.t}</h2>
           <p className="mt-1.5 text-sm text-muted-foreground">{p.d}</p>
         </div>
       ))}
