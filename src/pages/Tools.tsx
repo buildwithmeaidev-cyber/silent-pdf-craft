@@ -26,7 +26,7 @@ const Tools = () => (
             )}>
               <Icon className="size-5" strokeWidth={1.8} />
             </div>
-            <h3 className="font-medium">{t.title}</h3>
+            <h2 className="font-medium">{t.title}</h2>
             <p className="mt-1.5 text-sm text-muted-foreground">{t.short}</p>
             <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary">
               Open <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />

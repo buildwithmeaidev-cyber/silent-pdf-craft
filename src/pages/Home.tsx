@@ -120,7 +120,7 @@ const Home = () => {
                 <div className="mt-4 grid place-items-center size-11 rounded-xl bg-ink text-ink-foreground">
                   <s.i className="size-5" strokeWidth={1.8} />
                 </div>
-                <h4 className="mt-4 font-serif text-2xl">{s.t}</h4>
+                <h3 className="mt-4 font-serif text-2xl">{s.t}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{s.d}</p>
                 {idx < 2 && (
                   <ArrowRight className="hidden md:block absolute top-1/2 -right-3 size-5 text-muted-foreground/50" />
@@ -161,7 +161,7 @@ const Home = () => {
                 <div className="grid place-items-center size-10 rounded-xl bg-white/10">
                   <c.i className="size-5" strokeWidth={1.8} />
                 </div>
-                <h4 className="mt-5 font-medium">{c.t}</h4>
+                <h3 className="mt-5 font-medium">{c.t}</h3>
                 <p className="mt-1.5 text-sm text-white/60">{c.d}</p>
               </motion.div>
             ))}
@@ -185,7 +185,7 @@ const Home = () => {
                 <div className="grid place-items-center size-10 rounded-xl bg-primary-soft text-primary">
                   <u.i className="size-5" strokeWidth={1.8} />
                 </div>
-                <h4 className="mt-5 font-medium">{u.t}</h4>
+                <h3 className="mt-5 font-medium">{u.t}</h3>
                 <p className="mt-1.5 text-sm text-muted-foreground">{u.d}</p>
               </motion.div>
             ))}

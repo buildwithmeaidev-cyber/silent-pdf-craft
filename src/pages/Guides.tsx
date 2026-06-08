@@ -17,7 +17,7 @@ const Guides = () => (
           </div>
           <div className="p-6">
             <span className="text-xs uppercase tracking-wider text-muted-foreground">{g.category}</span>
-            <h3 className="mt-2 font-serif text-2xl leading-tight">{g.title}</h3>
+            <h2 className="mt-2 font-serif text-2xl leading-tight">{g.title}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{g.excerpt}</p>
             <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
               Read <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />

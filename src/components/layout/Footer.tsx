@@ -18,8 +18,12 @@ export const Footer = () => {
               Fast, private PDF tools that actually work — built for people who care about their files.
             </p>
             <div className="mt-6 flex items-center gap-3">
-              {[Twitter, Github, Linkedin].map((Icon, i) => (
-                <a key={i} href="#" className="grid place-items-center size-9 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
+              {[
+                { Icon: Twitter, label: "silentPDF on Twitter" },
+                { Icon: Github, label: "silentPDF on GitHub" },
+                { Icon: Linkedin, label: "silentPDF on LinkedIn" },
+              ].map(({ Icon, label }) => (
+                <a key={label} href="#" aria-label={label} className="grid place-items-center size-9 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
                   <Icon className="size-4" />
                 </a>
               ))}
@@ -27,7 +31,7 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-white/90">Tools</h4>
+            <h3 className="text-sm font-semibold text-white/90">Tools</h3>
             <ul className="mt-4 space-y-2.5">
               {TOOLS.slice(0, 6).map((t) => (
                 <li key={t.slug}>
@@ -40,7 +44,7 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-white/90">Product</h4>
+            <h3 className="text-sm font-semibold text-white/90">Product</h3>
             <ul className="mt-4 space-y-2.5">
               {[
                 ["All Tools", "/tools"],
@@ -55,7 +59,7 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-white/90">Trust</h4>
+            <h3 className="text-sm font-semibold text-white/90">Trust</h3>
             <ul className="mt-4 space-y-2.5">
               {[
                 ["Privacy", "/privacy"],

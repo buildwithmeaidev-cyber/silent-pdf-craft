@@ -1,0 +1,28 @@
+# silentPDF AI
+
+> Fast, private PDF tools that run in your browser. Merge, split, compress, convert, rotate, sign, watermark, and protect PDFs without uploads.
+
+## Pages
+
+- [Home](/): Overview of silentPDF and its privacy-first PDF tools.
+- [All Tools](/tools): Full list of available PDF tools.
+- [Guides](/guides): Editorial how-tos and PDF workflow tips.
+- [Use Cases](/use-cases): How students, teams, and freelancers use silentPDF.
+- [Privacy](/privacy): Data handling, storage, and retention policy.
+
+## Tools
+
+- [Merge PDF](/tools/merge-pdf): Combine multiple PDFs into one ordered document.
+- [Split PDF](/tools/split-pdf): Extract pages or ranges into a new PDF.
+- [Compress PDF](/tools/compress-pdf): Shrink PDF file size for email or storage.
+- [PDF to Word](/tools/pdf-to-word): Convert PDFs into editable .docx documents.
+- [Word to PDF](/tools/word-to-pdf): Turn .docx files into polished PDFs.
+- [Rotate PDF](/tools/rotate-pdf): Rotate every page 90°, 180°, or 270°.
+- [Remove Pages](/tools/remove-pages): Delete pages you don't need from a PDF.
+- [Protect PDF](/tools/protect-pdf): Add privacy metadata or password protection.
+- [Edit PDF](/tools/edit-pdf): Draw, write, and annotate PDF pages.
+- [E-Sign PDF](/tools/esign-pdf): Sign PDFs with drawn, typed, or uploaded signatures.
+- [Watermark PDF](/tools/watermark-pdf): Add custom text watermarks to every page.
+- [Photo to PDF](/tools/photo-to-pdf): Convert JPG, PNG, or WebP images into a PDF.
+- [Reorder Pages](/tools/reorder-pdf): Rearrange or delete pages visually.
+- [Export & Rename](/tools/export-pdf): Export a PDF with a new filename.
