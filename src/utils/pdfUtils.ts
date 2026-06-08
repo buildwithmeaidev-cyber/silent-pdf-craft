@@ -17,7 +17,7 @@ export async function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
  * Downloads a binary buffer as a file in the browser
  */
 export function downloadFile(bytes: Uint8Array | ArrayBuffer, filename: string, mimeType: string = 'application/pdf') {
-  const blob = new Blob([bytes], { type: mimeType });
+  const blob = new Blob([bytes as BlobPart], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
