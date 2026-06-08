@@ -131,7 +131,7 @@ const Home = () => {
           <motion.div {...fadeUp} className="mt-10 text-center">
             <Link
               to="/tools/merge-pdf"
-              className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium shadow-blue hover:shadow-lift transition-all"
+              className="group inline-flex items-center gap-2 rounded-full bg-ink text-ink-foreground px-6 py-3 text-sm font-medium shadow-lift hover:opacity-90 transition-all"
             >
               Start now
               <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
