@@ -40,7 +40,7 @@ export default function AppErrorBoundary({
 }) {
   return (
     <ErrorBoundary
-      FallbackComponent={ErrorFallback}
+      FallbackComponent={ErrorFallback as any}
     >
       {children}
     </ErrorBoundary>

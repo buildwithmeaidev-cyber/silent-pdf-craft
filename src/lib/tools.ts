@@ -6,8 +6,8 @@ import type { LucideIcon } from "lucide-react";
 
 export type ToolKind =
   | "merge" | "split" | "compress" | "pdf-to-word" | "word-to-pdf"
-  | "rotate" | "remove" | "protect" | "edit" | "sign" | "watermark"
-  | "photo-to-pdf" | "reorder" | "export";
+  | "rotate" | "remove" | "protect" | "edit" | "sign" | "e-sign" | "watermark"
+  | "photo-to-pdf" | "reorder" | "export" | "addpages" | "removewatermark";
 
 export interface ToolDef {
   slug: string;

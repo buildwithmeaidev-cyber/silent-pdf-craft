@@ -288,7 +288,7 @@ export function formatBytes(b: number) {
 
 export function validatePdfFile(file: File) {
   const maxSize = 100 * 1024 * 1024;
-  if (!file.name.toLowerCase().endswith(".pdf")) {
+  if (!file.name.toLowerCase().endsWith(".pdf")) {
     throw new Error("Unsupported file type. Please upload a PDF.");
   }
   if (file.size > maxSize) {

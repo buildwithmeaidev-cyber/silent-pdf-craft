@@ -62,7 +62,7 @@ export function useRealPdfProcess() {
 
       const mergedBytes = await mergedPdf.save();
 
-      const blob = new Blob([mergedBytes], {
+      const blob = new Blob([mergedBytes as BlobPart], {
         type: "application/pdf",
       });
 
