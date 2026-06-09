@@ -16,7 +16,7 @@ const STATIC_META: Record<string, RouteMeta> = {
   "/": {
     title: "silentPDF AI — Private PDF tools that actually work",
     description:
-      "Merge, split, compress, rotate, convert, and protect PDFs in your browser. Privacy-first, no uploads, no watermarks.",
+      "Merge, split, compress, convert, sign, and protect PDFs right in your browser. No uploads, no watermarks, no signup.",
     jsonLd: [
       {
         "@context": "https://schema.org",
@@ -30,18 +30,23 @@ const STATIC_META: Record<string, RouteMeta> = {
         "@type": "WebSite",
         name: SITE_NAME,
         url: SITE_URL,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${SITE_URL}/tools?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
       },
     ],
   },
   "/tools": {
     title: "All PDF Tools — silentPDF AI",
     description:
-      "Browse every silentPDF tool: merge, split, compress, convert, rotate, sign, watermark, and more. All private, all in your browser.",
+      "Every silentPDF tool in one place: merge, split, compress, convert, rotate, sign, watermark, and more. All private, all in your browser.",
   },
   "/guides": {
     title: "PDF Guides & Tutorials — silentPDF AI",
     description:
-      "Field notes on PDF craft: how-tos, workflow tips, and editorial guides from the silentPDF team.",
+      "Plain-language guides for the PDF tasks people actually run into: shrinking files for email, signing contracts, merging scans.",
   },
   "/use-cases": {
     title: "PDF Use Cases for Students, Teams & Freelancers — silentPDF AI",
@@ -68,8 +73,11 @@ function buildToolMeta(slug: string): RouteMeta {
       description: "A focused PDF tool from silentPDF.",
     };
   }
-  const title = `${tool.title} — Free Online PDF Tool | silentPDF`;
-  const description = tool.short.length > 160 ? tool.short.slice(0, 157) + "…" : tool.short;
+  const title = tool.seoTitle ?? `${tool.title} — Free Online PDF Tool | silentPDF`;
+  const rawDesc = tool.metaDescription ?? tool.short;
+  const description = rawDesc.length > 160 ? rawDesc.slice(0, 157) + "…" : rawDesc;
+  const toolUrl = `${SITE_URL}/tools/${tool.slug}`;
+
   const jsonLd: Record<string, unknown>[] = [
     {
       "@context": "https://schema.org",
@@ -79,9 +87,36 @@ function buildToolMeta(slug: string): RouteMeta {
       operatingSystem: "Web",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       description: tool.description,
-      url: `${SITE_URL}/tools/${tool.slug}`,
+      url: toolUrl,
+      aggregateRating: undefined,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+        { "@type": "ListItem", position: 2, name: "PDF Tools", item: `${SITE_URL}/tools` },
+        { "@type": "ListItem", position: 3, name: tool.title, item: toolUrl },
+      ],
     },
   ];
+
+  if (tool.howItWorks?.length) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: `How to ${tool.title.toLowerCase()} online`,
+      description: tool.whatItDoes ?? tool.description,
+      totalTime: "PT1M",
+      step: tool.howItWorks.map((s, i) => ({
+        "@type": "HowToStep",
+        position: i + 1,
+        name: s.name,
+        text: s.text,
+      })),
+    });
+  }
+
   if (tool.faq?.length) {
     jsonLd.push({
       "@context": "https://schema.org",
@@ -100,10 +135,13 @@ export const Seo = () => {
   const { pathname } = useLocation();
   const toolSlug = toolSlugFromPath(pathname);
   const meta: RouteMeta =
-    STATIC_META[pathname] ?? (toolSlug ? buildToolMeta(toolSlug) : {
-      title: `${SITE_NAME} — Private PDF tools`,
-      description: "Fast, private PDF tools that run in your browser.",
-    });
+    STATIC_META[pathname] ??
+    (toolSlug
+      ? buildToolMeta(toolSlug)
+      : {
+          title: `${SITE_NAME} — Private PDF tools`,
+          description: "Fast, private PDF tools that run in your browser.",
+        });
 
   const canonical = `${SITE_URL}${pathname === "/" ? "/" : pathname.replace(/\/$/, "")}`;
 
