@@ -3,26 +3,43 @@
 > Fast, private PDF tools that run in your browser. Merge, split, compress, convert, rotate, sign, watermark, and protect PDFs without uploads.
 
 ## Pages
-
-- [Home](/): Overview of silentPDF and its privacy-first PDF tools.
-- [All Tools](/tools): Full list of available PDF tools.
-- [Guides](/guides): Editorial how-tos and PDF workflow tips.
-- [Use Cases](/use-cases): How students, teams, and freelancers use silentPDF.
-- [Privacy](/privacy): Data handling, storage, and retention policy.
+- [Home](https://silentpdfai.pages.dev/): All PDF tools, browser-based.
+- [All Tools](https://silentpdfai.pages.dev/tools)
+- [Blog](https://silentpdfai.pages.dev/blog): Guides on compressing, merging, converting, and protecting PDFs.
+- [Privacy](https://silentpdfai.pages.dev/privacy)
 
 ## Tools
+- [Merge PDF](https://silentpdfai.pages.dev/tools/merge-pdf)
+- [Split PDF](https://silentpdfai.pages.dev/tools/split-pdf)
+- [Compress PDF](https://silentpdfai.pages.dev/tools/compress-pdf)
+- [PDF to Word](https://silentpdfai.pages.dev/tools/pdf-to-word)
+- [Word to PDF](https://silentpdfai.pages.dev/tools/word-to-pdf)
+- [Rotate PDF](https://silentpdfai.pages.dev/tools/rotate-pdf)
+- [Remove Pages](https://silentpdfai.pages.dev/tools/remove-pages)
+- [Protect PDF](https://silentpdfai.pages.dev/tools/protect-pdf)
+- [Edit PDF](https://silentpdfai.pages.dev/tools/edit-pdf)
+- [E-Sign PDF](https://silentpdfai.pages.dev/tools/esign-pdf)
+- [Watermark PDF](https://silentpdfai.pages.dev/tools/watermark-pdf)
+- [Photo to PDF](https://silentpdfai.pages.dev/tools/photo-to-pdf)
+- [Reorder PDF](https://silentpdfai.pages.dev/tools/reorder-pdf)
 
-- [Merge PDF](/tools/merge-pdf): Combine multiple PDFs into one ordered document.
-- [Split PDF](/tools/split-pdf): Extract pages or ranges into a new PDF.
-- [Compress PDF](/tools/compress-pdf): Shrink PDF file size for email or storage.
-- [PDF to Word](/tools/pdf-to-word): Convert PDFs into editable .docx documents.
-- [Word to PDF](/tools/word-to-pdf): Turn .docx files into polished PDFs.
-- [Rotate PDF](/tools/rotate-pdf): Rotate every page 90°, 180°, or 270°.
-- [Remove Pages](/tools/remove-pages): Delete pages you don't need from a PDF.
-- [Protect PDF](/tools/protect-pdf): Add privacy metadata or password protection.
-- [Edit PDF](/tools/edit-pdf): Draw, write, and annotate PDF pages.
-- [E-Sign PDF](/tools/esign-pdf): Sign PDFs with drawn, typed, or uploaded signatures.
-- [Watermark PDF](/tools/watermark-pdf): Add custom text watermarks to every page.
-- [Photo to PDF](/tools/photo-to-pdf): Convert JPG, PNG, or WebP images into a PDF.
-- [Reorder Pages](/tools/reorder-pdf): Rearrange or delete pages visually.
-- [Export & Rename](/tools/export-pdf): Export a PDF with a new filename.
+## Task-specific landing pages
+- [Compress PDF for email](https://silentpdfai.pages.dev/compress-pdf-for-email)
+- [Compress PDF to 1MB](https://silentpdfai.pages.dev/compress-pdf-to-1mb)
+- [Compress PDF for resume](https://silentpdfai.pages.dev/compress-pdf-for-resume)
+- [Merge 2 PDFs](https://silentpdfai.pages.dev/merge-2-pdfs)
+- [Merge multiple PDFs](https://silentpdfai.pages.dev/merge-multiple-pdfs)
+- [PDF to Word online](https://silentpdfai.pages.dev/pdf-to-word-online)
+- [PDF to Word for resume](https://silentpdfai.pages.dev/pdf-to-word-for-resume)
+- [PDF to Word with formatting](https://silentpdfai.pages.dev/pdf-to-word-with-formatting)
+- [Sign PDF online](https://silentpdfai.pages.dev/sign-pdf-online)
+- [Sign contract PDF](https://silentpdfai.pages.dev/sign-contract-pdf)
+- [Watermark PDF online](https://silentpdfai.pages.dev/watermark-pdf-online)
+- [Add logo watermark to PDF](https://silentpdfai.pages.dev/add-logo-watermark-pdf)
+
+## Blog
+- [How to compress a PDF under 1MB](https://silentpdfai.pages.dev/blog/how-to-compress-pdf-under-1mb)
+- [Compress PDF for Gmail attachments](https://silentpdfai.pages.dev/blog/compress-pdf-for-gmail-attachments)
+- [Merge-then-compress workflow](https://silentpdfai.pages.dev/blog/merge-then-compress-workflow)
+- [Convert PDF to Word without breaking formatting](https://silentpdfai.pages.dev/blog/convert-pdf-to-word-without-breaking-formatting)
+- [Password-protect a PDF the right way](https://silentpdfai.pages.dev/blog/password-protect-pdf-the-right-way)
