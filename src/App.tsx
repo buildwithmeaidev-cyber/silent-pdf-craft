@@ -17,6 +17,9 @@ import UseCases from "./pages/UseCases";
 import Privacy from "./pages/Privacy";
 import ToolPage from "./pages/tools/ToolPage";
 import NotFound from "./pages/NotFound";
+import ProgrammaticPage from "./pages/ProgrammaticPage";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 
 // Custom PDF Tools
 import MergePdf from "./pages/tools/MergePDF";
@@ -71,6 +74,24 @@ const App = () => (
             <Route path="/guides" element={<Guides />} />
             <Route path="/use-cases" element={<UseCases />} />
             <Route path="/privacy" element={<Privacy />} />
+
+            {/* Blog */}
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+
+            {/* Programmatic landing pages (root-level slugs) */}
+            <Route path="/compress-pdf-for-email" element={<ProgrammaticPage />} />
+            <Route path="/compress-pdf-to-1mb" element={<ProgrammaticPage />} />
+            <Route path="/compress-pdf-for-resume" element={<ProgrammaticPage />} />
+            <Route path="/merge-2-pdfs" element={<ProgrammaticPage />} />
+            <Route path="/merge-multiple-pdfs" element={<ProgrammaticPage />} />
+            <Route path="/pdf-to-word-online" element={<ProgrammaticPage />} />
+            <Route path="/pdf-to-word-for-resume" element={<ProgrammaticPage />} />
+            <Route path="/pdf-to-word-with-formatting" element={<ProgrammaticPage />} />
+            <Route path="/sign-pdf-online" element={<ProgrammaticPage />} />
+            <Route path="/sign-contract-pdf" element={<ProgrammaticPage />} />
+            <Route path="/watermark-pdf-online" element={<ProgrammaticPage />} />
+            <Route path="/add-logo-watermark-pdf" element={<ProgrammaticPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

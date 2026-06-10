@@ -1,6 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import { TOOLS } from "@/lib/tools";
+import { getProgrammatic } from "@/lib/programmatic";
+import { getPost, POSTS } from "@/content/blog/posts";
 
 const SITE_URL = "https://silentpdfai.pages.dev";
 const SITE_NAME = "silentPDF AI";
@@ -131,17 +133,130 @@ function buildToolMeta(slug: string): RouteMeta {
   return { title, description, jsonLd };
 }
 
+function buildProgrammaticMeta(slug: string): RouteMeta | null {
+  const v = getProgrammatic(slug);
+  if (!v) return null;
+  const url = `${SITE_URL}/${v.slug}`;
+  const jsonLd: Record<string, unknown>[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: v.title,
+      url,
+      description: v.metaDescription,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+        { "@type": "ListItem", position: 2, name: v.title, item: url },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: v.title,
+      description: v.intent,
+      step: v.howItWorks.map((s, i) => ({
+        "@type": "HowToStep",
+        position: i + 1,
+        name: s.name,
+        text: s.text,
+      })),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: v.faq.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+  ];
+  return { title: v.seoTitle, description: v.metaDescription, jsonLd };
+}
+
+function buildBlogIndexMeta(): RouteMeta {
+  return {
+    title: "PDF Guides & How-Tos — silentPDF Blog",
+    description:
+      "Practical posts about compressing, merging, converting, and protecting PDFs — for real situations, not search engines.",
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "silentPDF Blog",
+        url: `${SITE_URL}/blog`,
+        hasPart: POSTS.map((p) => ({
+          "@type": "BlogPosting",
+          headline: p.title,
+          url: `${SITE_URL}/blog/${p.slug}`,
+          datePublished: p.publishedAt,
+        })),
+      },
+    ],
+  };
+}
+
+function buildBlogPostMeta(slug: string): RouteMeta | null {
+  const post = getPost(slug);
+  if (!post) return null;
+  const url = `${SITE_URL}/blog/${post.slug}`;
+  const jsonLd: Record<string, unknown>[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: post.title,
+      description: post.excerpt,
+      datePublished: post.publishedAt,
+      url,
+      author: { "@type": "Organization", name: SITE_NAME },
+      publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: `${SITE_URL}/logo-512.png` } },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+        { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+        { "@type": "ListItem", position: 3, name: post.title, item: url },
+      ],
+    },
+  ];
+  if (post.faq?.length) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: post.faq.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    });
+  }
+  return { title: post.seoTitle, description: post.metaDescription, jsonLd };
+}
+
 export const Seo = () => {
   const { pathname } = useLocation();
   const toolSlug = toolSlugFromPath(pathname);
-  const meta: RouteMeta =
-    STATIC_META[pathname] ??
-    (toolSlug
-      ? buildToolMeta(toolSlug)
-      : {
-          title: `${SITE_NAME} — Private PDF tools`,
-          description: "Fast, private PDF tools that run in your browser.",
-        });
+  const blogPostMatch = pathname.match(/^\/blog\/([^/]+)\/?$/);
+  const rootSlugMatch = pathname.match(/^\/([^/]+)\/?$/);
+  const isBlogIndex = pathname === "/blog";
+
+  let meta: RouteMeta | null = STATIC_META[pathname] ?? null;
+  if (!meta && toolSlug) meta = buildToolMeta(toolSlug);
+  if (!meta && isBlogIndex) meta = buildBlogIndexMeta();
+  if (!meta && blogPostMatch) meta = buildBlogPostMeta(blogPostMatch[1]);
+  if (!meta && rootSlugMatch) meta = buildProgrammaticMeta(rootSlugMatch[1]);
+  if (!meta) {
+    meta = {
+      title: `${SITE_NAME} — Private PDF tools`,
+      description: "Fast, private PDF tools that run in your browser.",
+    };
+  }
 
   const canonical = `${SITE_URL}${pathname === "/" ? "/" : pathname.replace(/\/$/, "")}`;
 

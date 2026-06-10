@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 const links = [
   { to: "/", label: "Home" },
   { to: "/tools", label: "Tools" },
+  { to: "/blog", label: "Blog" },
   { to: "/guides", label: "Guides" },
   { to: "/use-cases", label: "Use Cases" },
-  { to: "/privacy", label: "Privacy" },
 ];
 
 export const Navbar = () => {
