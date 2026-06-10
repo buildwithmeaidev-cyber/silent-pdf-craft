@@ -44,14 +44,29 @@ export const Footer = () => {
           </div>
 
           <div>
+            <h3 className="text-sm font-semibold text-white/90">Popular tasks</h3>
+            <ul className="mt-4 space-y-2.5">
+              {[
+                ["Compress PDF for email", "/compress-pdf-for-email"],
+                ["Compress PDF to 1MB", "/compress-pdf-to-1mb"],
+                ["Merge 2 PDFs", "/merge-2-pdfs"],
+                ["PDF to Word online", "/pdf-to-word-online"],
+                ["Sign PDF online", "/sign-pdf-online"],
+                ["Watermark a PDF", "/watermark-pdf-online"],
+              ].map(([l, h]) => (
+                <li key={l}><Link to={h} className="text-sm text-white/60 hover:text-white transition-colors">{l}</Link></li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
             <h3 className="text-sm font-semibold text-white/90">Product</h3>
             <ul className="mt-4 space-y-2.5">
               {[
                 ["All Tools", "/tools"],
+                ["Blog", "/blog"],
                 ["Use Cases", "/use-cases"],
                 ["Guides", "/guides"],
-                ["Changelog", "#"],
-                ["Status", "#"],
               ].map(([l, h]) => (
                 <li key={l}><Link to={h} className="text-sm text-white/60 hover:text-white transition-colors">{l}</Link></li>
               ))}
