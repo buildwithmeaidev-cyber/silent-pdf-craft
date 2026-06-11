@@ -106,6 +106,35 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
     preset: { level: "balanced" },
     relatedVariants: ["compress-pdf-for-email", "compress-pdf-to-1mb"],
   },
+  {
+    slug: "compress-pdf-to-500kb",
+    parentSlug: "compress-pdf",
+    title: "Compress PDF to 500KB",
+    seoTitle: "Compress PDF to 500KB Online — Shrink Files Under 500KB | silentPDF",
+    metaDescription:
+      "Some forms cap PDF uploads at 500KB. Push your file under the limit in your browser, free, no signup, no watermark.",
+    intent: "For strict 500KB upload caps on government and university portals.",
+    scenario:
+      "500KB is a brutal cap. Older Indian government portals, some bank KYC uploaders, and a few university applications still enforce it. You usually can't hit it in one pass on a scanned color PDF — but with Maximum and a couple of tricks, you can get there.",
+    bullets: [
+      "Tuned to push past the 500KB ceiling, not just the 1MB one.",
+      "If a single pass isn't enough, drop the output back in and re-compress.",
+      "Removing blank or unused pages first usually does more than another compression pass.",
+      "Runs locally — ID scans never touch a server.",
+    ],
+    howItWorks: [
+      { name: "Upload the PDF", text: "Add the file your portal is rejecting at 500KB." },
+      { name: "Use Maximum compression", text: "Defaults to the smallest preset on this page." },
+      { name: "If still over, remove pages or re-run", text: "Trim blank pages with Remove Pages, then compress again." },
+    ],
+    faq: [
+      { q: "Can any PDF be compressed under 500KB?", a: "No — pure text PDFs with embedded fonts can already be near their minimum size. The win is biggest on photo or scan-heavy PDFs. If yours is one or two text pages, 500KB might already be impossible without converting to JPG." },
+      { q: "What if my PDF is still too big after Maximum?", a: "Two reliable next steps: (1) remove pages you don't need, (2) re-compress the result. A color scan of a one-page form usually lands under 500KB after those two." },
+      { q: "Will the text still be sharp?", a: "Text stays crisp on screen. Photos and full-color scans soften noticeably at this size — that's the tradeoff portals force on you." },
+    ],
+    preset: { level: "maximum" },
+    relatedVariants: ["compress-pdf-to-1mb", "compress-pdf-for-email"],
+  },
 
   // ---------- MERGE ----------
   {
