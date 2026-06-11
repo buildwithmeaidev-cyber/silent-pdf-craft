@@ -106,6 +106,35 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
     preset: { level: "balanced" },
     relatedVariants: ["compress-pdf-for-email", "compress-pdf-to-1mb"],
   },
+  {
+    slug: "compress-pdf-to-500kb",
+    parentSlug: "compress-pdf",
+    title: "Compress PDF to 500KB",
+    seoTitle: "Compress PDF to 500KB Online — Shrink Files Under 500KB | silentPDF",
+    metaDescription:
+      "Some forms cap PDF uploads at 500KB. Push your file under the limit in your browser, free, no signup, no watermark.",
+    intent: "For strict 500KB upload caps on government and university portals.",
+    scenario:
+      "500KB is a brutal cap. Older Indian government portals, some bank KYC uploaders, and a few university applications still enforce it. You usually can't hit it in one pass on a scanned color PDF — but with Maximum and a couple of tricks, you can get there.",
+    bullets: [
+      "Tuned to push past the 500KB ceiling, not just the 1MB one.",
+      "If a single pass isn't enough, drop the output back in and re-compress.",
+      "Removing blank or unused pages first usually does more than another compression pass.",
+      "Runs locally — ID scans never touch a server.",
+    ],
+    howItWorks: [
+      { name: "Upload the PDF", text: "Add the file your portal is rejecting at 500KB." },
+      { name: "Use Maximum compression", text: "Defaults to the smallest preset on this page." },
+      { name: "If still over, remove pages or re-run", text: "Trim blank pages with Remove Pages, then compress again." },
+    ],
+    faq: [
+      { q: "Can any PDF be compressed under 500KB?", a: "No — pure text PDFs with embedded fonts can already be near their minimum size. The win is biggest on photo or scan-heavy PDFs. If yours is one or two text pages, 500KB might already be impossible without converting to JPG." },
+      { q: "What if my PDF is still too big after Maximum?", a: "Two reliable next steps: (1) remove pages you don't need, (2) re-compress the result. A color scan of a one-page form usually lands under 500KB after those two." },
+      { q: "Will the text still be sharp?", a: "Text stays crisp on screen. Photos and full-color scans soften noticeably at this size — that's the tradeoff portals force on you." },
+    ],
+    preset: { level: "maximum" },
+    relatedVariants: ["compress-pdf-to-1mb", "compress-pdf-for-email"],
+  },
 
   // ---------- MERGE ----------
   {
@@ -162,7 +191,35 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
       { q: "Can I reorder pages, not just files?", a: "This tool merges full files in the order you set. To shuffle individual pages, use Reorder Pages after merging." },
       { q: "Will the merged PDF be searchable?", a: "Yes. Selectable text from each source PDF stays selectable in the merged file." },
     ],
-    relatedVariants: ["merge-2-pdfs"],
+    relatedVariants: ["merge-2-pdfs", "merge-3-pdfs"],
+  },
+  {
+    slug: "merge-3-pdfs",
+    parentSlug: "merge-pdf",
+    title: "Merge 3 PDFs",
+    seoTitle: "Merge 3 PDFs into One — Combine Three PDF Files Free | silentPDF",
+    metaDescription:
+      "Combine three PDFs into a single document. Reorder, preview, and download — runs in your browser, no signup.",
+    intent: "For combining three files cleanly — cover, body, appendix; or ID, address proof, bank statement.",
+    scenario:
+      "Three is the awkward number. Too many for a quick attach-each-one email, too few to bother with a folder. Common cases: cover letter + resume + portfolio; ID + address proof + photo; intro + report + appendix. This page is built for that shape.",
+    bullets: [
+      "Drop three files in any order, then sort them top-to-bottom.",
+      "Pages stay exactly as they are — no re-render or font swap.",
+      "Single clean PDF out, no watermark, no signup.",
+      "Runs in your browser; nothing uploaded.",
+    ],
+    howItWorks: [
+      { name: "Add all three PDFs", text: "Drop them into the upload area in any order." },
+      { name: "Sort them", text: "Move each one up or down so the order matches what you want." },
+      { name: "Merge and download", text: "We stitch them locally and download the combined PDF." },
+    ],
+    faq: [
+      { q: "Does the order matter?", a: "Yes — the order in the list is the order in the final PDF. Top of the list becomes page 1." },
+      { q: "Can the three PDFs be different page sizes?", a: "Yes. Each file keeps its own page size in the merged document. A4 mixed with Letter is fine." },
+      { q: "Will all three files be processed in my browser?", a: "Yes. All three are read into memory, merged, and saved locally. Nothing is uploaded." },
+    ],
+    relatedVariants: ["merge-2-pdfs", "merge-multiple-pdfs"],
   },
 
   // ---------- PDF TO WORD ----------
@@ -248,10 +305,36 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
       { q: "What about fonts I don't have installed?", a: "Word substitutes the closest match available on your system. The text reads identically; only the visual font changes." },
       { q: "Will images and charts survive?", a: "Yes. Images embed as pictures. Charts come over as images, not editable chart objects." },
     ],
-    relatedVariants: ["pdf-to-word-online", "pdf-to-word-for-resume"],
+    relatedVariants: ["pdf-to-word-online", "pdf-to-word-for-resume", "convert-scanned-pdf-to-word"],
   },
-
-  // ---------- E-SIGN ----------
+  {
+    slug: "convert-scanned-pdf-to-word",
+    parentSlug: "pdf-to-word",
+    title: "Convert Scanned PDF to Word",
+    seoTitle: "Convert Scanned PDF to Word — OCR PDF to Editable .docx | silentPDF",
+    metaDescription:
+      "Turn a scanned PDF into editable Word with OCR. Get selectable text from photos and scans — free, no signup.",
+    intent: "For scanned documents you can't select text in: contracts, old reports, photographed pages.",
+    scenario:
+      "Someone handed you a scanned contract. Your phone scanned a printed form. You opened a 10-year-old report and the text won't even highlight. This page runs OCR automatically and gives you a .docx with real, editable, selectable text.",
+    bullets: [
+      "Automatic OCR — no separate step or setting to toggle.",
+      "Works on English documents most reliably; partial support for other Latin-script languages.",
+      "Output is real text in Word, not an image pasted on a page.",
+      "Photographed pages (slight skew, normal phone light) usually convert cleanly.",
+    ],
+    howItWorks: [
+      { name: "Upload the scanned PDF", text: "Drop the image-based PDF — phone scan, copier scan, or photographed pages." },
+      { name: "OCR runs automatically", text: "We detect there's no selectable text and run recognition before converting." },
+      { name: "Download the editable .docx", text: "Open in Word or Google Docs and edit the text directly." },
+    ],
+    faq: [
+      { q: "How accurate is the OCR?", a: "On clean printed text in good light, accuracy is high — usually 95%+ on body text. Handwriting, faint print, or heavily skewed pages drop accuracy. A quick read-through after conversion is always worth it." },
+      { q: "Will the layout match the scan exactly?", a: "Close, not pixel-perfect. Paragraphs, headings, and basic columns come through. Hand-drawn tables and complex forms may need light cleanup." },
+      { q: "Does it work on non-English documents?", a: "English is most reliable. Other Latin-script languages (Spanish, French, German, Portuguese) work but accuracy varies. Non-Latin scripts aren't currently supported." },
+    ],
+    relatedVariants: ["pdf-to-word-online", "pdf-to-word-with-formatting"],
+  },
   {
     slug: "sign-pdf-online",
     parentSlug: "esign-pdf",

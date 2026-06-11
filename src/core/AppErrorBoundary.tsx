@@ -40,11 +40,7 @@ export default function AppErrorBoundary({
 }) {
   return (
     <ErrorBoundary
-<<<<<<< HEAD
       FallbackComponent={ErrorFallback as any}
-=======
-      FallbackComponent={ErrorFallback}
->>>>>>> security-fix-jspdf
     >
       {children}
     </ErrorBoundary>

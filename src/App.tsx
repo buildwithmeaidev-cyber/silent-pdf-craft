@@ -42,67 +42,6 @@ import RotatepagesPdf from "./pages/tools/RotatepagesPDF";
 const queryClient = new QueryClient();
 
 const App = () => (
-<<<<<<< HEAD
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route element={<SiteLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/tools" element={<Tools />} />
-            
-            {/* Specific PDF Tool Routes */}
-            <Route path="/tools/merge-pdf" element={<MergePdf />} />
-            <Route path="/tools/split-pdf" element={<SplitPdf />} />
-            <Route path="/tools/remove-pages" element={<RemovePagesPDF />} />
-            <Route path="/tools/edit-pdf" element={<EditPdf />} />
-            <Route path="/tools/compress-pdf" element={<CompressPdf />} />
-            <Route path="/tools/protect-pdf" element={<ProtectPdf />} />
-            <Route path="/tools/reorder-pdf" element={<ReorderPdf />} />
-            <Route path="/tools/esign-pdf" element={<ESignPdf />} />
-            <Route path="/tools/watermark-pdf" element={<WatermarkPdf />} />
-            <Route path="/tools/photo-to-pdf" element={<PhotoToPdf />} />
-            <Route path="/tools/export-pdf" element={<ExportPdf />} />
-            <Route path="/tools/pdf-to-word" element={<PdfToWord />} />
-            <Route path="/tools/word-to-pdf" element={<WordToPdf />} />
-            
-            {/* Fallback Tool Page */}
-            <Route path="/tools/:slug" element={<ToolPage />} />
-            
-            <Route path="/guides" element={<Guides />} />
-            <Route path="/use-cases" element={<UseCases />} />
-            <Route path="/privacy" element={<Privacy />} />
-
-            {/* Blog */}
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-
-            {/* Programmatic landing pages (root-level slugs) */}
-            <Route path="/compress-pdf-for-email" element={<ProgrammaticPage />} />
-            <Route path="/compress-pdf-to-1mb" element={<ProgrammaticPage />} />
-            <Route path="/compress-pdf-for-resume" element={<ProgrammaticPage />} />
-            <Route path="/merge-2-pdfs" element={<ProgrammaticPage />} />
-            <Route path="/merge-multiple-pdfs" element={<ProgrammaticPage />} />
-            <Route path="/pdf-to-word-online" element={<ProgrammaticPage />} />
-            <Route path="/pdf-to-word-for-resume" element={<ProgrammaticPage />} />
-            <Route path="/pdf-to-word-with-formatting" element={<ProgrammaticPage />} />
-            <Route path="/sign-pdf-online" element={<ProgrammaticPage />} />
-            <Route path="/sign-contract-pdf" element={<ProgrammaticPage />} />
-            <Route path="/watermark-pdf-online" element={<ProgrammaticPage />} />
-            <Route path="/add-logo-watermark-pdf" element={<ProgrammaticPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-export default App;
-=======
   <AppErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -117,6 +56,7 @@ export default App;
               <Route path="/" element={<Home />} />
               <Route path="/tools" element={<Tools />} />
 
+              {/* Specific PDF Tool Routes */}
               <Route path="/tools/merge-pdf" element={<MergePdf />} />
               <Route path="/tools/split-pdf" element={<SplitPdf />} />
               <Route path="/tools/remove-pages" element={<RemovePagesPDF />} />
@@ -134,11 +74,33 @@ export default App;
               <Route path="/tools/removewatermark-pdf" element={<RemovewatermarkPdf />} />
               <Route path="/tools/rotatepages-pdf" element={<RotatepagesPdf />} />
 
+              {/* Fallback Tool Page */}
               <Route path="/tools/:slug" element={<ToolPage />} />
 
               <Route path="/guides" element={<Guides />} />
               <Route path="/use-cases" element={<UseCases />} />
               <Route path="/privacy" element={<Privacy />} />
+
+              {/* Blog */}
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+
+              {/* Programmatic landing pages (root-level slugs) */}
+              <Route path="/compress-pdf-for-email" element={<ProgrammaticPage />} />
+              <Route path="/compress-pdf-to-1mb" element={<ProgrammaticPage />} />
+              <Route path="/compress-pdf-to-500kb" element={<ProgrammaticPage />} />
+              <Route path="/compress-pdf-for-resume" element={<ProgrammaticPage />} />
+              <Route path="/merge-2-pdfs" element={<ProgrammaticPage />} />
+              <Route path="/merge-3-pdfs" element={<ProgrammaticPage />} />
+              <Route path="/merge-multiple-pdfs" element={<ProgrammaticPage />} />
+              <Route path="/pdf-to-word-online" element={<ProgrammaticPage />} />
+              <Route path="/pdf-to-word-for-resume" element={<ProgrammaticPage />} />
+              <Route path="/pdf-to-word-with-formatting" element={<ProgrammaticPage />} />
+              <Route path="/convert-scanned-pdf-to-word" element={<ProgrammaticPage />} />
+              <Route path="/sign-pdf-online" element={<ProgrammaticPage />} />
+              <Route path="/sign-contract-pdf" element={<ProgrammaticPage />} />
+              <Route path="/watermark-pdf-online" element={<ProgrammaticPage />} />
+              <Route path="/add-logo-watermark-pdf" element={<ProgrammaticPage />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
@@ -150,4 +112,3 @@ export default App;
 );
 
 export default App;
->>>>>>> security-fix-jspdf
