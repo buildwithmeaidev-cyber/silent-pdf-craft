@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { TOOLS } from "@/lib/tools";
 import { cn } from "@/lib/utils";
+import HomeFaq from "@/components/home/HomeFaq";
 
 const fadeUp = {
   initial: { opacity: 0, y: 16 },
