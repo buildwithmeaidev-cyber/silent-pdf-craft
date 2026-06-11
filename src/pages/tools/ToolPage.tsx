@@ -1,37 +1,41 @@
+// src/pages/tools/ToolPage.tsx
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Download, Loader2, RotateCcw, AlertCircle, ChevronRight, ArrowUp, ArrowDown, FileText, X } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Download,
+  Loader2,
+  RotateCcw,
+  AlertCircle,
+  ChevronRight,
+  ArrowUp,
+  ArrowDown,
+  FileText,
+  X,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTool } from "@/lib/tools";
 import { PdfDropzone } from "@/components/PdfDropzone";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import {
-  mergePdfs, splitPdf, rotatePdf, removePages, compressPdf, protectPdf,
-  downloadBlob, formatBytes, ToolResult, CompressionLevel, getOptimalCompressionLevel,
-} from "@/lib/pdf";
 import { cn } from "@/lib/utils";
-
-type State = "idle" | "uploading" | "processing" | "success" | "error";
+import { usePdfJob } from "@/hooks/usePdfJob";
+import { mergePdfs, splitPdf, rotatePdf, removePages, compressPdf, protectPdf, downloadBlob, formatBytes } from "@/lib/pdf";
 
 const ToolPage = () => {
   const { slug = "" } = useParams();
   const tool = getTool(slug);
   const [files, setFiles] = useState<File[]>([]);
-  const [state, setState] = useState<State>("idle");
-  const [progress, setProgress] = useState(0);
-  const [result, setResult] = useState<ToolResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [range, setRange] = useState("");
   const [password, setPassword] = useState("");
   const [rotation, setRotation] = useState<90 | 180 | 270>(90);
-  const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>("medium");
+  const [compressionLevel, setCompressionLevel] = useState<"light" | "medium" | "strong" | "custom">(
+    "medium"
+  );
   const [customQuality, setCustomQuality] = useState(80);
 
-  const optimalLevel = useMemo(() => {
-    if (files.length === 0) return null;
-    return getOptimalCompressionLevel(files[0].size);
-  }, [files]);
+  const { progress, state, result, error, run, reset: resetJob, setState, setError, setProgress, setResult } = usePdfJob();
 
   const canRun = useMemo(() => {
     if (!tool || files.length === 0) return false;
@@ -42,99 +46,77 @@ const ToolPage = () => {
   }, [tool, files, range, password]);
 
   const moveFile = (index: number, direction: "up" | "down") => {
-    const updatedFiles = [...files];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-
-    if (targetIndex < 0 || targetIndex >= updatedFiles.length) return;
-
-    [updatedFiles[index], updatedFiles[targetIndex]] = [updatedFiles[targetIndex], updatedFiles[index]];
-    setFiles(updatedFiles);
+    const updated = [...files];
+    const target = direction === "up" ? index - 1 : index + 1;
+    if (target < 0 || target >= updated.length) return;
+    [updated[index], updated[target]] = [updated[target], updated[index]];
+    setFiles(updated);
   };
 
   const removeFile = (index: number) => {
     setFiles(files.filter((_, i) => i !== index));
   };
 
-  if (!tool) {
-    return (
-      <div className="container-px mx-auto max-w-2xl py-24 text-center">
-        <h1 className="font-serif text-4xl">Tool not found</h1>
-        <Link to="/tools" className="mt-6 inline-block text-primary">Browse all tools →</Link>
-      </div>
-    );
-  }
-
   const reset = () => {
     setFiles([]);
-    setResult(null);
-    setError(null);
-    setState("idle");
-    setProgress(0);
+    resetJob();
     setCompressionLevel("medium");
     setCustomQuality(80);
   };
 
-  const run = async () => {
-    setError(null);
-    setResult(null);
-    setState("uploading");
-    setProgress(15);
-
-    try {
-      await new Promise((r) => setTimeout(r, 350));
-      setState("processing");
-      setProgress(55);
-
-      let res: ToolResult;
-
-      switch (tool.kind) {
+  const runTool = async () => {
+    await run(async () => {
+      switch (tool?.kind) {
         case "merge":
-          res = await mergePdfs(files);
-          break;
+          return await mergePdfs(files);
         case "split":
-          res = await splitPdf(files[0], range);
-          break;
+          return await splitPdf(files[0], range);
         case "rotate":
-          res = await rotatePdf(files[0], rotation);
-          break;
+          return await rotatePdf(files[0], rotation);
         case "remove":
-          res = await removePages(files[0], range);
-          break;
+          return await removePages(files[0], range);
         case "compress":
-          res = await compressPdf(files[0], {
+          return await compressPdf(files[0], {
             level: compressionLevel,
             quality: compressionLevel === "custom" ? customQuality : undefined,
           });
-          break;
         case "protect":
-          res = await protectPdf(files[0], password);
-          break;
+          return await protectPdf(files[0], password);
         default:
           throw new Error("Unsupported tool");
       }
-
-      setProgress(100);
-      setResult(res);
-      setState("success");
-    } catch (e: any) {
-      setError(e?.message ?? "Something went wrong while processing.");
-      setState("error");
-    }
+    });
   };
+
+  if (!tool) {
+    return (
+      <div className="container-px mx-auto max-w-2xl py-24 text-center">
+        <h1 className="font-serif text-4xl">Tool not found</h1>
+        <Link to="/tools" className="mt-6 inline-block text-primary">
+          Browse all tools →
+        </Link>
+      </div>
+    );
+  }
 
   const Icon = tool.icon;
 
   return (
     <div className="container-px mx-auto max-w-3xl py-12 md:py-16">
-      <Link to="/tools" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8">
+      <Link
+        to="/tools"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
+      >
         <ArrowLeft className="size-4" /> All tools
       </Link>
 
       <div className="flex items-start gap-4">
-        <div className={cn(
-          "grid place-items-center size-12 rounded-xl shrink-0",
-          tool.accent === "blue" ? "bg-primary-soft text-primary" : "bg-accent-soft text-accent"
-        )}>
+        <div
+          className={cn(
+            "grid place-items-center size-12 rounded-xl shrink-0",
+            tool.accent === "blue" ? "bg-primary-soft text-primary" : "bg-accent-soft text-accent"
+          )}
+        >
           <Icon className="size-6" strokeWidth={1.8} />
         </div>
 
@@ -148,12 +130,7 @@ const ToolPage = () => {
         <AnimatePresence mode="wait">
           {(state === "idle" || state === "error") && (
             <motion.div key="idle" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <PdfDropzone
-                files={files}
-                onChange={setFiles}
-                accept={tool.accept}
-                multiple={tool.multiple}
-              />
+              <PdfDropzone files={files} onChange={setFiles} accept={tool.accept} multiple={tool.multiple} />
 
               {tool.kind === "merge" && files.length > 0 && (
                 <div className="mt-6">
@@ -161,7 +138,6 @@ const ToolPage = () => {
                     <h3 className="font-medium text-lg">Arrange PDF Order</h3>
                     <p className="text-sm text-muted-foreground">Files merge from top to bottom</p>
                   </div>
-
                   <div className="space-y-3">
                     {files.map((file, index) => (
                       <div
@@ -174,9 +150,7 @@ const ToolPage = () => {
 
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-medium">{file.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatBytes(file.size)}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{formatBytes(file.size)}</p>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -223,9 +197,13 @@ const ToolPage = () => {
               )}
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
-                <Button onClick={run} disabled={!canRun} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  {tool.title} now
-                  <ChevronRight className="size-4 ml-1" />
+                <Button
+                  onClick={runTool}
+                  disabled={!canRun}
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  {tool.title} now <ChevronRight className="size-4 ml-1" />
                 </Button>
 
                 {files.length > 0 && (
@@ -238,7 +216,13 @@ const ToolPage = () => {
           )}
 
           {(state === "uploading" || state === "processing") && (
-            <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-10 text-center">
+            <motion.div
+              key="processing"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-10 text-center"
+            >
               <Loader2 className="mx-auto size-10 text-primary animate-spin" />
               <p className="mt-4 font-medium">{state === "uploading" ? "Preparing your file…" : "Processing in your browser…"}</p>
               <p className="text-sm text-muted-foreground mt-1">No uploads to our servers for this step.</p>
@@ -247,7 +231,12 @@ const ToolPage = () => {
           )}
 
           {state === "success" && result && (
-            <motion.div key="success" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="py-8 text-center">
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="py-8 text-center"
+            >
               <div className="mx-auto grid place-items-center size-14 rounded-full bg-primary-soft text-primary">
                 <CheckCircle2 className="size-7" />
               </div>
@@ -256,10 +245,13 @@ const ToolPage = () => {
               <p className="text-sm text-muted-foreground mt-1">{result.filename} · {formatBytes(result.blob.size)}</p>
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                <Button size="lg" onClick={() => downloadBlob(result.blob, result.filename)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Button
+                  size="lg"
+                  onClick={() => downloadBlob(result.blob, result.filename)}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
                   <Download className="size-4 mr-1.5" /> Download
                 </Button>
-
                 <Button size="lg" variant="outline" onClick={reset}>
                   <RotateCcw className="size-4 mr-1.5" /> Process another
                 </Button>
