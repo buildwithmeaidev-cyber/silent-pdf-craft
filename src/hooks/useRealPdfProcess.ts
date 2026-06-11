@@ -62,7 +62,11 @@ export function useRealPdfProcess() {
 
       const mergedBytes = await mergedPdf.save();
 
+<<<<<<< HEAD
       const blob = new Blob([mergedBytes as BlobPart], {
+=======
+      const blob = new Blob([mergedBytes], {
+>>>>>>> security-fix-jspdf
         type: "application/pdf",
       });
 
