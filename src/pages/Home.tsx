@@ -238,6 +238,9 @@ const Home = () => {
         </div>
       </section>
 
+      {/* FAQ */}
+      <HomeFaq />
+
       {/* CTA */}
       <section className="py-24">
         <div className="container-px mx-auto max-w-5xl">
