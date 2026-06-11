@@ -39,6 +39,15 @@ const STATIC_META: Record<string, RouteMeta> = {
           "query-input": "required name=search_term_string",
         },
       },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: HOME_FAQ.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      },
     ],
   },
   "/tools": {
