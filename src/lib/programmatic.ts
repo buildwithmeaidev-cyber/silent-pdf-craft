@@ -191,7 +191,35 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
       { q: "Can I reorder pages, not just files?", a: "This tool merges full files in the order you set. To shuffle individual pages, use Reorder Pages after merging." },
       { q: "Will the merged PDF be searchable?", a: "Yes. Selectable text from each source PDF stays selectable in the merged file." },
     ],
-    relatedVariants: ["merge-2-pdfs"],
+    relatedVariants: ["merge-2-pdfs", "merge-3-pdfs"],
+  },
+  {
+    slug: "merge-3-pdfs",
+    parentSlug: "merge-pdf",
+    title: "Merge 3 PDFs",
+    seoTitle: "Merge 3 PDFs into One — Combine Three PDF Files Free | silentPDF",
+    metaDescription:
+      "Combine three PDFs into a single document. Reorder, preview, and download — runs in your browser, no signup.",
+    intent: "For combining three files cleanly — cover, body, appendix; or ID, address proof, bank statement.",
+    scenario:
+      "Three is the awkward number. Too many for a quick attach-each-one email, too few to bother with a folder. Common cases: cover letter + resume + portfolio; ID + address proof + photo; intro + report + appendix. This page is built for that shape.",
+    bullets: [
+      "Drop three files in any order, then sort them top-to-bottom.",
+      "Pages stay exactly as they are — no re-render or font swap.",
+      "Single clean PDF out, no watermark, no signup.",
+      "Runs in your browser; nothing uploaded.",
+    ],
+    howItWorks: [
+      { name: "Add all three PDFs", text: "Drop them into the upload area in any order." },
+      { name: "Sort them", text: "Move each one up or down so the order matches what you want." },
+      { name: "Merge and download", text: "We stitch them locally and download the combined PDF." },
+    ],
+    faq: [
+      { q: "Does the order matter?", a: "Yes — the order in the list is the order in the final PDF. Top of the list becomes page 1." },
+      { q: "Can the three PDFs be different page sizes?", a: "Yes. Each file keeps its own page size in the merged document. A4 mixed with Letter is fine." },
+      { q: "Will all three files be processed in my browser?", a: "Yes. All three are read into memory, merged, and saved locally. Nothing is uploaded." },
+    ],
+    relatedVariants: ["merge-2-pdfs", "merge-multiple-pdfs"],
   },
 
   // ---------- PDF TO WORD ----------
