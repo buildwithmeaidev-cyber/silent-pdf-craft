@@ -305,10 +305,36 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
       { q: "What about fonts I don't have installed?", a: "Word substitutes the closest match available on your system. The text reads identically; only the visual font changes." },
       { q: "Will images and charts survive?", a: "Yes. Images embed as pictures. Charts come over as images, not editable chart objects." },
     ],
-    relatedVariants: ["pdf-to-word-online", "pdf-to-word-for-resume"],
+    relatedVariants: ["pdf-to-word-online", "pdf-to-word-for-resume", "convert-scanned-pdf-to-word"],
   },
-
-  // ---------- E-SIGN ----------
+  {
+    slug: "convert-scanned-pdf-to-word",
+    parentSlug: "pdf-to-word",
+    title: "Convert Scanned PDF to Word",
+    seoTitle: "Convert Scanned PDF to Word — OCR PDF to Editable .docx | silentPDF",
+    metaDescription:
+      "Turn a scanned PDF into editable Word with OCR. Get selectable text from photos and scans — free, no signup.",
+    intent: "For scanned documents you can't select text in: contracts, old reports, photographed pages.",
+    scenario:
+      "Someone handed you a scanned contract. Your phone scanned a printed form. You opened a 10-year-old report and the text won't even highlight. This page runs OCR automatically and gives you a .docx with real, editable, selectable text.",
+    bullets: [
+      "Automatic OCR — no separate step or setting to toggle.",
+      "Works on English documents most reliably; partial support for other Latin-script languages.",
+      "Output is real text in Word, not an image pasted on a page.",
+      "Photographed pages (slight skew, normal phone light) usually convert cleanly.",
+    ],
+    howItWorks: [
+      { name: "Upload the scanned PDF", text: "Drop the image-based PDF — phone scan, copier scan, or photographed pages." },
+      { name: "OCR runs automatically", text: "We detect there's no selectable text and run recognition before converting." },
+      { name: "Download the editable .docx", text: "Open in Word or Google Docs and edit the text directly." },
+    ],
+    faq: [
+      { q: "How accurate is the OCR?", a: "On clean printed text in good light, accuracy is high — usually 95%+ on body text. Handwriting, faint print, or heavily skewed pages drop accuracy. A quick read-through after conversion is always worth it." },
+      { q: "Will the layout match the scan exactly?", a: "Close, not pixel-perfect. Paragraphs, headings, and basic columns come through. Hand-drawn tables and complex forms may need light cleanup." },
+      { q: "Does it work on non-English documents?", a: "English is most reliable. Other Latin-script languages (Spanish, French, German, Portuguese) work but accuracy varies. Non-Latin scripts aren't currently supported." },
+    ],
+    relatedVariants: ["pdf-to-word-online", "pdf-to-word-with-formatting"],
+  },
   {
     slug: "sign-pdf-online",
     parentSlug: "esign-pdf",
