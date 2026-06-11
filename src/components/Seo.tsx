@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { TOOLS } from "@/lib/tools";
 import { getProgrammatic } from "@/lib/programmatic";
 import { getPost, POSTS } from "@/content/blog/posts";
+import { HOME_FAQ } from "@/components/home/HomeFaq";
 
 const SITE_URL = "https://silentpdfai.pages.dev";
 const SITE_NAME = "silentPDF AI";
