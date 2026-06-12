@@ -45,10 +45,16 @@ export default function ProtectPdf() {
     const buf = await fileToArrayBuffer(file);
     const pdfDoc = await PDFDocument.load(buf);
 
+    // Generate a cryptographically random owner password independent of the user password.
+    // This prevents recipients from deriving the owner password and stripping permissions.
+    const ownerPassword = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+
     // pdf-lib supports encryption via save options
     const bytes = await pdfDoc.save({
       userPassword: password,
-      ownerPassword: password + '_owner',
+      ownerPassword,
       permissions: {
         printing: allowPrinting ? 'highResolution' : 'none',
         modifying: allowEditing,
