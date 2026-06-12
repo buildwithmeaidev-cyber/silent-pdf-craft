@@ -1,7 +1,7 @@
 // src/core/engine/useToolProcessor.ts
 import { useState, useCallback, useMemo } from "react";
 import { PDFDocument } from "pdf-lib";
-import { saveAs } from "file-saver"; // for download helper
+// (file-saver removed; using anchor download instead)
 
 // Types for processed PDF
 interface ProcessedPdf {

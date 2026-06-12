@@ -13,7 +13,7 @@ type WorkerMessage =
   | { id: string; result: unknown }
   | { id: string; error: string };
 
-type AbortSignal = AbortSignal; // alias for clarity
+// (AbortSignal uses the global DOM type)
 
 // Simple fingerprint for caching
 function fingerprint(file: File): string {

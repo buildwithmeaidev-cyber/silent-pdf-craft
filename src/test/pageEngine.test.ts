@@ -9,7 +9,7 @@ async function createPdfWithPages(pageCount: number): Promise<File> {
     pdfDoc.addPage();
   }
   const pdfBytes = await pdfDoc.save();
-  return new File([pdfBytes], `test_${pageCount}_pages.pdf`, { type: 'application/pdf' });
+  return new File([pdfBytes as BlobPart], `test_${pageCount}_pages.pdf`, { type: 'application/pdf' });
 }
 
 describe('PageEngine', () => {
