@@ -259,6 +259,39 @@ const ToolPage = () => {
                   <RotateCcw className="size-4 mr-1.5" /> Process another
                 </Button>
               </div>
+
+              {tool.relatedSlugs?.length > 0 && (
+                <div className="mt-10 text-left border-t pt-6">
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground text-center">
+                    Suggested next
+                  </p>
+                  <div className="mt-4 grid sm:grid-cols-3 gap-3">
+                    {tool.relatedSlugs.slice(0, 3).map((slug) => {
+                      const related = getTool(slug);
+                      if (!related) return null;
+                      const RIcon = related.icon;
+                      return (
+                        <Link
+                          key={slug}
+                          to={`/tools/${slug}`}
+                          className="group flex items-start gap-3 rounded-xl border bg-card p-4 hover:border-primary/40 hover:shadow-soft transition-all text-left"
+                        >
+                          <div className={cn(
+                            "grid place-items-center size-9 rounded-lg shrink-0",
+                            related.accent === "blue" ? "bg-primary-soft text-primary" : "bg-accent-soft text-accent"
+                          )}>
+                            <RIcon className="size-4" strokeWidth={1.8} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{related.title}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{related.short}</p>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
