@@ -422,6 +422,17 @@ export const TOOLS: ToolDef[] = [
       { q: "Can recipients still copy text from the PDF?", a: "By default, yes. Restricting copy, print, and edit permissions is part of the AES encryption tier. Free protection is focused on access control, not granular permissions." },
     ],
     relatedSlugs: ["watermark-pdf", "esign-pdf", "compress-pdf"],
+    bestPractices: [
+      "Use a password of 12+ characters mixing letters, numbers and symbols. Short passwords are cracked offline in minutes.",
+      "Send the password through a different channel than the file — text the password if you emailed the PDF.",
+      "Protect the final, merged version. If you protect each file then merge, only the first file's protection survives.",
+      "Keep a clean, unprotected master copy somewhere safe. Lost-password recovery isn't a thing with strong PDF encryption.",
+    ],
+    commonMistakes: [
+      "Using the recipient's name or '1234' as the password.",
+      "Putting the password in the same email as the file (defeats the entire point).",
+      "Assuming protection prevents printing or copying — that needs owner-level permission controls, not just an open password.",
+    ],
   },
   {
     slug: "edit-pdf", kind: "edit", title: "Edit PDF",
