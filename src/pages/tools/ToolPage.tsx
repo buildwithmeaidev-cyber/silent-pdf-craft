@@ -1,5 +1,6 @@
 // src/pages/tools/ToolPage.tsx
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -188,6 +189,89 @@ const ToolPage = () => {
                   </div>
                 </div>
               )}
+
+              {/* Step 3 — Required inputs (P2 workflow) */}
+              {files.length > 0 && (tool.needsRange || tool.needsPassword || tool.needsRotation || tool.kind === "compress") && (
+                <div className="mt-6 rounded-2xl border bg-background p-5 space-y-4">
+                  <div className="flex items-baseline justify-between">
+                    <h3 className="font-medium">Settings</h3>
+                    <span className="text-xs text-muted-foreground">Step 3 of 4</span>
+                  </div>
+
+                  {tool.needsPassword && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Password (min 4 chars)</label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Choose a strong password"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">Recipients will need this password to open the PDF.</p>
+                    </div>
+                  )}
+
+                  {tool.needsRange && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Page range</label>
+                      <input
+                        type="text"
+                        value={range}
+                        onChange={(e) => setRange(e.target.value)}
+                        placeholder="e.g. 1-3, 5, 7-9"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">Use commas to separate, dashes for ranges.</p>
+                    </div>
+                  )}
+
+                  {tool.needsRotation && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Rotation</label>
+                      <div className="flex gap-2">
+                        {[90, 180, 270].map((deg) => (
+                          <button
+                            key={deg}
+                            type="button"
+                            onClick={() => setRotation(deg as 90 | 180 | 270)}
+                            className={cn(
+                              "flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition",
+                              rotation === deg ? "border-primary bg-primary-soft text-primary" : "hover:bg-secondary"
+                            )}
+                          >
+                            {deg}°
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {tool.kind === "compress" && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Compression level</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(["light", "medium", "strong"] as const).map((lvl) => (
+                          <button
+                            key={lvl}
+                            type="button"
+                            onClick={() => setCompressionLevel(lvl)}
+                            className={cn(
+                              "rounded-lg border px-3 py-2 text-sm font-medium capitalize transition",
+                              compressionLevel === lvl ? "border-primary bg-primary-soft text-primary" : "hover:bg-secondary"
+                            )}
+                          >
+                            {lvl}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-1.5 text-xs text-muted-foreground">Stronger = smaller file, lower image quality.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+
 
               {state === "error" && error && (
                 <div className="mt-5 flex gap-3 rounded-xl border border-accent/30 bg-accent-soft p-4">

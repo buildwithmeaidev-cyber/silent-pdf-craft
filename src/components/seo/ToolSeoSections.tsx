@@ -20,9 +20,26 @@ export default function ToolSeoSections({ slug }: Props) {
     .map((s) => TOOLS.find((t) => t.slug === s))
     .filter(Boolean) as ToolDef[];
 
+  const quickAnswer = tool.faq?.[0];
+
   return (
     <section className="bg-white border-t border-slate-200">
       <div className="mx-auto max-w-4xl px-4 md:px-6 py-16 md:py-20 space-y-16">
+        {/* AI-extractable Quick Answer (P5) */}
+        {quickAnswer && (
+          <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-6 md:p-8">
+            <p className="text-xs uppercase tracking-[0.18em] text-blue-700 font-semibold">
+              Quick answer
+            </p>
+            <p className="mt-3 text-lg md:text-xl font-semibold text-slate-900 leading-snug">
+              {quickAnswer.q}
+            </p>
+            <p className="mt-3 text-base text-slate-700 leading-relaxed">
+              {quickAnswer.a}
+            </p>
+          </div>
+        )}
+
         {/* Intent + What/When */}
         <div className="space-y-6">
           <p className="text-sm uppercase tracking-wide text-blue-600 font-semibold">
@@ -36,6 +53,7 @@ export default function ToolSeoSections({ slug }: Props) {
             {tool.whatItDoes}
           </p>
         </div>
+
 
         {/* When to use */}
         {tool.whenToUse?.length > 0 && (
@@ -111,6 +129,38 @@ export default function ToolSeoSections({ slug }: Props) {
             </div>
           </div>
         )}
+
+        {/* Best practices (P4) */}
+        {tool.bestPractices && tool.bestPractices.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold text-slate-900">Best practices</h3>
+            <ul className="space-y-3">
+              {tool.bestPractices.map((b, i) => (
+                <li key={i} className="flex gap-3 text-slate-700">
+                  <Check className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Common mistakes (P4) */}
+        {tool.commonMistakes && tool.commonMistakes.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold text-slate-900">Common mistakes to avoid</h3>
+            <ul className="space-y-3">
+              {tool.commonMistakes.map((m, i) => (
+                <li key={i} className="flex gap-3 text-slate-700">
+                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600 text-xs font-bold">!</span>
+                  <span>{m}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+
 
         {/* Keywords / topics (subtle) */}
         {tool.keywords?.length > 0 && (
