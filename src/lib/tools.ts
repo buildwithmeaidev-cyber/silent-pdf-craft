@@ -243,6 +243,17 @@ export const TOOLS: ToolDef[] = [
       { q: "What file size can I convert?", a: "Up to about 50MB works smoothly. For very large reports, split the PDF first and convert the parts." },
     ],
     relatedSlugs: ["word-to-pdf", "compress-pdf", "merge-pdf"],
+    bestPractices: [
+      "Use PDFs that were exported from Word, Pages or Google Docs — they convert nearly perfectly because the text layer is intact.",
+      "For scanned PDFs, run OCR first; converting an image-only PDF produces a Word file full of pictures, not editable text.",
+      "Open the result in Word and run 'Clear All Formatting' on stubborn sections rather than wrestling with inherited styles.",
+      "Convert one chapter at a time for books or thesis files. Smaller chunks = fewer layout surprises.",
+    ],
+    commonMistakes: [
+      "Expecting pixel-perfect layout. Complex multi-column magazines and InDesign exports will reflow.",
+      "Editing the converted .docx and then re-exporting to PDF expecting the original look — fonts often aren't embedded the same way.",
+      "Converting a 300-page scanned contract without OCR and getting a Word file with zero editable text.",
+    ],
   },
   {
     slug: "word-to-pdf", kind: "word-to-pdf", title: "Word to PDF",
