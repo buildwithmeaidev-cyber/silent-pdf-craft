@@ -90,6 +90,17 @@ export const TOOLS: ToolDef[] = [
       { q: "Is the merged PDF watermarked?", a: "No. The output is a clean PDF with no silentPDF branding added." },
     ],
     relatedSlugs: ["split-pdf", "reorder-pdf", "compress-pdf"],
+    bestPractices: [
+      "Rename files with a number prefix (01-cover.pdf, 02-resume.pdf) so the default upload order matches your merge order.",
+      "Flatten signed or form-filled PDFs before merging if the originals came from different software — it prevents weird form-field collisions.",
+      "Keep individual files under ~50MB each on average laptops; split a giant scan first, then merge.",
+      "Run Compress after merging large reports — combined files often have duplicated fonts that compression cleans up.",
+    ],
+    commonMistakes: [
+      "Uploading files in the wrong order and not reordering before hitting merge.",
+      "Merging password-protected PDFs without unlocking them first — the resulting file may refuse to open.",
+      "Combining 30+ scanned PDFs at once and freezing the browser tab. Merge in batches instead.",
+    ],
   },
   {
     slug: "split-pdf", kind: "split", title: "Split PDF",
