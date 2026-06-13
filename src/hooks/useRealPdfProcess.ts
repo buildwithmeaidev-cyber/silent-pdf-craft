@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { PDFDocument } from "pdf-lib";
+// PDFDocument import removed; merge logic moved to pdfOperations
 import { PROCESS_MESSAGES } from "@/constants/processMessages";
+import { processTool } from "@/core/pdf/pdfOperations";
 
 export function useRealPdfProcess() {
   const [loading, setLoading] = useState(false);
@@ -22,22 +23,20 @@ export function useRealPdfProcess() {
     try {
       setLoading(true);
       setError("");
-
       if (!files.length) {
         throw new Error("No PDF files selected.");
       }
-
+      // Revoke any previous URL
       if (downloadUrl) {
         URL.revokeObjectURL(downloadUrl);
       }
-
       setDownloadUrl(null);
-
       setMessage(PROCESS_MESSAGES.validating);
-
-      const mergedPdf = await PDFDocument.create();
-
+      // Delegate merge to shared PDF operations layer
+      const result = await processTool('merge', files);
+      setDownloadUrl(result.url);
       setMessage(
+
         `Preparing ${files.length} PDF file${
           files.length > 1 ? "s" : ""
         }...`
@@ -74,14 +73,12 @@ export function useRealPdfProcess() {
         `Successfully merged ${files.length} PDF file${
           files.length > 1 ? "s" : ""
         }. Your document is ready to download.`
+        `Successfully merged ${files.length} PDF file${files.length > 1 ? 's' : ''}. Your document is ready to download.`
+
       );
     } catch (err) {
       console.error(err);
-
-      setError(
-        "Unable to process the PDF files. Please try again."
-      );
-
+      setError("Unable to process the PDF files. Please try again.");
       setMessage(PROCESS_MESSAGES.error);
     } finally {
       setLoading(false);

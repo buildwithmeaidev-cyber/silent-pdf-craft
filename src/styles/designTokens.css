@@ -1,0 +1,100 @@
+/* src/styles/designTokens.css */
+:root {
+  /* Colors */
+  --c-bg: #FAFAFA;
+  --c-bg-dark: #1A1A1A;
+  --c-primary: #0066FF;
+  --c-muted: #6E7A88;
+  --c-border: #E2E8F0;
+  --c-success: #28A745;
+  --c-error: #DC3545;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --fs-hero: 3rem;
+  --fs-h1: 2.5rem;
+  --fs-h2: 2rem;
+  --fs-h3: 1.5rem;
+  --fs-body: 1rem;
+  --lh-body: 1.5;
+
+  /* Spacing */
+  --sp-xs: 4px;
+  --sp-sm: 8px;
+  --sp-md: 16px;
+  --sp-lg: 24px;
+  --sp-xl: 40px;
+
+  /* Radius */
+  --radius: 8px;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-bg: var(--c-bg-dark);
+    --c-muted: #B0B0B0;
+  }
+}
+
+/* Global styles */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--c-bg);
+  color: var(--c-muted);
+  line-height: var(--lh-body);
+  margin: 0;
+  padding: 0;
+}
+
+/* Utility classes */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.btn--primary {
+  background-color: var(--c-primary);
+  color: #fff;
+}
+.btn--primary:hover {
+  transform: translateY(-2px);
+  background-color: #0055e6;
+}
+.btn--ghost {
+  background: transparent;
+  border: 1px solid var(--c-border);
+  color: var(--c-muted);
+}
+.btn--ghost:hover {
+  background-color: rgba(0, 102, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: var(--sp-md);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+.skeleton {
+  background: #e0e0e0;
+  border-radius: var(--radius);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+@keyframes pulse {
+  0% { opacity: 0.9; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0.9; }
+}

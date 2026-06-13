@@ -1,5 +1,5 @@
 // src/core/pdf/pdfOperations.ts
-// Universal PDF Engine – shared API for all PDF tools.
+// Universal PDF Engine – shared API
 
 import { pdfEngine } from '@/core/engine/pdfEngine';
 import type { CompressionConfig, CompressionLevel } from '@/lib/pdf';
@@ -58,3 +58,19 @@ export async function deletePages({ file, range }: DeleteOptions): Promise<{ fil
   const result = await pdfEngine.removePages(file, range);
   return { filename: result.filename, blob: result.blob };
 }
+
+/** Generic processor that routes tool requests to the appropriate function. */
+export async function processTool(params: { type: string; files?: File[]; file?: File; range?: string; pages?: string; angle?: number }): Promise<{ filename: string; blob: Blob; url: string }> {
+  switch (params.type) {
+    case 'merge':
+      if (!params.files) throw new Error('Merge requires files');
+      const mergeRes = await merge({ files: params.files });
+      const mergeUrl = URL.createObjectURL(mergeRes.blob);
+      return { filename: mergeRes.filename, blob: mergeRes.blob, url: mergeUrl };
+    // Future cases: split, rotate, compress, delete, extract
+    default:
+      throw new Error(`Unsupported tool type: ${params.type}`);
+  }
+}
+
+// TODO: add other operations like protect, export, etc.

@@ -6,21 +6,22 @@ import { PDFDocument } from 'pdf-lib';
 import { fileToArrayBuffer, downloadFile, loadPdfPages } from '@/utils/pdfUtils';
 import FileUploadZone from '@/components/pdf/FileUploadZone';
 import ToolPageLayout from '@/components/pdf/ToolPageLayout';
-import { motion } from 'framer-motion';
 
 const SIGN_MODES = { DRAW: 'draw', TYPE: 'type', UPLOAD: 'upload' };
 
 export default function SignPdf() {
-  const [file, setFile] = useState(null);
-  const [pdfPages, setPdfPages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [signMode, setSignMode] = useState(SIGN_MODES.DRAW);
-  const [typedName, setTypedName] = useState('');
-  const [signFont, setSignFont] = useState('cursive');
-  const [signColor, setSignColor] = useState('#1e1b4b');
-  const [signatureDataUrl, setSignatureDataUrl] = useState(null);
-  const [sigPosition, setSigPosition] = useState(null);
-  const [saving, setSaving] = useState(false);
+ const [file, setFile] = useState(null);
+const [pdfPages, setPdfPages] = useState([]);
+const [loading, setLoading] = useState(false);
+const [signMode, setSignMode] = useState(SIGN_MODES.DRAW);
+const [typedName, setTypedName] = useState('');
+const [signFont, setSignFont] = useState('cursive');
+const [signColor, setSignColor] = useState('#1e1b4b');
+const [signatureDataUrl, setSignatureDataUrl] = useState(null);
+const [sigPosition, setSigPosition] = useState(null);
+const [saving, setSaving] = useState(false);
+
+const [currentPage, setCurrentPage] = useState(0);
 
   const sigCanvasRef = useRef(null);
   const pdfCanvasRef = useRef(null);
