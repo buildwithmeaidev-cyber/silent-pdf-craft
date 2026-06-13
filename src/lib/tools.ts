@@ -188,6 +188,17 @@ export const TOOLS: ToolDef[] = [
       { q: "Why is my PDF still large after compressing?", a: "Some PDFs are already optimized, or contain vector graphics and embedded fonts that can't be shrunk much without breaking them. In that case, Split out the pages you actually need before compressing." },
     ],
     relatedSlugs: ["merge-pdf", "split-pdf", "pdf-to-word"],
+    bestPractices: [
+      "Pick Medium first — it solves 90% of email-attachment problems without visible quality loss.",
+      "For resume or portfolio PDFs going through ATS portals, target 1MB and check that text is still selectable afterwards.",
+      "If the file is mostly scanned images, Strong compression gives much bigger savings than on text-only PDFs.",
+      "Compress once. Re-compressing an already-compressed PDF gives diminishing returns and visible artifacts.",
+    ],
+    commonMistakes: [
+      "Using Strong on a contract or invoice and ending up with blurry signatures or stamps.",
+      "Expecting compression to fix a 100MB file that's huge because it has 400 photo pages — split first, then compress each chunk.",
+      "Compressing before merging multiple files. Merge first, then compress the final once — fonts dedupe better that way.",
+    ],
   },
   {
     slug: "pdf-to-word", kind: "pdf-to-word", title: "PDF to Word",
