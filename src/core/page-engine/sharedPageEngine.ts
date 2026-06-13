@@ -29,8 +29,14 @@ export async function loadPdf(source: File | Blob | Uint8Array): Promise<PdfHand
   if (source instanceof Uint8Array) {
     bytes = source;
   } else {
-    // Use Response to extract array buffer for File/Blob
-    const buf = await new Response(source).arrayBuffer();
+    // Prefer native arrayBuffer if available (File/Blob in environments that support it), otherwise fallback to Response
+    let buf: ArrayBuffer;
+    if (typeof (source as any).arrayBuffer === 'function') {
+      buf = await (source as any).arrayBuffer();
+    } else {
+      const resp = new Response(source as any);
+      buf = await resp.arrayBuffer();
+    }
     bytes = new Uint8Array(buf);
   }
   // Precompute page count
