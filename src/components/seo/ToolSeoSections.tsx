@@ -130,6 +130,38 @@ export default function ToolSeoSections({ slug }: Props) {
           </div>
         )}
 
+        {/* Best practices (P4) */}
+        {tool.bestPractices && tool.bestPractices.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold text-slate-900">Best practices</h3>
+            <ul className="space-y-3">
+              {tool.bestPractices.map((b, i) => (
+                <li key={i} className="flex gap-3 text-slate-700">
+                  <Check className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Common mistakes (P4) */}
+        {tool.commonMistakes && tool.commonMistakes.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold text-slate-900">Common mistakes to avoid</h3>
+            <ul className="space-y-3">
+              {tool.commonMistakes.map((m, i) => (
+                <li key={i} className="flex gap-3 text-slate-700">
+                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600 text-xs font-bold">!</span>
+                  <span>{m}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+
+
         {/* Keywords / topics (subtle) */}
         {tool.keywords?.length > 0 && (
           <div className="space-y-3">
