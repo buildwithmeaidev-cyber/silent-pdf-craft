@@ -53,11 +53,8 @@ const sections = [
 
 const Privacy = () => (
   <>
-    <Seo
-      title="Privacy & Trust Center — silentPDF AI"
-      description="How silentPDF AI handles your files: browser-first processing, zero document storage, TLS in transit, and automatic deletion within minutes for any server-assisted job."
-      canonical="/privacy"
-    />
+    <Seo />
+
     <div className="container-px mx-auto max-w-3xl py-16 md:py-24">
       <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Trust Center</span>
       <h1 className="mt-3 font-serif text-5xl md:text-6xl leading-tight text-balance">Your files, your business.</h1>
