@@ -90,6 +90,17 @@ export const TOOLS: ToolDef[] = [
       { q: "Is the merged PDF watermarked?", a: "No. The output is a clean PDF with no silentPDF branding added." },
     ],
     relatedSlugs: ["split-pdf", "reorder-pdf", "compress-pdf"],
+    bestPractices: [
+      "Rename files with a number prefix (01-cover.pdf, 02-resume.pdf) so the default upload order matches your merge order.",
+      "Flatten signed or form-filled PDFs before merging if the originals came from different software — it prevents weird form-field collisions.",
+      "Keep individual files under ~50MB each on average laptops; split a giant scan first, then merge.",
+      "Run Compress after merging large reports — combined files often have duplicated fonts that compression cleans up.",
+    ],
+    commonMistakes: [
+      "Uploading files in the wrong order and not reordering before hitting merge.",
+      "Merging password-protected PDFs without unlocking them first — the resulting file may refuse to open.",
+      "Combining 30+ scanned PDFs at once and freezing the browser tab. Merge in batches instead.",
+    ],
   },
   {
     slug: "split-pdf", kind: "split", title: "Split PDF",
@@ -177,6 +188,17 @@ export const TOOLS: ToolDef[] = [
       { q: "Why is my PDF still large after compressing?", a: "Some PDFs are already optimized, or contain vector graphics and embedded fonts that can't be shrunk much without breaking them. In that case, Split out the pages you actually need before compressing." },
     ],
     relatedSlugs: ["merge-pdf", "split-pdf", "pdf-to-word"],
+    bestPractices: [
+      "Pick Medium first — it solves 90% of email-attachment problems without visible quality loss.",
+      "For resume or portfolio PDFs going through ATS portals, target 1MB and check that text is still selectable afterwards.",
+      "If the file is mostly scanned images, Strong compression gives much bigger savings than on text-only PDFs.",
+      "Compress once. Re-compressing an already-compressed PDF gives diminishing returns and visible artifacts.",
+    ],
+    commonMistakes: [
+      "Using Strong on a contract or invoice and ending up with blurry signatures or stamps.",
+      "Expecting compression to fix a 100MB file that's huge because it has 400 photo pages — split first, then compress each chunk.",
+      "Compressing before merging multiple files. Merge first, then compress the final once — fonts dedupe better that way.",
+    ],
   },
   {
     slug: "pdf-to-word", kind: "pdf-to-word", title: "PDF to Word",
@@ -221,6 +243,17 @@ export const TOOLS: ToolDef[] = [
       { q: "What file size can I convert?", a: "Up to about 50MB works smoothly. For very large reports, split the PDF first and convert the parts." },
     ],
     relatedSlugs: ["word-to-pdf", "compress-pdf", "merge-pdf"],
+    bestPractices: [
+      "Use PDFs that were exported from Word, Pages or Google Docs — they convert nearly perfectly because the text layer is intact.",
+      "For scanned PDFs, run OCR first; converting an image-only PDF produces a Word file full of pictures, not editable text.",
+      "Open the result in Word and run 'Clear All Formatting' on stubborn sections rather than wrestling with inherited styles.",
+      "Convert one chapter at a time for books or thesis files. Smaller chunks = fewer layout surprises.",
+    ],
+    commonMistakes: [
+      "Expecting pixel-perfect layout. Complex multi-column magazines and InDesign exports will reflow.",
+      "Editing the converted .docx and then re-exporting to PDF expecting the original look — fonts often aren't embedded the same way.",
+      "Converting a 300-page scanned contract without OCR and getting a Word file with zero editable text.",
+    ],
   },
   {
     slug: "word-to-pdf", kind: "word-to-pdf", title: "Word to PDF",
@@ -389,6 +422,17 @@ export const TOOLS: ToolDef[] = [
       { q: "Can recipients still copy text from the PDF?", a: "By default, yes. Restricting copy, print, and edit permissions is part of the AES encryption tier. Free protection is focused on access control, not granular permissions." },
     ],
     relatedSlugs: ["watermark-pdf", "esign-pdf", "compress-pdf"],
+    bestPractices: [
+      "Use a password of 12+ characters mixing letters, numbers and symbols. Short passwords are cracked offline in minutes.",
+      "Send the password through a different channel than the file — text the password if you emailed the PDF.",
+      "Protect the final, merged version. If you protect each file then merge, only the first file's protection survives.",
+      "Keep a clean, unprotected master copy somewhere safe. Lost-password recovery isn't a thing with strong PDF encryption.",
+    ],
+    commonMistakes: [
+      "Using the recipient's name or '1234' as the password.",
+      "Putting the password in the same email as the file (defeats the entire point).",
+      "Assuming protection prevents printing or copying — that needs owner-level permission controls, not just an open password.",
+    ],
   },
   {
     slug: "edit-pdf", kind: "edit", title: "Edit PDF",
@@ -474,6 +518,17 @@ export const TOOLS: ToolDef[] = [
       { q: "Can I sign multiple places?", a: "Yes. Add the signature once and place it as many times as the document needs — every signature line or initial spot." },
     ],
     relatedSlugs: ["edit-pdf", "protect-pdf", "watermark-pdf"],
+    bestPractices: [
+      "Sign on the actual signature line — drag the signature box so it sits where the printed name appears, not floating above it.",
+      "Add a typed date and your printed name next to the signature. Many recipients reject signatures without one or both.",
+      "Flatten after signing if you're sending to government, legal or banking portals — they often reject 'live' signature fields.",
+      "Use a black or dark navy signature, not blue. Scanners reproduce dark signatures more reliably.",
+    ],
+    commonMistakes: [
+      "Signing every page when only the last page or specific initial boxes are required.",
+      "Using a giant signature that overlaps the next paragraph of text.",
+      "E-signing a contract draft, then sending the unsigned version by accident — always re-download and double-check the file you attach.",
+    ],
   },
   {
     slug: "watermark-pdf", kind: "watermark", title: "Watermark PDF",
