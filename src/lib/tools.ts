@@ -518,6 +518,17 @@ export const TOOLS: ToolDef[] = [
       { q: "Can I sign multiple places?", a: "Yes. Add the signature once and place it as many times as the document needs — every signature line or initial spot." },
     ],
     relatedSlugs: ["edit-pdf", "protect-pdf", "watermark-pdf"],
+    bestPractices: [
+      "Sign on the actual signature line — drag the signature box so it sits where the printed name appears, not floating above it.",
+      "Add a typed date and your printed name next to the signature. Many recipients reject signatures without one or both.",
+      "Flatten after signing if you're sending to government, legal or banking portals — they often reject 'live' signature fields.",
+      "Use a black or dark navy signature, not blue. Scanners reproduce dark signatures more reliably.",
+    ],
+    commonMistakes: [
+      "Signing every page when only the last page or specific initial boxes are required.",
+      "Using a giant signature that overlaps the next paragraph of text.",
+      "E-signing a contract draft, then sending the unsigned version by accident — always re-download and double-check the file you attach.",
+    ],
   },
   {
     slug: "watermark-pdf", kind: "watermark", title: "Watermark PDF",
