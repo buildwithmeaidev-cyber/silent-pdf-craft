@@ -42,6 +42,8 @@ export interface ToolDef {
   useCases: { title: string; body: string }[];
   faq: { q: string; a: string }[];
   relatedSlugs: string[];
+  bestPractices?: string[];
+  commonMistakes?: string[];
 }
 
 export const TOOLS: ToolDef[] = [
