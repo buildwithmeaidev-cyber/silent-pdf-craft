@@ -24,34 +24,20 @@ export default function MergePDF() {
 
   const handleMerge = async () => {
     await process.mergePDFs(files.map((f) => f.file));
-
-
-export default function MergePDF() {
-  const { files, addFiles, removeFile, clearFiles, uploadErrors, clearErrors } = useToolFiles();
-  const { mergePDFs, loading, message, error, downloadUrl, clearState, setError, retry } = useToolProcessor();
-
-  const handleMerge = async () => {
-    await mergePDFs(files.map((f) => f.file));
   };
 
   const handleReset = () => {
     clearFiles();
     process.clearState?.();
-
-
-    clearState();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
-
     <ToolLayout
       title="Merge PDF"
       description="Combine multiple PDF files into one document."
     >
-      <ToolUpload
-        onFiles={(files) => addFiles(files)}
-      />
+      <ToolUpload onFiles={addFiles} />
 
       {uploadErrors.length > 0 && (
         <ErrorBanner
@@ -63,7 +49,7 @@ export default function MergePDF() {
       {process.error && (
         <ErrorBanner
           message={process.error}
-          onClose={() => process.setError("")}
+          onClose={() => process.setError?.("")}
           onRetry={() =>
             process.retry?.(files.map((f) => f.file))
           }
@@ -75,19 +61,6 @@ export default function MergePDF() {
           title="No PDFs Uploaded"
           description="Upload two or more PDF files to merge them."
         />
-    <ToolLayout title="Merge PDF" description="Combine multiple PDF files into one document.">
-      <ToolUpload onFiles={addFiles} />
-
-      {uploadErrors.length > 0 && (
-        <ErrorBanner message={uploadErrors.join(", ")} onClose={clearErrors} />
-      )}
-
-      {error && (
-        <ErrorBanner message={error} onClose={() => setError("")} onRetry={() => retry(files.map((f) => f.file))} />
-      )}
-
-      {files.length === 0 && (
-        <EmptyState title="No PDFs Uploaded" description="Upload two or more PDF files to merge them." />
       )}
 
       {files.length > 0 && (
@@ -98,7 +71,6 @@ export default function MergePDF() {
               file={file}
               onRemove={() => removeFile(file.id)}
             />
-            <ToolFileCard key={file.id} file={file} onRemove={() => removeFile(file.id)} />
           ))}
         </div>
       )}
@@ -118,7 +90,7 @@ export default function MergePDF() {
       )}
 
       <ToolActionBar
-        disabled={!files.length || process.loading}
+        disabled={files.length < 2 || process.loading}
         loading={process.loading}
         label="Merge PDFs"
         onClick={handleMerge}
