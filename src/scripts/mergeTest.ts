@@ -23,6 +23,7 @@ async function createPdf(text: string): Promise<File> {
     type: 'application/pdf',
     lastModified: Date.now(),
     async arrayBuffer() { return bytes.buffer; },
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     stream() { const { Readable } = require('stream'); return Readable.from(bytes); },
   } as unknown as File;
   return file;

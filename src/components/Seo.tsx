@@ -73,8 +73,10 @@ const STATIC_META: Record<string, RouteMeta> = {
 };
 
 function toolSlugFromPath(pathname: string): string | null {
-  const match = pathname.match(/^\/tools\/([^/]+)\/?$/);
-  return match ? match[1] : null;
+  const match = pathname.match(/^\/([^/]+)\/?$/);
+  if (!match) return null;
+  const slug = match[1];
+  return TOOLS.some((t) => t.slug === slug) ? slug : null;
 }
 
 function buildToolMeta(slug: string): RouteMeta {
@@ -88,7 +90,7 @@ function buildToolMeta(slug: string): RouteMeta {
   const title = tool.seoTitle ?? `${tool.title} — Free Online PDF Tool | silentPDF`;
   const rawDesc = tool.metaDescription ?? tool.short;
   const description = rawDesc.length > 160 ? rawDesc.slice(0, 157) + "…" : rawDesc;
-  const toolUrl = `${SITE_URL}/tools/${tool.slug}`;
+  const toolUrl = `${SITE_URL}/${tool.slug}`;
 
   const jsonLd: Record<string, unknown>[] = [
     {
@@ -257,10 +259,12 @@ export const Seo = () => {
   const isBlogIndex = pathname === "/blog";
 
   let meta: RouteMeta | null = STATIC_META[pathname] ?? null;
-  if (!meta && toolSlug) meta = buildToolMeta(toolSlug);
   if (!meta && isBlogIndex) meta = buildBlogIndexMeta();
   if (!meta && blogPostMatch) meta = buildBlogPostMeta(blogPostMatch[1]);
-  if (!meta && rootSlugMatch) meta = buildProgrammaticMeta(rootSlugMatch[1]);
+  if (!meta && rootSlugMatch) {
+    const slug = rootSlugMatch[1];
+    meta = buildProgrammaticMeta(slug) || buildToolMeta(slug);
+  }
   if (!meta) {
     meta = {
       title: `${SITE_NAME} — Private PDF tools`,

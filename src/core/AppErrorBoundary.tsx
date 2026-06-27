@@ -40,7 +40,7 @@ export default function AppErrorBoundary({
 }) {
   return (
     <ErrorBoundary
-      FallbackComponent={ErrorFallback as any}
+      FallbackComponent={ErrorFallback as unknown as React.ComponentType<unknown>}
     >
       {children}
     </ErrorBoundary>

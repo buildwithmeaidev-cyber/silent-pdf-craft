@@ -357,7 +357,7 @@ const ToolPage = () => {
                       return (
                         <Link
                           key={slug}
-                          to={`/tools/${slug}`}
+                          to={`/${slug}`}
                           className="group flex items-start gap-3 rounded-xl border bg-card p-4 hover:border-primary/40 hover:shadow-soft transition-all text-left"
                         >
                           <div className={cn(

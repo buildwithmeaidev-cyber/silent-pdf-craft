@@ -212,7 +212,7 @@ export default function ToolSeoSections({ slug }: Props) {
                 return (
                   <Link
                     key={r.slug}
-                    to={`/tools/${r.slug}`}
+                    to={`/${r.slug}`}
                     className="group flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-sm"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">

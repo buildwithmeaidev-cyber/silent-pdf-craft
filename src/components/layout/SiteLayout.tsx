@@ -3,11 +3,13 @@ import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { Seo } from "@/components/Seo";
 import ToolSeoSections from "@/components/seo/ToolSeoSections";
+import { TOOLS } from "@/lib/tools";
 
 export const SiteLayout = () => {
   const { pathname } = useLocation();
-  const toolMatch = pathname.match(/^\/tools\/([^/]+)\/?$/);
-  const toolSlug = toolMatch ? toolMatch[1] : null;
+  const rawSlug = pathname.slice(1).replace(/\/$/, ""); // Remove leading and trailing slash
+  const isValidTool = TOOLS.some((t) => t.slug === rawSlug);
+  const toolSlug = isValidTool ? rawSlug : null;
 
   return (
     <div className="min-h-screen w-full max-w-full flex flex-col">

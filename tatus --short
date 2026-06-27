@@ -1,0 +1,33 @@
+warning: in the working copy of 'public/sitemap.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/PdfDropzone.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/ScrollToTop.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/content/blog/posts.ts', LF will be replaced by CRLF the next time Git touches it
+ index.html                               |    3 [32m+[m[31m-[m
+ package-lock.json                        | 1613 [32m+++++++++++++++++++++++++++++[m[31m-[m
+ package.json                             |    9 [32m+[m[31m-[m
+ public/sitemap.xml                       |   31 [32m+[m
+ src/App.tsx                              |   49 [32m+[m[31m-[m
+ src/components/PdfDropzone.tsx           |    7 [32m+[m[31m-[m
+ src/components/ScrollToTop.tsx           |   12 [32m+[m[31m-[m
+ src/components/Seo.tsx                   |   14 [32m+[m[31m-[m
+ src/components/layout/Footer.tsx         |    4 [32m+[m[31m-[m
+ src/components/layout/SiteLayout.tsx     |    6 [32m+[m[31m-[m
+ src/components/seo/ToolSeoSections.tsx   |    2 [32m+[m[31m-[m
+ src/content/blog/posts.ts                |   10 [32m+[m[31m-[m
+ src/core/AppErrorBoundary.tsx            |    2 [32m+[m[31m-[m
+ src/core/components/PageReorder.tsx      |    4 [32m+[m[31m-[m
+ src/core/engine/withWorkerError.ts       |    2 [32m+[m[31m-[m
+ src/core/page-engine/sharedPageEngine.ts |    6 [32m+[m[31m-[m
+ src/core/pdf/pdfOperations.ts            |   37 [32m+[m[31m-[m
+ src/hooks/useRealPdfProcess.ts           |  139 [32m++[m[31m-[m
+ src/lib/pdf.ts                           |    7 [32m+[m[31m-[m
+ src/lib/programmatic.ts                  |    5 [32m+[m[31m-[m
+ src/main.tsx                             |    6 [32m+[m[31m-[m
+ src/pages/BlogPost.tsx                   |    2 [32m+[m[31m-[m
+ src/pages/Home.tsx                       |   56 [32m+[m[31m-[m
+ src/pages/ProgrammaticPage.tsx           |    4 [32m+[m[31m-[m
+ src/pages/Tools.tsx                      |    2 [32m+[m[31m-[m
+ src/pages/tools/ToolPage.tsx             |    2 [32m+[m[31m-[m
+ src/scripts/mergeTest.ts                 |    1 [32m+[m
+ src/test/pageEngine.test.ts              |    1 [31m-[m
+ 28 files changed, 1887 insertions(+), 149 deletions(-)

@@ -12,10 +12,12 @@ export interface ProgrammaticVariant {
   scenario: string;        // 2-3 sentence relatable opener
   bullets: string[];       // 3-5 short angle-specific points
   howItWorks: { name: string; text: string }[];
-  faq: { q: string; a: string }[];
+  faq?: { q: string; a: string }[];
   preset?: Record<string, unknown>; // optional preset for the tool (e.g. compression level)
   relatedVariants?: string[];       // sibling slugs
 }
+
+import { NEW_PROGRAMMATIC } from "./programmatic_new";
 
 export const PROGRAMMATIC: ProgrammaticVariant[] = [
   // ---------- COMPRESS ----------
@@ -449,6 +451,7 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
     ],
     relatedVariants: ["watermark-pdf-online"],
   },
+  ...NEW_PROGRAMMATIC,
 ];
 
 export function getProgrammatic(slug: string) {

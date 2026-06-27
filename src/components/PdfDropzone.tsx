@@ -1,5 +1,5 @@
 import { useDropzone } from "react-dropzone";
-import { UploadCloud, FileText, X } from "lucide-react";
+import { UploadCloud, FileText, X, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatBytes } from "@/lib/pdf";
 
@@ -44,6 +44,11 @@ export const PdfDropzone = ({ files, onChange, accept, multiple, disabled }: Pro
         <span className="absolute top-4 right-4 inline-flex items-center gap-1 rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-medium text-accent">
           <span className="size-1.5 rounded-full bg-accent" /> Private
         </span>
+      </div>
+      
+      <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+        <Lock className="size-3.5 opacity-70" /> 
+        <span>Files are processed entirely in your browser. No files are uploaded to our servers.</span>
       </div>
 
       {files.length > 0 && (

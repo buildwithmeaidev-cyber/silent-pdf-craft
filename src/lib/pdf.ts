@@ -223,9 +223,10 @@ export async function compressPdf(file: File, config?: CompressionConfig): Promi
     };
 
     // Attach compression info to result (optional, for UI feedback)
-    (result as any).compressionRatio = ratio;
-    (result as any).originalSize = originalSize;
-    (result as any).compressedSize = compressedSize;
+    const resultWithInfo = result as ToolResult & { compressionRatio?: number; originalSize?: number; compressedSize?: number };
+    resultWithInfo.compressionRatio = ratio;
+    resultWithInfo.originalSize = originalSize;
+    resultWithInfo.compressedSize = compressedSize;
 
     return result;
   } catch (error) {

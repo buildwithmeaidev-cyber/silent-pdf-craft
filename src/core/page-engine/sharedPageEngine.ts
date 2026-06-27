@@ -31,10 +31,10 @@ export async function loadPdf(source: File | Blob | Uint8Array): Promise<PdfHand
   } else {
     // Prefer native arrayBuffer if available (File/Blob in environments that support it), otherwise fallback to Response
     let buf: ArrayBuffer;
-    if (typeof (source as any).arrayBuffer === 'function') {
-      buf = await (source as any).arrayBuffer();
+    if ('arrayBuffer' in source && typeof source.arrayBuffer === 'function') {
+      buf = await source.arrayBuffer();
     } else {
-      const resp = new Response(source as any);
+      const resp = new Response(source as unknown as BodyInit);
       buf = await resp.arrayBuffer();
     }
     bytes = new Uint8Array(buf);

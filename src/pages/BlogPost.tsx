@@ -150,7 +150,7 @@ export default function BlogPost() {
               {relatedTools.map((t) => (
                 <Link
                   key={t.slug}
-                  to={`/tools/${t.slug}`}
+                  to={`/${t.slug}`}
                   className="flex items-center justify-between rounded-2xl bg-white/5 px-5 py-4 transition hover:bg-white/10"
                 >
                   <span className="font-semibold">{t.title}</span>

@@ -19,6 +19,10 @@ export interface BlogPost {
   relatedPostSlugs?: string[];
 }
 
+import { type ToolKind } from "@/lib/tools";
+import { COMPRESSION_POSTS } from "./posts_compression";
+import { OTHER_POSTS } from "./posts_other";
+
 export type BlogBlock =
   | { type: "h2"; text: string }
   | { type: "h3"; text: string }
@@ -320,8 +324,10 @@ export const POSTS: BlogPost[] = [
     relatedProgrammaticSlugs: ["sign-contract-pdf"],
     relatedPostSlugs: ["convert-pdf-to-word-without-breaking-formatting"],
   },
-];
+  ...COMPRESSION_POSTS,
+  ...OTHER_POSTS
+] as BlogPost[];
 
-export function getPost(slug: string) {
+export function getPost(slug: string): BlogPost | undefined {
   return POSTS.find((p) => p.slug === slug);
 }

@@ -6,7 +6,7 @@ export const Footer = () => {
   return (
     <footer className="bg-ink text-ink-foreground mt-24">
       <div className="container-px mx-auto max-w-7xl py-16">
-        <div className="grid gap-12 md:grid-cols-4">
+        <div className="grid gap-12 md:grid-cols-5">
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-2">
               <span className="grid place-items-center size-8 rounded-lg bg-white/10">
@@ -35,7 +35,7 @@ export const Footer = () => {
             <ul className="mt-4 space-y-2.5">
               {TOOLS.slice(0, 6).map((t) => (
                 <li key={t.slug}>
-                  <Link to={`/tools/${t.slug}`} className="text-sm text-white/60 hover:text-white transition-colors">
+                  <Link to={`/${t.slug}`} className="text-sm text-white/60 hover:text-white transition-colors">
                     {t.title}
                   </Link>
                 </li>

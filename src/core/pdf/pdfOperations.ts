@@ -59,15 +59,38 @@ export async function deletePages({ file, range }: DeleteOptions): Promise<{ fil
   return { filename: result.filename, blob: result.blob };
 }
 
-/** Generic processor that routes tool requests to the appropriate function. */
-export async function processTool(params: { type: string; files?: File[]; file?: File; range?: string; pages?: string; angle?: number }): Promise<{ filename: string; blob: Blob; url: string }> {
+export async function processTool(params: { type: string; files?: File[]; file?: File; range?: string; pages?: string; angle?: number; level?: string; quality?: number; ranges?: string }): Promise<{ filename: string; blob: Blob; url: string }> {
   switch (params.type) {
-    case 'merge':
+    case 'merge': {
       if (!params.files) throw new Error('Merge requires files');
-      const mergeRes = await merge({ files: params.files });
-      const mergeUrl = URL.createObjectURL(mergeRes.blob);
-      return { filename: mergeRes.filename, blob: mergeRes.blob, url: mergeUrl };
-    // Future cases: split, rotate, compress, delete, extract
+      const res = await merge({ files: params.files });
+      return { filename: res.filename, blob: res.blob, url: URL.createObjectURL(res.blob) };
+    }
+    case 'split': {
+      if (!params.file) throw new Error('Split requires file');
+      const res = await split({ file: params.file, ranges: params.ranges });
+      return { filename: res.filename, blob: res.blob, url: URL.createObjectURL(res.blob) };
+    }
+    case 'rotate': {
+      if (!params.file) throw new Error('Rotate requires file');
+      const res = await rotate({ file: params.file, angle: (params.angle ?? 90) as 90 | 180 | 270 });
+      return { filename: res.filename, blob: res.blob, url: URL.createObjectURL(res.blob) };
+    }
+    case 'compress': {
+      if (!params.file) throw new Error('Compress requires file');
+      const res = await compress({ file: params.file, level: params.level as CompressOptions['level'], quality: params.quality });
+      return { filename: res.filename, blob: res.blob, url: URL.createObjectURL(res.blob) };
+    }
+    case 'extract': {
+      if (!params.file) throw new Error('Extract requires file');
+      const res = await extract({ file: params.file, pages: params.pages });
+      return { filename: res.filename, blob: res.blob, url: URL.createObjectURL(res.blob) };
+    }
+    case 'delete': {
+      if (!params.file) throw new Error('Delete requires file');
+      const res = await deletePages({ file: params.file, range: params.range });
+      return { filename: res.filename, blob: res.blob, url: URL.createObjectURL(res.blob) };
+    }
     default:
       throw new Error(`Unsupported tool type: ${params.type}`);
   }

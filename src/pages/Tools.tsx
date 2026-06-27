@@ -17,7 +17,7 @@ const Tools = () => (
         return (
           <Link
             key={t.slug}
-            to={`/tools/${t.slug}`}
+            to={`/${t.slug}`}
             className="group rounded-2xl border bg-card p-6 hover:shadow-lift hover:-translate-y-0.5 hover:border-primary/40 transition-all"
           >
             <div className={cn(

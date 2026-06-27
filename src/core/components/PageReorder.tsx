@@ -93,11 +93,11 @@ export default function PageReorder({ items, onChange, label }: PageReorderProps
     useSensor(KeyboardSensor)
   );
 
-  const handleDragStart = (event: any) => {
+  const handleDragStart = (event: { active: { id: string | number } }) => {
     setActiveId(event.active.id as string);
   };
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
       const oldIndex = items.findIndex((i) => i.pageNumber.toString() === active.id);

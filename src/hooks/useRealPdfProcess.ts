@@ -59,22 +59,10 @@ export function useRealPdfProcess() {
 
       setMessage(PROCESS_MESSAGES.processing);
 
-      const mergedBytes = await mergedPdf.save();
-
-      const blob = new Blob([mergedBytes as BlobPart], {
-        type: "application/pdf",
-      });
-
-      const url = URL.createObjectURL(blob);
-
-      setDownloadUrl(url);
-
       setMessage(
         `Successfully merged ${files.length} PDF file${
           files.length > 1 ? "s" : ""
         }. Your document is ready to download.`
-        `Successfully merged ${files.length} PDF file${files.length > 1 ? 's' : ''}. Your document is ready to download.`
-
       );
     } catch (err) {
       console.error(err);
@@ -90,12 +78,139 @@ export function useRealPdfProcess() {
     await mergePDFs(files);
   };
 
+  // Additional placeholder processing methods for other tools
+  const compressPDFs = async (files: File[]) => {
+    try {
+      setLoading(true);
+      setError("");
+      setMessage(PROCESS_MESSAGES.processing);
+      const result = await processTool('compress', files);
+      setDownloadUrl(result.url);
+      setMessage(`Compressed ${files.length} PDF file${files.length > 1 ? 's' : ''}.`);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to compress the PDF files. Please try again.");
+      setMessage(PROCESS_MESSAGES.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const splitPDFs = async (files: File[]) => {
+    try {
+      setLoading(true);
+      setError("");
+      setMessage(PROCESS_MESSAGES.processing);
+      const result = await processTool('split', files);
+      setDownloadUrl(result.url);
+      setMessage(`Split ${files.length} PDF file${files.length > 1 ? 's' : ''}.`);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to split the PDF files. Please try again.");
+      setMessage(PROCESS_MESSAGES.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const rotatePDFs = async (files: File[]) => {
+    try {
+      setLoading(true);
+      setError("");
+      setMessage(PROCESS_MESSAGES.processing);
+      const result = await processTool('rotate', files);
+      setDownloadUrl(result.url);
+      setMessage(`Rotated ${files.length} PDF file${files.length > 1 ? 's' : ''}.`);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to rotate the PDF files. Please try again.");
+      setMessage(PROCESS_MESSAGES.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const protectPDFs = async (files: File[]) => {
+    try {
+      setLoading(true);
+      setError("");
+      setMessage(PROCESS_MESSAGES.processing);
+      const result = await processTool('protect', files);
+      setDownloadUrl(result.url);
+      setMessage(`Protected ${files.length} PDF file${files.length > 1 ? 's' : ''}.`);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to protect the PDF files. Please try again.");
+      setMessage(PROCESS_MESSAGES.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const unlockPDFs = async (files: File[]) => {
+    try {
+      setLoading(true);
+      setError("");
+      setMessage(PROCESS_MESSAGES.processing);
+      const result = await processTool('unlock', files);
+      setDownloadUrl(result.url);
+      setMessage(`Unlocked ${files.length} PDF file${files.length > 1 ? 's' : ''}.`);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to unlock the PDF files. Please try again.");
+      setMessage(PROCESS_MESSAGES.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const watermarkPDFs = async (files: File[]) => {
+    try {
+      setLoading(true);
+      setError("");
+      setMessage(PROCESS_MESSAGES.processing);
+      const result = await processTool('watermark', files);
+      setDownloadUrl(result.url);
+      setMessage(`Watermarked ${files.length} PDF file${files.length > 1 ? 's' : ''}.`);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to add watermark to the PDF files. Please try again.");
+      setMessage(PROCESS_MESSAGES.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeWatermarkPDFs = async (files: File[]) => {
+    try {
+      setLoading(true);
+      setError("");
+      setMessage(PROCESS_MESSAGES.processing);
+      const result = await processTool('removeWatermark', files);
+      setDownloadUrl(result.url);
+      setMessage(`Removed watermark from ${files.length} PDF file${files.length > 1 ? 's' : ''}.`);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to remove watermark from the PDF files. Please try again.");
+      setMessage(PROCESS_MESSAGES.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     message,
     error,
     downloadUrl,
     mergePDFs,
+    compressPDFs,
+    splitPDFs,
+    rotatePDFs,
+    protectPDFs,
+    unlockPDFs,
+    watermarkPDFs,
+    removeWatermarkPDFs,
     retry,
     clearState,
     setError,

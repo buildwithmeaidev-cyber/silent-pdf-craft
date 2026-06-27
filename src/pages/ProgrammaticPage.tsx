@@ -40,7 +40,7 @@ export default function ProgrammaticPage() {
           {parent && (
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
-                to={`/tools/${parent.slug}`}
+                to={`/${parent.slug}`}
                 className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white font-semibold transition hover:bg-blue-700"
               >
                 Open {parent.title} <ArrowRight className="h-4 w-4" />
@@ -95,7 +95,7 @@ export default function ProgrammaticPage() {
               Free, no signup, no watermark. Runs in your browser.
             </p>
             <Link
-              to={`/tools/${parent.slug}`}
+              to={`/${parent.slug}`}
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-slate-900 font-semibold transition hover:bg-slate-100"
             >
               Open {parent.title} <ArrowRight className="h-4 w-4" />

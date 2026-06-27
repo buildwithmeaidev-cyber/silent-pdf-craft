@@ -15,6 +15,8 @@ import Tools from "./pages/Tools";
 import Guides from "./pages/Guides";
 import UseCases from "./pages/UseCases";
 import Privacy from "./pages/Privacy";
+import About from "./pages/About";
+
 import ToolPage from "./pages/tools/ToolPage";
 import NotFound from "./pages/NotFound";
 import ProgrammaticPage from "./pages/ProgrammaticPage";
@@ -22,22 +24,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 
 // Custom PDF Tools
-import MergePdf from "./pages/tools/MergePDF";
-import SplitPdf from "./pages/tools/SplitPDF";
-import RemovePagesPDF from "./pages/tools/RemovepagesPDF";
-import EditPdf from "./pages/tools/EditPDF";
-import CompressPdf from "./pages/tools/CompressPDF";
-import ProtectPdf from "./pages/tools/ProtectPDF";
-import ReorderPdf from "./pages/tools/ReorderPDF";
-import ESignPdf from "./pages/tools/ESignPDF";
-import WatermarkPdf from "./pages/tools/WatermarkPDF";
-import PhotoToPdf from "./pages/tools/PhotoToPDF";
-import ExportPdf from "./pages/tools/ExportPDF";
-import PdfToWord from "./pages/tools/PdfToWord";
-import WordToPdf from "./pages/tools/WordToPDF";
-import AddpagesPdf from "./pages/tools/AddpagesPDF";
-import RemovewatermarkPdf from "./pages/tools/RemovewatermarkPDF";
-import RotatepagesPdf from "./pages/tools/RotatepagesPDF";
+
 
 const queryClient = new QueryClient();
 
@@ -48,7 +35,6 @@ const App = () => (
         <Toaster />
         <Sonner />
 
-        <BrowserRouter>
           <ScrollToTop />
 
           <Routes>
@@ -56,30 +42,15 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/tools" element={<Tools />} />
 
-              {/* Specific PDF Tool Routes */}
-              <Route path="/tools/merge-pdf" element={<MergePdf />} />
-              <Route path="/tools/split-pdf" element={<SplitPdf />} />
-              <Route path="/tools/remove-pages" element={<RemovePagesPDF />} />
-              <Route path="/tools/edit-pdf" element={<EditPdf />} />
-              <Route path="/tools/compress-pdf" element={<CompressPdf />} />
-              <Route path="/tools/protect-pdf" element={<ProtectPdf />} />
-              <Route path="/tools/reorder-pdf" element={<ReorderPdf />} />
-              <Route path="/tools/esign-pdf" element={<ESignPdf />} />
-              <Route path="/tools/watermark-pdf" element={<WatermarkPdf />} />
-              <Route path="/tools/photo-to-pdf" element={<PhotoToPdf />} />
-              <Route path="/tools/export-pdf" element={<ExportPdf />} />
-              <Route path="/tools/pdf-to-word" element={<PdfToWord />} />
-              <Route path="/tools/word-to-pdf" element={<WordToPdf />} />
-              <Route path="/tools/addpages-pdf" element={<AddpagesPdf />} />
-              <Route path="/tools/removewatermark-pdf" element={<RemovewatermarkPdf />} />
-              <Route path="/tools/rotatepages-pdf" element={<RotatepagesPdf />} />
 
-              {/* Fallback Tool Page */}
-              <Route path="/tools/:slug" element={<ToolPage />} />
+
+              {/* Tools list */}
 
               <Route path="/guides" element={<Guides />} />
               <Route path="/use-cases" element={<UseCases />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/privacy-policy" element={<Privacy />} />
+              <Route path="/about" element={<About />} />
 
               {/* Blog */}
               <Route path="/blog" element={<Blog />} />
@@ -101,11 +72,13 @@ const App = () => (
               <Route path="/sign-contract-pdf" element={<ProgrammaticPage />} />
               <Route path="/watermark-pdf-online" element={<ProgrammaticPage />} />
               <Route path="/add-logo-watermark-pdf" element={<ProgrammaticPage />} />
+              
+              {/* Dynamic Tool Page (Catch-all for toolsConfig slugs) */}
+              <Route path="/:slug" element={<ToolPage />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   </AppErrorBoundary>

@@ -9,6 +9,7 @@ import {
 import { TOOLS } from "@/lib/tools";
 import { cn } from "@/lib/utils";
 import HomeFaq from "@/components/home/HomeFaq";
+import WorkflowIntro from "@/components/home/WorkflowIntro";
 
 const fadeUp = {
   initial: { opacity: 0, y: 16 },
@@ -58,9 +59,9 @@ const WORKFLOWS = [
     name: "Resume submission",
     audience: "Job seekers",
     steps: [
-      { label: "Word to PDF", to: "/tools/word-to-pdf" },
-      { label: "Compress",    to: "/tools/compress-pdf" },
-      { label: "Sign",        to: "/tools/sign-pdf" },
+      { label: "Word to PDF", to: "/word-to-pdf" },
+      { label: "Compress",    to: "/compress-pdf" },
+      { label: "Sign",        to: "/sign-pdf" },
     ],
     accent: "from-primary/15 to-primary/0",
   },
@@ -68,9 +69,9 @@ const WORKFLOWS = [
     name: "Business contract",
     audience: "Founders & ops",
     steps: [
-      { label: "Merge",   to: "/tools/merge-pdf" },
-      { label: "Protect", to: "/tools/protect-pdf" },
-      { label: "E-Sign",  to: "/tools/e-sign-pdf" },
+      { label: "Merge",   to: "/merge-pdf" },
+      { label: "Protect", to: "/protect-pdf" },
+      { label: "E-Sign",  to: "/e-sign-pdf" },
     ],
     accent: "from-accent/15 to-accent/0",
   },
@@ -78,9 +79,9 @@ const WORKFLOWS = [
     name: "Student assignment",
     audience: "Students",
     steps: [
-      { label: "Photo to PDF", to: "/tools/photo-to-pdf" },
-      { label: "Compress",     to: "/tools/compress-pdf" },
-      { label: "Merge",        to: "/tools/merge-pdf" },
+      { label: "Photo to PDF", to: "/photo-to-pdf" },
+      { label: "Compress",     to: "/compress-pdf" },
+      { label: "Merge",        to: "/merge-pdf" },
     ],
     accent: "from-ink/10 to-ink/0",
   },
@@ -130,7 +131,7 @@ const Home = () => {
               className="mt-10 flex flex-wrap items-center gap-4"
             >
               <Link
-                to="/tools/merge-pdf"
+                to="/merge-pdf"
                 className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-4 text-base font-medium shadow-blue hover:shadow-lift transition-all"
               >
                 Start free — pick a PDF
@@ -250,7 +251,7 @@ const Home = () => {
               return (
                 <motion.div key={t.slug} {...fadeUp}>
                   <Link
-                    to={`/tools/${t.slug}`}
+                    to={`/${t.slug}`}
                     className="group flex h-full flex-col rounded-2xl border bg-card p-6 shadow-soft hover:shadow-lift hover:-translate-y-0.5 hover:border-primary/40 transition-all"
                   >
                     <div className="flex items-start justify-between">
@@ -287,7 +288,8 @@ const Home = () => {
             })}
           </div>
         </div>
-      </section>
+              </section>
+        <WorkflowIntro />
 
       {/* TRUST — dedicated, prominent */}
       <section className="py-28 bg-ink text-ink-foreground">
@@ -326,36 +328,6 @@ const Home = () => {
                 </motion.div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* WORKFLOW (kept, lightly tightened) */}
-      <section className="py-24 bg-surface">
-        <div className="container-px mx-auto max-w-7xl">
-          <SectionHeading
-            eyebrow="How it feels"
-            title="Three quiet steps. No friction."
-            subtitle="A typical silentPDF flow takes under 30 seconds, end to end."
-          />
-          <div className="mt-14 grid md:grid-cols-3 gap-5">
-            {[
-              { i: Combine,  t: "Pick a tool", d: "Search or browse 17 focused PDF tools." },
-              { i: Minimize2, t: "Drop your file", d: "Files stay in your browser — no upload." },
-              { i: CheckCircle2, t: "Download", d: "Get a clean, watermark-free result." },
-            ].map((s, idx) => (
-              <motion.div key={s.t} {...fadeUp} className="relative rounded-2xl bg-card border p-7 shadow-soft">
-                <span className="text-xs font-medium text-muted-foreground">Step {idx + 1}</span>
-                <div className="mt-4 grid place-items-center size-11 rounded-xl bg-ink text-ink-foreground">
-                  <s.i className="size-5" strokeWidth={1.8} />
-                </div>
-                <h3 className="mt-4 font-serif text-2xl">{s.t}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{s.d}</p>
-                {idx < 2 && (
-                  <ArrowRight className="hidden md:block absolute top-1/2 -right-3 size-5 text-muted-foreground/50" />
-                )}
-              </motion.div>
-            ))}
           </div>
         </div>
       </section>
