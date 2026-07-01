@@ -21,24 +21,31 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { usePdfJob } from "@/hooks/usePdfJob";
 import { useMergeProcessor } from "@/hooks/useMergeProcessor";
-import { ErrorModal } from "@/components/ErrorModal";
-import { mergePdfs, splitPdf, rotatePdf, removePages, compressPdf, protectPdf, downloadBlob, formatBytes } from "@/lib/pdf";
+import {
+  splitPdf, rotatePdf, removePages, compressPdf, protectPdf,
+  imageToPdf, watermarkPdf, removeWatermarkPdf, reorderPdf,
+  addBlankPages, exportPdf, signPdf, pdfToWord, wordToPdf, editPdfPassthrough,
+  downloadBlob, formatBytes,
+} from "@/lib/pdf";
 
 const ToolPage = () => {
   const { slug = "" } = useParams();
   const tool = getTool(slug);
-  const { files, addFiles, removeFile, clearFiles, moveFile, error: contextError, setError: setContextError, clearError } = useUpload();
+  const { files, addFiles, removeFile, clearFiles, moveFile } = useUpload();
   const [range, setRange] = useState("");
   const [password, setPassword] = useState("");
   const [rotation, setRotation] = useState<90 | 180 | 270>(90);
   const [compressionLevel, setCompressionLevel] = useState<"light" | "medium" | "strong" | "custom">(
     "medium"
   );
-
   const [customQuality, setCustomQuality] = useState(80);
+  const [watermarkText, setWatermarkText] = useState("CONFIDENTIAL");
+  const [signatureText, setSignatureText] = useState("");
+  const [addCount, setAddCount] = useState(1);
+  const [exportName, setExportName] = useState("");
 
   // Initialize hooks for PDF jobs and merge processing
-  const { progress: pdfProgress, state: pdfState, result: pdfResult, error: pdfJobError, run: runJob, reset: resetJob, setError: setPdfJobError } = usePdfJob();
+  const { progress: pdfProgress, state: pdfState, result: pdfResult, error: pdfJobError, run: runJob, reset: resetJob } = usePdfJob();
   const { progress: mergeProgress, state: mergeState, result: mergeResult, error: mergeError, runMerge, reset: resetMerge } = useMergeProcessor();
 
   // Determine which hook to use based on selected tool
@@ -46,51 +53,66 @@ const ToolPage = () => {
   const progress = isMergeTool ? mergeProgress : pdfProgress;
   const state = isMergeTool ? mergeState : pdfState;
   const result = isMergeTool ? mergeResult : pdfResult;
-  const error = isMergeTool ? mergeError : pdfJobError;
+
+  const rawFiles = useMemo(() => files.map((f) => f.file), [files]);
+
+  const needsWatermarkText = tool?.kind === "watermark";
+  const needsSignatureText = tool?.kind === "sign" || tool?.kind === "e-sign";
+  const needsAddCount = tool?.kind === "addpages";
+  const needsExportName = tool?.kind === "export";
+  const needsReorderInput = tool?.kind === "reorder";
 
   const canRun = useMemo(() => {
     if (!tool || files.length === 0) return false;
     if (isMergeTool && files.length < 2) return false;
     if (tool.needsRange && !range.trim()) return false;
+    if (needsReorderInput && !range.trim()) return false;
     if (tool.needsPassword && password.length < 4) return false;
+    if (needsWatermarkText && !watermarkText.trim()) return false;
+    if (needsSignatureText && !signatureText.trim()) return false;
+    if (needsAddCount && (!addCount || addCount < 1)) return false;
     return true;
-  }, [tool, files, range, password, isMergeTool]);
-
-  // moveFile is provided by context
-
-  // removeFile is provided by context
+  }, [tool, files, range, password, isMergeTool, needsReorderInput, needsWatermarkText, watermarkText, needsSignatureText, signatureText, needsAddCount, addCount]);
 
   const reset = () => {
     clearFiles();
     resetJob();
+    resetMerge();
     setCompressionLevel("medium");
     setCustomQuality(80);
   };
 
   const runTool = async () => {
     if (tool?.kind === "merge") {
-      await runMerge(files);
-    } else {
-      await runJob(async () => {
-        switch (tool?.kind) {
-          case "split":
-            return await splitPdf(files[0], range);
-          case "rotate":
-            return await rotatePdf(files[0], rotation);
-          case "remove":
-            return await removePages(files[0], range);
-          case "compress":
-            return await compressPdf(files[0], {
-              level: compressionLevel,
-              quality: compressionLevel === "custom" ? customQuality : undefined,
-            });
-          case "protect":
-            return await protectPdf(files[0], password);
-          default:
-            throw new Error("Unsupported tool");
-        }
-      });
+      await runMerge(rawFiles);
+      return;
     }
+    await runJob(async () => {
+      const f = rawFiles[0];
+      switch (tool?.kind) {
+        case "split": return await splitPdf(f, range);
+        case "rotate": return await rotatePdf(f, rotation);
+        case "remove": return await removePages(f, range);
+        case "compress":
+          return await compressPdf(f, {
+            level: compressionLevel,
+            quality: compressionLevel === "custom" ? customQuality : undefined,
+          });
+        case "protect": return await protectPdf(f, password);
+        case "watermark": return await watermarkPdf(f, watermarkText);
+        case "removewatermark": return await removeWatermarkPdf(f);
+        case "reorder": return await reorderPdf(f, range);
+        case "addpages": return await addBlankPages(f, addCount);
+        case "export": return await exportPdf(f, exportName);
+        case "sign":
+        case "e-sign": return await signPdf(f, signatureText);
+        case "pdf-to-word": return await pdfToWord(f);
+        case "word-to-pdf": return await wordToPdf(f);
+        case "photo-to-pdf": return await imageToPdf(rawFiles);
+        case "edit": return await editPdfPassthrough(f);
+        default: throw new Error("Unsupported tool");
+      }
+    });
   };
 
   if (!tool) {
