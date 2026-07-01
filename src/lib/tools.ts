@@ -205,7 +205,7 @@ export const TOOLS: ToolDef[] = [
     short: "Convert a PDF into an editable .docx file.",
     description: "Upload a PDF and we'll convert it to a Word document you can actually edit — text, layout, and most formatting carry over.",
     icon: FileText, accent: "red",
-    accept: { "application/pdf": [".pdf"] }, multiple: false, serverOnly: true,
+    accept: { "application/pdf": [".pdf"] }, multiple: false,
 
     seoTitle: "PDF to Word Converter — Free, Keeps Formatting | silentPDF",
     metaDescription: "Convert PDF to editable Word (.docx). Keeps text formatting, tables, and layout intact. Free, no signup.",
