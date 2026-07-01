@@ -261,7 +261,7 @@ export const TOOLS: ToolDef[] = [
     description: "Upload a Word document and we'll render it as a polished PDF with fonts and layout intact.",
     icon: FileType2, accent: "red",
     accept: { "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"] },
-    multiple: false, serverOnly: true,
+    multiple: false,
 
     seoTitle: "Word to PDF Converter — Free .docx to PDF | silentPDF",
     metaDescription: "Convert Word documents to PDF online. Keeps fonts, layout, headers, and images. Free, no signup, no watermark.",
