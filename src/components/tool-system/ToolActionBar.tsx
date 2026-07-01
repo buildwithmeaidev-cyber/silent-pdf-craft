@@ -16,6 +16,7 @@ interface Props {
   downloadUrl?: string;
   downloadName?: string;
   showRetry?: boolean;
+  tooltip?: string; // optional tooltip for disabled state
 }
 
 export default function ToolActionBar({
@@ -88,7 +89,11 @@ export default function ToolActionBar({
             <button
               disabled={disabled}
               onClick={isCompleted ? onReset : onClick}
-              className="flex h-14 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-8 text-base font-semibold text-slate-900 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              title={tooltip}
+              className={
+                `flex h-14 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-8 text-base font-semibold text-slate-900 transition-all hover:bg-slate-50 disabled:cursor-not-allowed`
+                + (disabled ? ` opacity-60 backdrop-blur-md` : ``)
+              }
             >
               {isCompleted ? (
                 <>

@@ -54,7 +54,7 @@ function renderBlock(block: BlogBlock, i: number) {
 export default function BlogPost() {
   const { slug = "" } = useParams();
   const post = getPost(slug);
-  if (!post) return <Navigate to="/blog" replace />;
+  if (!post) return typeof window !== "undefined" ? <Navigate to="/blog" replace /> : null;
 
   const relatedTools = (post.relatedToolSlugs ?? [])
     .map((s) => TOOLS.find((t) => t.slug === s))

@@ -14,7 +14,7 @@ export default function ProgrammaticPage() {
   const { slug = "" } = useParams();
   const variant = getProgrammatic(slug);
 
-  if (!variant) return <Navigate to="/tools" replace />;
+  if (!variant) return typeof window !== "undefined" ? <Navigate to="/tools" replace /> : null;
 
   const parent = TOOLS.find((t) => t.slug === variant.parentSlug);
   const siblings = (variant.relatedVariants ?? [])

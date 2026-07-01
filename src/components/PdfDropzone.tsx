@@ -9,11 +9,18 @@ interface Props {
   accept: Record<string, string[]>;
   multiple?: boolean;
   disabled?: boolean;
+  /**
+   * When false, the component will not render the file list below the dropzone.
+   * Useful for tools that provide custom file list UI (e.g., merge tool).
+   */
+  showFileList?: boolean;
 }
 
-export const PdfDropzone = ({ files, onChange, accept, multiple, disabled }: Props) => {
+export const PdfDropzone = ({ files, onChange, accept, multiple, disabled, showFileList = true }: Props) => {
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
-    accept, multiple, disabled,
+    accept,
+    multiple,
+    disabled,
     onDrop: (accepted) => {
       onChange(multiple ? [...files, ...accepted] : accepted.slice(0, 1));
     },
@@ -51,7 +58,7 @@ export const PdfDropzone = ({ files, onChange, accept, multiple, disabled }: Pro
         <span>Files are processed entirely in your browser. No files are uploaded to our servers.</span>
       </div>
 
-      {files.length > 0 && (
+      {showFileList && files.length > 0 && (
         <ul className="mt-4 space-y-2">
           {files.map((f, i) => (
             <li key={i} className="flex items-center gap-3 rounded-xl border bg-card p-3 shadow-soft">

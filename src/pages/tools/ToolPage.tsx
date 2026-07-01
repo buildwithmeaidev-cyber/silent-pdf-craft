@@ -10,83 +10,87 @@ import {
   RotateCcw,
   AlertCircle,
   ChevronRight,
-  ArrowUp,
-  ArrowDown,
-  FileText,
-  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTool } from "@/lib/tools";
+import { useUpload } from "@/context/UploadContext";
 import { PdfDropzone } from "@/components/PdfDropzone";
+import { UnifiedFileList } from "@/components/UnifiedFileList";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { usePdfJob } from "@/hooks/usePdfJob";
+import { useMergeProcessor } from "@/hooks/useMergeProcessor";
+import { ErrorModal } from "@/components/ErrorModal";
 import { mergePdfs, splitPdf, rotatePdf, removePages, compressPdf, protectPdf, downloadBlob, formatBytes } from "@/lib/pdf";
 
 const ToolPage = () => {
   const { slug = "" } = useParams();
   const tool = getTool(slug);
-  const [files, setFiles] = useState<File[]>([]);
+  const { files, addFiles, removeFile, clearFiles, moveFile, error: contextError, setError: setContextError, clearError } = useUpload();
   const [range, setRange] = useState("");
   const [password, setPassword] = useState("");
   const [rotation, setRotation] = useState<90 | 180 | 270>(90);
   const [compressionLevel, setCompressionLevel] = useState<"light" | "medium" | "strong" | "custom">(
     "medium"
   );
+
   const [customQuality, setCustomQuality] = useState(80);
 
-  const { progress, state, result, error, run, reset: resetJob, setState, setError, setProgress, setResult } = usePdfJob();
+  // Initialize hooks for PDF jobs and merge processing
+  const { progress: pdfProgress, state: pdfState, result: pdfResult, error: pdfJobError, run: runJob, reset: resetJob, setError: setPdfJobError } = usePdfJob();
+  const { progress: mergeProgress, state: mergeState, result: mergeResult, error: mergeError, runMerge, reset: resetMerge } = useMergeProcessor();
+
+  // Determine which hook to use based on selected tool
+  const isMergeTool = tool?.kind === "merge";
+  const progress = isMergeTool ? mergeProgress : pdfProgress;
+  const state = isMergeTool ? mergeState : pdfState;
+  const result = isMergeTool ? mergeResult : pdfResult;
+  const error = isMergeTool ? mergeError : pdfJobError;
 
   const canRun = useMemo(() => {
     if (!tool || files.length === 0) return false;
-    if (tool.kind === "merge" && files.length < 2) return false;
+    if (isMergeTool && files.length < 2) return false;
     if (tool.needsRange && !range.trim()) return false;
     if (tool.needsPassword && password.length < 4) return false;
     return true;
-  }, [tool, files, range, password]);
+  }, [tool, files, range, password, isMergeTool]);
 
-  const moveFile = (index: number, direction: "up" | "down") => {
-    const updated = [...files];
-    const target = direction === "up" ? index - 1 : index + 1;
-    if (target < 0 || target >= updated.length) return;
-    [updated[index], updated[target]] = [updated[target], updated[index]];
-    setFiles(updated);
-  };
+  // moveFile is provided by context
 
-  const removeFile = (index: number) => {
-    setFiles(files.filter((_, i) => i !== index));
-  };
+  // removeFile is provided by context
 
   const reset = () => {
-    setFiles([]);
+    clearFiles();
     resetJob();
     setCompressionLevel("medium");
     setCustomQuality(80);
   };
 
   const runTool = async () => {
-    await run(async () => {
-      switch (tool?.kind) {
-        case "merge":
-          return await mergePdfs(files);
-        case "split":
-          return await splitPdf(files[0], range);
-        case "rotate":
-          return await rotatePdf(files[0], rotation);
-        case "remove":
-          return await removePages(files[0], range);
-        case "compress":
-          return await compressPdf(files[0], {
-            level: compressionLevel,
-            quality: compressionLevel === "custom" ? customQuality : undefined,
-          });
-        case "protect":
-          return await protectPdf(files[0], password);
-        default:
-          throw new Error("Unsupported tool");
-      }
-    });
+    if (tool?.kind === "merge") {
+      await runMerge(files);
+    } else {
+      await runJob(async () => {
+        switch (tool?.kind) {
+          case "split":
+            return await splitPdf(files[0], range);
+          case "rotate":
+            return await rotatePdf(files[0], rotation);
+          case "remove":
+            return await removePages(files[0], range);
+          case "compress":
+            return await compressPdf(files[0], {
+              level: compressionLevel,
+              quality: compressionLevel === "custom" ? customQuality : undefined,
+            });
+          case "protect":
+            return await protectPdf(files[0], password);
+          default:
+            throw new Error("Unsupported tool");
+        }
+      });
+    }
   };
 
   if (!tool) {
@@ -131,7 +135,7 @@ const ToolPage = () => {
         <AnimatePresence mode="wait">
           {(state === "idle" || state === "error") && (
             <motion.div key="idle" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <PdfDropzone files={files} onChange={setFiles} accept={tool.accept} multiple={tool.multiple} />
+              <PdfDropzone files={files.map(f => f.file)} onChange={(newFiles) => addFiles(newFiles)} accept={tool.accept} multiple={tool.multiple} />
 
               {tool.kind === "merge" && files.length > 0 && (
                 <div className="mt-6">
@@ -139,54 +143,7 @@ const ToolPage = () => {
                     <h2 className="font-medium text-lg">Arrange PDF Order</h2>
                     <p className="text-sm text-muted-foreground">Files merge from top to bottom</p>
                   </div>
-                  <div className="space-y-3">
-                    {files.map((file, index) => (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="flex items-center gap-4 rounded-2xl border bg-background p-4"
-                      >
-                        <div className="flex h-16 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                          <FileText className="size-7" />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium">{file.name}</p>
-                          <p className="text-sm text-muted-foreground">{formatBytes(file.size)}</p>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => moveFile(index, "up")}
-                            disabled={index === 0}
-                            aria-label={`Move ${file.name} up`}
-                            className="rounded-lg border p-2 hover:bg-secondary disabled:opacity-40"
-                          >
-                            <ArrowUp className="size-4" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => moveFile(index, "down")}
-                            disabled={index === files.length - 1}
-                            aria-label={`Move ${file.name} down`}
-                            className="rounded-lg border p-2 hover:bg-secondary disabled:opacity-40"
-                          >
-                            <ArrowDown className="size-4" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => removeFile(index)}
-                            aria-label={`Remove ${file.name}`}
-                            className="rounded-lg border p-2 hover:bg-accent/10 text-accent"
-                          >
-                            <X className="size-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <UnifiedFileList />
                 </div>
               )}
 
@@ -273,12 +230,12 @@ const ToolPage = () => {
 
 
 
-              {state === "error" && error && (
+              {state === "error" && pdfJobError && (
                 <div className="mt-5 flex gap-3 rounded-xl border border-accent/30 bg-accent-soft p-4">
                   <AlertCircle className="size-5 text-accent shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-accent">Couldn't process this file</p>
-                    <p className="text-sm text-foreground/80 mt-0.5">{error}</p>
+                    <p className="text-sm text-foreground/80 mt-0.5">{pdfJobError}</p>
                   </div>
                 </div>
               )}

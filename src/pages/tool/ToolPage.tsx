@@ -88,6 +88,7 @@ export default function ToolPage() {
         onRetry={() => process.retry?.(files.map((f) => f.file))}
         downloadUrl={(process as any).downloadUrl || undefined}
         downloadName={config.downloadName}
+        tooltip={isAdvancedTool && !featureFlags.enableAdvancedProcessing ? 'Advanced processing is disabled via feature flag.' : undefined}
       />
     </ToolLayout>
   );
