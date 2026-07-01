@@ -21,24 +21,31 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { usePdfJob } from "@/hooks/usePdfJob";
 import { useMergeProcessor } from "@/hooks/useMergeProcessor";
-import { ErrorModal } from "@/components/ErrorModal";
-import { mergePdfs, splitPdf, rotatePdf, removePages, compressPdf, protectPdf, downloadBlob, formatBytes } from "@/lib/pdf";
+import {
+  splitPdf, rotatePdf, removePages, compressPdf, protectPdf,
+  imageToPdf, watermarkPdf, removeWatermarkPdf, reorderPdf,
+  addBlankPages, exportPdf, signPdf, pdfToWord, wordToPdf, editPdfPassthrough,
+  downloadBlob, formatBytes,
+} from "@/lib/pdf";
 
 const ToolPage = () => {
   const { slug = "" } = useParams();
   const tool = getTool(slug);
-  const { files, addFiles, removeFile, clearFiles, moveFile, error: contextError, setError: setContextError, clearError } = useUpload();
+  const { files, addFiles, removeFile, clearFiles, moveFile } = useUpload();
   const [range, setRange] = useState("");
   const [password, setPassword] = useState("");
   const [rotation, setRotation] = useState<90 | 180 | 270>(90);
   const [compressionLevel, setCompressionLevel] = useState<"light" | "medium" | "strong" | "custom">(
     "medium"
   );
-
   const [customQuality, setCustomQuality] = useState(80);
+  const [watermarkText, setWatermarkText] = useState("CONFIDENTIAL");
+  const [signatureText, setSignatureText] = useState("");
+  const [addCount, setAddCount] = useState(1);
+  const [exportName, setExportName] = useState("");
 
   // Initialize hooks for PDF jobs and merge processing
-  const { progress: pdfProgress, state: pdfState, result: pdfResult, error: pdfJobError, run: runJob, reset: resetJob, setError: setPdfJobError } = usePdfJob();
+  const { progress: pdfProgress, state: pdfState, result: pdfResult, error: pdfJobError, run: runJob, reset: resetJob } = usePdfJob();
   const { progress: mergeProgress, state: mergeState, result: mergeResult, error: mergeError, runMerge, reset: resetMerge } = useMergeProcessor();
 
   // Determine which hook to use based on selected tool
@@ -46,51 +53,66 @@ const ToolPage = () => {
   const progress = isMergeTool ? mergeProgress : pdfProgress;
   const state = isMergeTool ? mergeState : pdfState;
   const result = isMergeTool ? mergeResult : pdfResult;
-  const error = isMergeTool ? mergeError : pdfJobError;
+
+  const rawFiles = useMemo(() => files.map((f) => f.file), [files]);
+
+  const needsWatermarkText = tool?.kind === "watermark";
+  const needsSignatureText = tool?.kind === "sign" || tool?.kind === "e-sign";
+  const needsAddCount = tool?.kind === "addpages";
+  const needsExportName = tool?.kind === "export";
+  const needsReorderInput = tool?.kind === "reorder";
 
   const canRun = useMemo(() => {
     if (!tool || files.length === 0) return false;
     if (isMergeTool && files.length < 2) return false;
     if (tool.needsRange && !range.trim()) return false;
+    if (needsReorderInput && !range.trim()) return false;
     if (tool.needsPassword && password.length < 4) return false;
+    if (needsWatermarkText && !watermarkText.trim()) return false;
+    if (needsSignatureText && !signatureText.trim()) return false;
+    if (needsAddCount && (!addCount || addCount < 1)) return false;
     return true;
-  }, [tool, files, range, password, isMergeTool]);
-
-  // moveFile is provided by context
-
-  // removeFile is provided by context
+  }, [tool, files, range, password, isMergeTool, needsReorderInput, needsWatermarkText, watermarkText, needsSignatureText, signatureText, needsAddCount, addCount]);
 
   const reset = () => {
     clearFiles();
     resetJob();
+    resetMerge();
     setCompressionLevel("medium");
     setCustomQuality(80);
   };
 
   const runTool = async () => {
     if (tool?.kind === "merge") {
-      await runMerge(files);
-    } else {
-      await runJob(async () => {
-        switch (tool?.kind) {
-          case "split":
-            return await splitPdf(files[0], range);
-          case "rotate":
-            return await rotatePdf(files[0], rotation);
-          case "remove":
-            return await removePages(files[0], range);
-          case "compress":
-            return await compressPdf(files[0], {
-              level: compressionLevel,
-              quality: compressionLevel === "custom" ? customQuality : undefined,
-            });
-          case "protect":
-            return await protectPdf(files[0], password);
-          default:
-            throw new Error("Unsupported tool");
-        }
-      });
+      await runMerge(rawFiles);
+      return;
     }
+    await runJob(async () => {
+      const f = rawFiles[0];
+      switch (tool?.kind) {
+        case "split": return await splitPdf(f, range);
+        case "rotate": return await rotatePdf(f, rotation);
+        case "remove": return await removePages(f, range);
+        case "compress":
+          return await compressPdf(f, {
+            level: compressionLevel,
+            quality: compressionLevel === "custom" ? customQuality : undefined,
+          });
+        case "protect": return await protectPdf(f, password);
+        case "watermark": return await watermarkPdf(f, watermarkText);
+        case "removewatermark": return await removeWatermarkPdf(f);
+        case "reorder": return await reorderPdf(f, range);
+        case "addpages": return await addBlankPages(f, addCount);
+        case "export": return await exportPdf(f, exportName);
+        case "sign":
+        case "e-sign": return await signPdf(f, signatureText);
+        case "pdf-to-word": return await pdfToWord(f);
+        case "word-to-pdf": return await wordToPdf(f);
+        case "photo-to-pdf": return await imageToPdf(rawFiles);
+        case "edit": return await editPdfPassthrough(f);
+        default: throw new Error("Unsupported tool");
+      }
+    });
   };
 
   if (!tool) {
@@ -148,7 +170,11 @@ const ToolPage = () => {
               )}
 
               {/* Step 3 — Required inputs (P2 workflow) */}
-              {files.length > 0 && (tool.needsRange || tool.needsPassword || tool.needsRotation || tool.kind === "compress") && (
+              {files.length > 0 && (
+                tool.needsRange || tool.needsPassword || tool.needsRotation ||
+                tool.kind === "compress" || needsWatermarkText || needsSignatureText ||
+                needsAddCount || needsExportName || needsReorderInput
+              ) && (
                 <div className="mt-6 rounded-2xl border bg-background p-5 space-y-4">
                   <div className="flex items-baseline justify-between">
                     <h3 className="font-medium">Settings</h3>
@@ -169,17 +195,23 @@ const ToolPage = () => {
                     </div>
                   )}
 
-                  {tool.needsRange && (
+                  {(tool.needsRange || needsReorderInput) && (
                     <div>
-                      <label className="text-sm font-medium block mb-1.5">Page range</label>
+                      <label className="text-sm font-medium block mb-1.5">
+                        {needsReorderInput ? "New page order" : "Page range"}
+                      </label>
                       <input
                         type="text"
                         value={range}
                         onChange={(e) => setRange(e.target.value)}
-                        placeholder="e.g. 1-3, 5, 7-9"
+                        placeholder={needsReorderInput ? "e.g. 3,1,2,4" : "e.g. 1-3, 5, 7-9"}
                         className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
                       />
-                      <p className="mt-1.5 text-xs text-muted-foreground">Use commas to separate, dashes for ranges.</p>
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {needsReorderInput
+                          ? "List page numbers in the order you want them."
+                          : "Use commas to separate, dashes for ranges."}
+                      </p>
                     </div>
                   )}
 
@@ -225,12 +257,69 @@ const ToolPage = () => {
                       <p className="mt-1.5 text-xs text-muted-foreground">Stronger = smaller file, lower image quality.</p>
                     </div>
                   )}
+
+                  {needsWatermarkText && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Watermark text</label>
+                      <input
+                        type="text"
+                        value={watermarkText}
+                        onChange={(e) => setWatermarkText(e.target.value)}
+                        placeholder="CONFIDENTIAL"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">Diagonal, semi-transparent, on every page.</p>
+                    </div>
+                  )}
+
+                  {needsSignatureText && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Your signature</label>
+                      <input
+                        type="text"
+                        value={signatureText}
+                        onChange={(e) => setSignatureText(e.target.value)}
+                        placeholder="Type your name"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary font-serif italic"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">Rendered on the last page, bottom-right.</p>
+                    </div>
+                  )}
+
+                  {needsAddCount && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Blank pages to add</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={addCount}
+                        onChange={(e) => setAddCount(parseInt(e.target.value || "1", 10))}
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">Appended to the end, matching your first page's size.</p>
+                    </div>
+                  )}
+
+                  {needsExportName && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">New filename</label>
+                      <input
+                        type="text"
+                        value={exportName}
+                        onChange={(e) => setExportName(e.target.value)}
+                        placeholder="my-final-document"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">We'll add .pdf if you don't.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
 
 
-              {state === "error" && pdfJobError && (
+              {state === "error" && (pdfJobError || mergeError) && (
                 <div className="mt-5 flex gap-3 rounded-xl border border-accent/30 bg-accent-soft p-4">
                   <AlertCircle className="size-5 text-accent shrink-0 mt-0.5" />
                   <div>
