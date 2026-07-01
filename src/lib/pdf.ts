@@ -286,8 +286,8 @@ export async function removeWatermarkPdf(file: File): Promise<ToolResult> {
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
   src.getPages().forEach((page) => {
     try {
-      // @ts-expect-error – node exists on the low-level PDFPage
-      page.node.delete?.(page.node.context.obj("Annots"));
+      const node = (page as unknown as { node: { delete?: (k: unknown) => void; context: { obj: (s: string) => unknown } } }).node;
+      node.delete?.(node.context.obj("Annots"));
     } catch { /* ignore */ }
   });
   src.setSubject("");
