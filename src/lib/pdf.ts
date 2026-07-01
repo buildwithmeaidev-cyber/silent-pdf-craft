@@ -1,4 +1,4 @@
-import { PDFDocument, degrees } from "pdf-lib";
+import { PDFDocument, degrees, StandardFonts, rgb } from "pdf-lib";
 
 export type ToolResult = { blob: Blob; filename: string };
 export type CompressionLevel = "light" | "medium" | "strong" | "custom";
