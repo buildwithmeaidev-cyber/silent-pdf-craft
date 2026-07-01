@@ -170,7 +170,11 @@ const ToolPage = () => {
               )}
 
               {/* Step 3 — Required inputs (P2 workflow) */}
-              {files.length > 0 && (tool.needsRange || tool.needsPassword || tool.needsRotation || tool.kind === "compress") && (
+              {files.length > 0 && (
+                tool.needsRange || tool.needsPassword || tool.needsRotation ||
+                tool.kind === "compress" || needsWatermarkText || needsSignatureText ||
+                needsAddCount || needsExportName || needsReorderInput
+              ) && (
                 <div className="mt-6 rounded-2xl border bg-background p-5 space-y-4">
                   <div className="flex items-baseline justify-between">
                     <h3 className="font-medium">Settings</h3>
@@ -191,17 +195,23 @@ const ToolPage = () => {
                     </div>
                   )}
 
-                  {tool.needsRange && (
+                  {(tool.needsRange || needsReorderInput) && (
                     <div>
-                      <label className="text-sm font-medium block mb-1.5">Page range</label>
+                      <label className="text-sm font-medium block mb-1.5">
+                        {needsReorderInput ? "New page order" : "Page range"}
+                      </label>
                       <input
                         type="text"
                         value={range}
                         onChange={(e) => setRange(e.target.value)}
-                        placeholder="e.g. 1-3, 5, 7-9"
+                        placeholder={needsReorderInput ? "e.g. 3,1,2,4" : "e.g. 1-3, 5, 7-9"}
                         className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
                       />
-                      <p className="mt-1.5 text-xs text-muted-foreground">Use commas to separate, dashes for ranges.</p>
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {needsReorderInput
+                          ? "List page numbers in the order you want them."
+                          : "Use commas to separate, dashes for ranges."}
+                      </p>
                     </div>
                   )}
 
@@ -245,6 +255,63 @@ const ToolPage = () => {
                         ))}
                       </div>
                       <p className="mt-1.5 text-xs text-muted-foreground">Stronger = smaller file, lower image quality.</p>
+                    </div>
+                  )}
+
+                  {needsWatermarkText && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Watermark text</label>
+                      <input
+                        type="text"
+                        value={watermarkText}
+                        onChange={(e) => setWatermarkText(e.target.value)}
+                        placeholder="CONFIDENTIAL"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">Diagonal, semi-transparent, on every page.</p>
+                    </div>
+                  )}
+
+                  {needsSignatureText && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Your signature</label>
+                      <input
+                        type="text"
+                        value={signatureText}
+                        onChange={(e) => setSignatureText(e.target.value)}
+                        placeholder="Type your name"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary font-serif italic"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">Rendered on the last page, bottom-right.</p>
+                    </div>
+                  )}
+
+                  {needsAddCount && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Blank pages to add</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={addCount}
+                        onChange={(e) => setAddCount(parseInt(e.target.value || "1", 10))}
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">Appended to the end, matching your first page's size.</p>
+                    </div>
+                  )}
+
+                  {needsExportName && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">New filename</label>
+                      <input
+                        type="text"
+                        value={exportName}
+                        onChange={(e) => setExportName(e.target.value)}
+                        placeholder="my-final-document"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">We'll add .pdf if you don't.</p>
                     </div>
                   )}
                 </div>
