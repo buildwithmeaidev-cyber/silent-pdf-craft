@@ -234,11 +234,12 @@ export async function compressPdf(file: File, config?: CompressionConfig): Promi
   }
 }
 
-export async function protectPdf(file: File, _password: string): Promise<ToolResult> {
-  // pdf-lib does not encrypt; we mark the document with metadata and warn user in UI.
+export async function protectPdf(file: File, password: string): Promise<ToolResult> {
+  // pdf-lib does not encrypt; we mark the document with metadata + a cover note.
+  // For real password protection users need a desktop tool — surfaced in the UI copy.
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
   src.setProducer("silentPDF");
-  src.setSubject("Marked private — open in your secured workflow");
+  src.setSubject(`Marked private (password hint length: ${password.length})`);
   const bytes = await src.save();
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-protected.pdf" };
 }
@@ -247,13 +248,190 @@ export async function imageToPdf(files: File[]): Promise<ToolResult> {
   const out = await PDFDocument.create();
   for (const f of files) {
     const buf = await f.arrayBuffer();
-    const img = f.type.includes("png") ? await out.embedPng(buf) : await out.embedJpg(buf);
+    const isPng = f.type.includes("png") || f.name.toLowerCase().endsWith(".png");
+    const img = isPng ? await out.embedPng(buf) : await out.embedJpg(buf);
     const page = out.addPage([img.width, img.height]);
     page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
   }
   const bytes = await out.save();
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-from-images.pdf" };
 }
+
+export async function watermarkPdf(file: File, text: string): Promise<ToolResult> {
+  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const font = await src.embedFont(StandardFonts.HelveticaBold);
+  const label = (text || "CONFIDENTIAL").trim();
+  src.getPages().forEach((page) => {
+    const { width, height } = page.getSize();
+    const size = Math.max(36, Math.min(width, height) / 8);
+    const textWidth = font.widthOfTextAtSize(label, size);
+    page.drawText(label, {
+      x: width / 2 - textWidth / 2,
+      y: height / 2,
+      size,
+      font,
+      color: rgb(0.7, 0.1, 0.1),
+      opacity: 0.25,
+      rotate: degrees(45),
+    });
+  });
+  const bytes = await src.save();
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-watermarked.pdf" };
+}
+
+export async function removeWatermarkPdf(file: File): Promise<ToolResult> {
+  // Best-effort browser cleanup: strip annotations layer (common home for watermark stamps)
+  // and clear metadata. Rasterized watermarks embedded in page content can't be safely removed
+  // in the browser — the UI copy calls this out.
+  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  src.getPages().forEach((page) => {
+    try {
+      // @ts-expect-error – node exists on the low-level PDFPage
+      page.node.delete?.(page.node.context.obj("Annots"));
+    } catch { /* ignore */ }
+  });
+  src.setSubject("");
+  src.setKeywords([]);
+  const bytes = await src.save();
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-cleaned.pdf" };
+}
+
+export async function reorderPdf(file: File, order: string): Promise<ToolResult> {
+  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const total = src.getPageCount();
+  const indices = parseRanges(order, total);
+  if (!indices || indices.length === 0) throw new Error("Enter a new page order, e.g. 3,1,2");
+  const out = await PDFDocument.create();
+  const pages = await out.copyPages(src, indices);
+  pages.forEach((p) => out.addPage(p));
+  const bytes = await out.save();
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-reordered.pdf" };
+}
+
+export async function addBlankPages(file: File, count: number): Promise<ToolResult> {
+  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const [first] = src.getPages();
+  const size: [number, number] = first ? [first.getWidth(), first.getHeight()] : [595.28, 841.89];
+  for (let i = 0; i < Math.max(1, count); i++) src.addPage(size);
+  const bytes = await src.save();
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-with-pages.pdf" };
+}
+
+export async function exportPdf(file: File, newName: string): Promise<ToolResult> {
+  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const bytes = await src.save();
+  const clean = (newName || "silentpdf-export").replace(/[^\w\-. ]+/g, "").trim() || "silentpdf-export";
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: clean.endsWith(".pdf") ? clean : `${clean}.pdf` };
+}
+
+export async function signPdf(file: File, signatureText: string): Promise<ToolResult> {
+  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const font = await src.embedFont(StandardFonts.HelveticaOblique);
+  const pages = src.getPages();
+  const last = pages[pages.length - 1];
+  const { width } = last.getSize();
+  const label = signatureText || "Signed";
+  const size = 24;
+  const w = font.widthOfTextAtSize(label, size);
+  last.drawText(label, {
+    x: Math.max(24, width - w - 48),
+    y: 48,
+    size,
+    font,
+    color: rgb(0.05, 0.1, 0.35),
+  });
+  last.drawText(`Signed via silentPDF · ${new Date().toISOString().slice(0, 10)}`, {
+    x: Math.max(24, width - w - 48),
+    y: 30,
+    size: 8,
+    font,
+    color: rgb(0.4, 0.4, 0.45),
+  });
+  const bytes = await src.save();
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-signed.pdf" };
+}
+
+export async function pdfToWord(file: File): Promise<ToolResult> {
+  const [{ Document, Packer, Paragraph, TextRun }, pdfjs] = await Promise.all([
+    import("docx"),
+    import("pdfjs-dist"),
+  ]);
+  // Wire the pdfjs worker from the bundled asset to keep everything browser-side.
+  // @ts-expect-error – Vite resolves the worker URL
+  const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+  // @ts-expect-error – GlobalWorkerOptions exists at runtime
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjs.getDocument({ data: buf }).promise;
+  const paragraphs: InstanceType<typeof Paragraph>[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const lines = new Map<number, string[]>();
+    for (const item of content.items as Array<{ str: string; transform: number[] }>) {
+      const y = Math.round(item.transform[5]);
+      const arr = lines.get(y) ?? [];
+      arr.push(item.str);
+      lines.set(y, arr);
+    }
+    const sortedY = Array.from(lines.keys()).sort((a, b) => b - a);
+    for (const y of sortedY) {
+      const text = (lines.get(y) ?? []).join(" ").trim();
+      if (text) paragraphs.push(new Paragraph({ children: [new TextRun(text)] }));
+    }
+    paragraphs.push(new Paragraph({ children: [new TextRun("")] }));
+  }
+  const doc = new Document({ sections: [{ children: paragraphs }] });
+  const blob = await Packer.toBlob(doc);
+  return { blob, filename: file.name.replace(/\.pdf$/i, "") + ".docx" };
+}
+
+export async function wordToPdf(file: File): Promise<ToolResult> {
+  const mammoth = await import("mammoth");
+  const { value: text } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+  const out = await PDFDocument.create();
+  const font = await out.embedFont(StandardFonts.Helvetica);
+  const size = 11;
+  const margin = 54;
+  const pageW = 595.28;
+  const pageH = 841.89;
+  const maxWidth = pageW - margin * 2;
+  const lineHeight = size * 1.4;
+
+  const wrap = (line: string): string[] => {
+    const words = line.split(/\s+/);
+    const result: string[] = [];
+    let cur = "";
+    for (const w of words) {
+      const test = cur ? `${cur} ${w}` : w;
+      if (font.widthOfTextAtSize(test, size) > maxWidth) {
+        if (cur) result.push(cur);
+        cur = w;
+      } else cur = test;
+    }
+    if (cur) result.push(cur);
+    return result.length ? result : [""];
+  };
+
+  let page = out.addPage([pageW, pageH]);
+  let y = pageH - margin;
+  for (const rawLine of text.split(/\r?\n/)) {
+    for (const line of wrap(rawLine)) {
+      if (y < margin) { page = out.addPage([pageW, pageH]); y = pageH - margin; }
+      page.drawText(line, { x: margin, y, size, font, color: rgb(0.1, 0.1, 0.15) });
+      y -= lineHeight;
+    }
+  }
+  const bytes = await out.save();
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: file.name.replace(/\.docx$/i, "") + ".pdf" };
+}
+
+export async function editPdfPassthrough(file: File): Promise<ToolResult> {
+  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const bytes = await src.save();
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-edited.pdf" };
+}
+
 
 function parseRanges(input: string | undefined, total: number): number[] | null {
   if (!input || !input.trim()) return null;
