@@ -357,10 +357,10 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
     import("pdfjs-dist"),
   ]);
   // Wire the pdfjs worker from the bundled asset to keep everything browser-side.
-  // @ts-expect-error – Vite resolves the worker URL
-  const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
-  // @ts-expect-error – GlobalWorkerOptions exists at runtime
-  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  const workerMod: { default: string } = await import(
+    /* @vite-ignore */ "pdfjs-dist/build/pdf.worker.min.mjs?url"
+  );
+  (pdfjs as unknown as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc = workerMod.default;
   const buf = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: buf }).promise;
   const paragraphs: InstanceType<typeof Paragraph>[] = [];
