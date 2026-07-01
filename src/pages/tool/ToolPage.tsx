@@ -1,4 +1,5 @@
 import React from 'react';
+import { ToolKind } from '@/types/ToolConfig';
 import { useParams } from 'react-router-dom';
 import toolsConfig from '@/toolsConfig';
 import ToolLayout from '@/components/tool-system/ToolLayout';
@@ -14,6 +15,10 @@ import useRealPdfProcess from '@/hooks/useRealPdfProcess';
 export default function ToolPage() {
   const { tool } = useParams<{ tool: string }>();
   const config = toolsConfig[tool as keyof typeof toolsConfig];
+  // Retrieve feature flags (fallback to default)
+  const featureFlags = (window as any).__FEATURE_FLAGS__ || { enableAdvancedProcessing: false };
+  const advancedTools: ToolKind[] = ['ocr', 'imageConvert', 'watermark', 'encrypt', 'pdfToWord', 'wordToPdf'];
+  const isAdvancedTool = advancedTools.includes(config.kind as ToolKind);
 
   if (!config) {
     return <div>Tool not found.</div>;
@@ -74,7 +79,7 @@ export default function ToolPage() {
         <ToolSuccess title='Success' description={process.message} downloadUrl={(process as any).downloadUrl} />
       )}
       <ToolActionBar
-        disabled={files.length < (config.minFiles ?? 1) || process.loading}
+        disabled={files.length < (config.minFiles ?? 1) || process.loading || (isAdvancedTool && !featureFlags.enableAdvancedProcessing)}
         loading={process.loading}
         label={config.actionLabel}
         onClick={handleAction}
