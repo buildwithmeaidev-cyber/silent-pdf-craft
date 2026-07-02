@@ -268,15 +268,44 @@ export async function protectPdf(file: File, password: string): Promise<ToolResu
 export async function imageToPdf(files: File[]): Promise<ToolResult> {
   const out = await PDFDocument.create();
   for (const f of files) {
-    const buf = await f.arrayBuffer();
-    const isPng = f.type.includes("png") || f.name.toLowerCase().endsWith(".png");
-    const img = isPng ? await out.embedPng(buf) : await out.embedJpg(buf);
+    const name = f.name.toLowerCase();
+    const isPng = f.type.includes("png") || name.endsWith(".png");
+    const isJpg = f.type.includes("jpeg") || f.type.includes("jpg") || name.endsWith(".jpg") || name.endsWith(".jpeg");
+    let img: Awaited<ReturnType<typeof out.embedJpg>>;
+    if (isJpg) {
+      img = await out.embedJpg(await f.arrayBuffer());
+    } else if (isPng) {
+      img = await out.embedPng(await f.arrayBuffer());
+    } else {
+      // Normalize webp/gif/etc via canvas → JPEG
+      const url = URL.createObjectURL(f);
+      const bitmap = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = () => reject(new Error(`Couldn't read image: ${f.name}`));
+        el.src = url;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = bitmap.naturalWidth || 1;
+      canvas.height = bitmap.naturalHeight || 1;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas not available");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0);
+      URL.revokeObjectURL(url);
+      const blob: Blob = await new Promise((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Encode failed"))), "image/jpeg", 0.92)
+      );
+      img = await out.embedJpg(new Uint8Array(await blob.arrayBuffer()));
+    }
     const page = out.addPage([img.width, img.height]);
     page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
   }
   const bytes = await out.save();
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-from-images.pdf" };
 }
+
 
 export async function watermarkPdf(file: File, text: string): Promise<ToolResult> {
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
