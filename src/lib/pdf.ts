@@ -176,63 +176,84 @@ export function getCompressionDescription(level: CompressionLevel): { title: str
   }
 }
 
+// Load pdf.js once, wiring its worker from the bundled asset.
+let _pdfjs: typeof import("pdfjs-dist") | null = null;
+async function getPdfJs() {
+  if (_pdfjs) return _pdfjs;
+  const pdfjs = await import("pdfjs-dist");
+  const workerMod: { default: string } = await import(
+    /* @vite-ignore */ "pdfjs-dist/build/pdf.worker.min.mjs?url"
+  );
+  (pdfjs as unknown as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc = workerMod.default;
+  _pdfjs = pdfjs;
+  return pdfjs;
+}
+
+/**
+ * Real compression: rasterize each page to JPEG at chosen scale + quality,
+ * then rebuild the PDF from those JPEGs. Produces genuinely smaller files
+ * for image-heavy or scanned PDFs. For pure-text PDFs, savings are smaller
+ * but metadata + object-stream save still helps.
+ */
 export async function compressPdf(file: File, config?: CompressionConfig): Promise<ToolResult> {
-  // Determine compression configuration
-  const compressionConfig = config || {
-    level: getOptimalCompressionLevel(file.size) as CompressionLevel,
-  };
-  
-  const settings = getCompressionConfig(compressionConfig);
+  const level: CompressionLevel = config?.level ?? getOptimalCompressionLevel(file.size);
 
-  try {
-    const src = await PDFDocument.load(await file.arrayBuffer(), {
-      ignoreEncryption: true,
-      updateMetadata: settings.removeMetadata ? false : true,
-    });
-
-    // Remove metadata if requested (Light, Medium, Strong, or Custom)
-    if (settings.removeMetadata) {
-      try {
-        src.setTitle("");
-        src.setAuthor("");
-        src.setSubject("");
-        src.setKeywords([]);
-        src.setProducer("silentPDF");
-        src.setCreationDate(new Date(0)); // Set to epoch to minimize date storage
-      } catch (e) {
-        // Continue if metadata operations fail
+  // Map level → render scale + JPEG quality
+  const preset = (() => {
+    switch (level) {
+      case "light":  return { scale: 1.5, quality: 0.92 };
+      case "medium": return { scale: 1.25, quality: 0.75 };
+      case "strong": return { scale: 1.0, quality: 0.55 };
+      case "custom": {
+        const q = Math.min(100, Math.max(20, config?.quality ?? 75)) / 100;
+        // Scale tracks quality so lower quality = smaller pages too.
+        const scale = 0.8 + q * 0.9;
+        return { scale, quality: q };
       }
     }
+  })();
 
-    // Save with optimization
-    const bytes = await src.save({
-      useObjectStreams: true,
-      addDefaultPage: false,
-      objectsPerTick: settings.objectsPerTick,
+  const pdfjs = await getPdfJs();
+  const srcBuf = await file.arrayBuffer();
+  const srcPdf = await pdfjs.getDocument({ data: srcBuf }).promise;
+  const out = await PDFDocument.create();
+  out.setProducer("silentPDF");
+  out.setCreationDate(new Date(0));
+
+  for (let i = 1; i <= srcPdf.numPages; i++) {
+    const page = await srcPdf.getPage(i);
+    const viewport = page.getViewport({ scale: preset.scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.floor(viewport.width));
+    canvas.height = Math.max(1, Math.floor(viewport.height));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas not available");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // pdf.js v4 requires the canvas in render params
+    await page.render({ canvasContext: ctx, viewport, canvas } as unknown as Parameters<typeof page.render>[0]).promise;
+
+    const jpegBlob: Blob = await new Promise((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Encode failed"))), "image/jpeg", preset.quality)
+    );
+    const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
+    const embedded = await out.embedJpg(jpegBytes);
+
+    // Preserve original page size (points) so the PDF prints correctly.
+    const origViewport = page.getViewport({ scale: 1 });
+    const pdfPage = out.addPage([origViewport.width, origViewport.height]);
+    pdfPage.drawImage(embedded, {
+      x: 0, y: 0, width: origViewport.width, height: origViewport.height,
     });
-
-    // Calculate estimated compression ratio
-    const originalSize = file.size;
-    const compressedSize = bytes.length;
-    const ratio = ((originalSize - compressedSize) / originalSize) * 100;
-
-    // Return result with metadata
-    const result: ToolResult = {
-      blob: new Blob([bytes as BlobPart], { type: "application/pdf" }),
-      filename: "silentpdf-compressed.pdf",
-    };
-
-    // Attach compression info to result (optional, for UI feedback)
-    const resultWithInfo = result as ToolResult & { compressionRatio?: number; originalSize?: number; compressedSize?: number };
-    resultWithInfo.compressionRatio = ratio;
-    resultWithInfo.originalSize = originalSize;
-    resultWithInfo.compressedSize = compressedSize;
-
-    return result;
-  } catch (error) {
-    throw new Error(`Compression failed: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
+
+  const bytes = await out.save({ useObjectStreams: true, addDefaultPage: false });
+  return {
+    blob: new Blob([bytes as BlobPart], { type: "application/pdf" }),
+    filename: "silentpdf-compressed.pdf",
+  };
 }
+
 
 export async function protectPdf(file: File, password: string): Promise<ToolResult> {
   // pdf-lib does not encrypt; we mark the document with metadata + a cover note.
