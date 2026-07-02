@@ -20,13 +20,14 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { usePdfJob } from "@/hooks/usePdfJob";
-import { useMergeProcessor } from "@/hooks/useMergeProcessor";
 import {
+  mergePdfs,
   splitPdf, rotatePdf, removePages, compressPdf, protectPdf,
   imageToPdf, watermarkPdf, removeWatermarkPdf, reorderPdf,
   addBlankPages, exportPdf, signPdf, pdfToWord, wordToPdf, editPdfPassthrough,
   downloadBlob, formatBytes,
 } from "@/lib/pdf";
+
 
 const ToolPage = () => {
   const { slug = "" } = useParams();
@@ -45,14 +46,9 @@ const ToolPage = () => {
   const [exportName, setExportName] = useState("");
 
   // Initialize hooks for PDF jobs and merge processing
-  const { progress: pdfProgress, state: pdfState, result: pdfResult, error: pdfJobError, run: runJob, reset: resetJob } = usePdfJob();
-  const { progress: mergeProgress, state: mergeState, result: mergeResult, error: mergeError, runMerge, reset: resetMerge } = useMergeProcessor();
+  // Single unified PDF job hook — every tool routes through it.
+  const { progress, state, result, error: jobError, run: runJob, reset: resetJob } = usePdfJob();
 
-  // Determine which hook to use based on selected tool
-  const isMergeTool = tool?.kind === "merge";
-  const progress = isMergeTool ? mergeProgress : pdfProgress;
-  const state = isMergeTool ? mergeState : pdfState;
-  const result = isMergeTool ? mergeResult : pdfResult;
 
   const rawFiles = useMemo(() => files.map((f) => f.file), [files]);
 
@@ -61,6 +57,7 @@ const ToolPage = () => {
   const needsAddCount = tool?.kind === "addpages";
   const needsExportName = tool?.kind === "export";
   const needsReorderInput = tool?.kind === "reorder";
+  const isMergeTool = tool?.kind === "merge";
 
   const canRun = useMemo(() => {
     if (!tool || files.length === 0) return false;
@@ -77,19 +74,16 @@ const ToolPage = () => {
   const reset = () => {
     clearFiles();
     resetJob();
-    resetMerge();
     setCompressionLevel("medium");
     setCustomQuality(80);
   };
 
   const runTool = async () => {
-    if (tool?.kind === "merge") {
-      await runMerge(rawFiles);
-      return;
-    }
     await runJob(async () => {
       const f = rawFiles[0];
       switch (tool?.kind) {
+        case "merge": return await mergePdfs(rawFiles);
+
         case "split": return await splitPdf(f, range);
         case "rotate": return await rotatePdf(f, rotation);
         case "remove": return await removePages(f, range);
@@ -319,15 +313,16 @@ const ToolPage = () => {
 
 
 
-              {state === "error" && (pdfJobError || mergeError) && (
+              {state === "error" && jobError && (
                 <div className="mt-5 flex gap-3 rounded-xl border border-accent/30 bg-accent-soft p-4">
                   <AlertCircle className="size-5 text-accent shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-accent">Couldn't process this file</p>
-                    <p className="text-sm text-foreground/80 mt-0.5">{pdfJobError}</p>
+                    <p className="text-sm text-foreground/80 mt-0.5">{jobError}</p>
                   </div>
                 </div>
               )}
+
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Button
