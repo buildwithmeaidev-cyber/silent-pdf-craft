@@ -1,10 +1,7 @@
-import { ErrorBoundary } from "react-error-boundary";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 
-function ErrorFallback({
-  error,
-}: {
-  error: Error;
-}) {
+function ErrorFallback({ error }: FallbackProps) {
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
       <div className="max-w-lg rounded-3xl border border-red-200 bg-white p-8 text-center shadow-sm">
@@ -18,7 +15,7 @@ function ErrorFallback({
 
         {import.meta.env.DEV && (
           <pre className="mt-4 overflow-auto rounded-xl bg-slate-100 p-4 text-left text-xs text-red-600">
-            {error.message}
+            {(error as Error).message}
           </pre>
         )}
 
@@ -39,9 +36,7 @@ export default function AppErrorBoundary({
   children: React.ReactNode;
 }) {
   return (
-    <ErrorBoundary
-      FallbackComponent={ErrorFallback as unknown as React.ComponentType<unknown>}
-    >
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
       {children}
     </ErrorBoundary>
   );
