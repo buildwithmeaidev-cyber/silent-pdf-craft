@@ -233,8 +233,8 @@ const ToolPage = () => {
                   {tool.kind === "compress" && (
                     <div>
                       <label className="text-sm font-medium block mb-1.5">Compression level</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {(["light", "medium", "strong"] as const).map((lvl) => (
+                      <div className="grid grid-cols-4 gap-2">
+                        {(["light", "medium", "strong", "custom"] as const).map((lvl) => (
                           <button
                             key={lvl}
                             type="button"
@@ -248,9 +248,29 @@ const ToolPage = () => {
                           </button>
                         ))}
                       </div>
-                      <p className="mt-1.5 text-xs text-muted-foreground">Stronger = smaller file, lower image quality.</p>
+                      {compressionLevel === "custom" ? (
+                        <div className="mt-3">
+                          <div className="flex items-baseline justify-between">
+                            <label className="text-xs text-muted-foreground">Quality</label>
+                            <span className="text-xs font-medium">{customQuality}%</span>
+                          </div>
+                          <input
+                            type="range"
+                            min={20}
+                            max={100}
+                            step={5}
+                            value={customQuality}
+                            onChange={(e) => setCustomQuality(parseInt(e.target.value, 10))}
+                            className="w-full mt-1 accent-primary"
+                          />
+                          <p className="mt-1 text-xs text-muted-foreground">Lower quality = smaller file. 75% is a good middle ground.</p>
+                        </div>
+                      ) : (
+                        <p className="mt-1.5 text-xs text-muted-foreground">Stronger = smaller file, lower image quality.</p>
+                      )}
                     </div>
                   )}
+
 
                   {needsWatermarkText && (
                     <div>
