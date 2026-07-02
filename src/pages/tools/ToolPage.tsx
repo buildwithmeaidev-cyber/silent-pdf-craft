@@ -57,6 +57,7 @@ const ToolPage = () => {
   const needsAddCount = tool?.kind === "addpages";
   const needsExportName = tool?.kind === "export";
   const needsReorderInput = tool?.kind === "reorder";
+  const isMergeTool = tool?.kind === "merge";
 
   const canRun = useMemo(() => {
     if (!tool || files.length === 0) return false;
@@ -73,19 +74,16 @@ const ToolPage = () => {
   const reset = () => {
     clearFiles();
     resetJob();
-    resetMerge();
     setCompressionLevel("medium");
     setCustomQuality(80);
   };
 
   const runTool = async () => {
-    if (tool?.kind === "merge") {
-      await runMerge(rawFiles);
-      return;
-    }
     await runJob(async () => {
       const f = rawFiles[0];
       switch (tool?.kind) {
+        case "merge": return await mergePdfs(rawFiles);
+
         case "split": return await splitPdf(f, range);
         case "rotate": return await rotatePdf(f, rotation);
         case "remove": return await removePages(f, range);
