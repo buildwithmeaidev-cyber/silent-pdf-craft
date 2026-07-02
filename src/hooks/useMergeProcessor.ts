@@ -30,8 +30,9 @@ export function useMergeProcessor(): UseMergeProcessorReturn {
     setState("processing");
     setProgress(20);
     try {
-      const blob = await mergePdfs(files);
-      setResult({ filename: "merged.pdf", blob });
+      const { blob, filename } = await mergePdfs(files);
+      setResult({ filename, blob });
+
       setProgress(100);
       setState("success");
     } catch (e: any) {
