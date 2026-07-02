@@ -1,10 +1,7 @@
-import { ErrorBoundary } from "react-error-boundary";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 
-function ErrorFallback({
-  error,
-}: {
-  error: Error;
-}) {
+function ErrorFallback({ error }: FallbackProps) {
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
       <div className="max-w-lg rounded-3xl border border-red-200 bg-white p-8 text-center shadow-sm">
