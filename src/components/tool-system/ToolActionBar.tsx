@@ -29,6 +29,7 @@ export default function ToolActionBar({
   downloadUrl,
   downloadName = "silentpdf-output.pdf",
   showRetry = false,
+  tooltip,
 }: Props) {
   const isCompleted = Boolean(downloadUrl);
 
