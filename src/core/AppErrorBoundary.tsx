@@ -15,7 +15,7 @@ function ErrorFallback({ error }: FallbackProps) {
 
         {import.meta.env.DEV && (
           <pre className="mt-4 overflow-auto rounded-xl bg-slate-100 p-4 text-left text-xs text-red-600">
-            {error.message}
+            {(error as Error).message}
           </pre>
         )}
 
