@@ -20,13 +20,14 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { usePdfJob } from "@/hooks/usePdfJob";
-import { useMergeProcessor } from "@/hooks/useMergeProcessor";
 import {
+  mergePdfs,
   splitPdf, rotatePdf, removePages, compressPdf, protectPdf,
   imageToPdf, watermarkPdf, removeWatermarkPdf, reorderPdf,
   addBlankPages, exportPdf, signPdf, pdfToWord, wordToPdf, editPdfPassthrough,
   downloadBlob, formatBytes,
 } from "@/lib/pdf";
+
 
 const ToolPage = () => {
   const { slug = "" } = useParams();
