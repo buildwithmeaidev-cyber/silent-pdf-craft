@@ -17,7 +17,6 @@ export interface ProgrammaticVariant {
   relatedVariants?: string[];       // sibling slugs
 }
 
-import { NEW_PROGRAMMATIC } from "./programmatic_new";
 
 export const PROGRAMMATIC: ProgrammaticVariant[] = [
   // ---------- COMPRESS ----------
@@ -451,7 +450,6 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
     ],
     relatedVariants: ["watermark-pdf-online"],
   },
-  ...NEW_PROGRAMMATIC,
 ];
 
 export function getProgrammatic(slug: string) {
