@@ -46,14 +46,9 @@ const ToolPage = () => {
   const [exportName, setExportName] = useState("");
 
   // Initialize hooks for PDF jobs and merge processing
-  const { progress: pdfProgress, state: pdfState, result: pdfResult, error: pdfJobError, run: runJob, reset: resetJob } = usePdfJob();
-  const { progress: mergeProgress, state: mergeState, result: mergeResult, error: mergeError, runMerge, reset: resetMerge } = useMergeProcessor();
+  // Single unified PDF job hook — every tool routes through it.
+  const { progress, state, result, error: jobError, run: runJob, reset: resetJob } = usePdfJob();
 
-  // Determine which hook to use based on selected tool
-  const isMergeTool = tool?.kind === "merge";
-  const progress = isMergeTool ? mergeProgress : pdfProgress;
-  const state = isMergeTool ? mergeState : pdfState;
-  const result = isMergeTool ? mergeResult : pdfResult;
 
   const rawFiles = useMemo(() => files.map((f) => f.file), [files]);
 
