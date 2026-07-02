@@ -402,17 +402,11 @@ export async function signPdf(file: File, signatureText: string): Promise<ToolRe
 }
 
 export async function pdfToWord(file: File): Promise<ToolResult> {
-  const [{ Document, Packer, Paragraph, TextRun }, pdfjs] = await Promise.all([
-    import("docx"),
-    import("pdfjs-dist"),
-  ]);
-  // Wire the pdfjs worker from the bundled asset to keep everything browser-side.
-  const workerMod: { default: string } = await import(
-    /* @vite-ignore */ "pdfjs-dist/build/pdf.worker.min.mjs?url"
-  );
-  (pdfjs as unknown as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc = workerMod.default;
+  const { Document, Packer, Paragraph, TextRun } = await import("docx");
+  const pdfjs = await getPdfJs();
   const buf = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: buf }).promise;
+
   const paragraphs: InstanceType<typeof Paragraph>[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
