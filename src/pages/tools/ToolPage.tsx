@@ -313,15 +313,16 @@ const ToolPage = () => {
 
 
 
-              {state === "error" && (pdfJobError || mergeError) && (
+              {state === "error" && jobError && (
                 <div className="mt-5 flex gap-3 rounded-xl border border-accent/30 bg-accent-soft p-4">
                   <AlertCircle className="size-5 text-accent shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-accent">Couldn't process this file</p>
-                    <p className="text-sm text-foreground/80 mt-0.5">{pdfJobError}</p>
+                    <p className="text-sm text-foreground/80 mt-0.5">{jobError}</p>
                   </div>
                 </div>
               )}
+
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Button
