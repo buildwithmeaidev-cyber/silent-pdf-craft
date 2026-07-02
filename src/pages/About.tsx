@@ -2,10 +2,8 @@ import Seo from "@/components/Seo";
 
 const About = () => (
   <>
-    <Seo 
-      title="About Us - SilentPDF"
-      description="Learn about the mission behind SilentPDF and our commitment to privacy-first, browser-based document processing."
-    />
+    <Seo />
+
 
     <div className="container-px mx-auto max-w-3xl py-16 md:py-24">
       <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">About Us</span>
