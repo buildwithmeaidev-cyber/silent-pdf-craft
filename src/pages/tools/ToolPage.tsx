@@ -179,6 +179,13 @@ const ToolPage = () => {
                 showFileList={!isMergeTool}
               />
 
+              {uploadError && (
+                <div className="mt-4 flex gap-3 rounded-xl border border-accent/30 bg-accent-soft p-3">
+                  <AlertCircle className="size-4 text-accent shrink-0 mt-0.5" />
+                  <p className="text-sm text-accent">{uploadError}</p>
+                </div>
+              )}
+
               {tool.kind === "merge" && files.length > 0 && (
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
