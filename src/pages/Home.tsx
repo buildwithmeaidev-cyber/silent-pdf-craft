@@ -54,38 +54,6 @@ const TOOL_META: Record<string, { category: Exclude<CategoryId, "all">; useCase:
   "e-sign-pdf":        { category: "signing",      useCase: "Send contracts for e-signature",   time: "2 minutes" },
 };
 
-const WORKFLOWS = [
-  {
-    name: "Resume submission",
-    audience: "Job seekers",
-    steps: [
-      { label: "Word to PDF", to: "/word-to-pdf" },
-      { label: "Compress",    to: "/compress-pdf" },
-      { label: "Sign",        to: "/sign-pdf" },
-    ],
-    accent: "from-primary/15 to-primary/0",
-  },
-  {
-    name: "Business contract",
-    audience: "Founders & ops",
-    steps: [
-      { label: "Merge",   to: "/merge-pdf" },
-      { label: "Protect", to: "/protect-pdf" },
-      { label: "E-Sign",  to: "/e-sign-pdf" },
-    ],
-    accent: "from-accent/15 to-accent/0",
-  },
-  {
-    name: "Student assignment",
-    audience: "Students",
-    steps: [
-      { label: "Photo to PDF", to: "/photo-to-pdf" },
-      { label: "Compress",     to: "/compress-pdf" },
-      { label: "Merge",        to: "/merge-pdf" },
-    ],
-    accent: "from-ink/10 to-ink/0",
-  },
-];
 
 const Home = () => {
   const [category, setCategory] = useState<CategoryId>("all");
