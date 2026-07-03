@@ -151,7 +151,24 @@ const ToolPage = () => {
         <AnimatePresence mode="wait">
           {(state === "idle" || state === "error") && (
             <motion.div key="idle" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <PdfDropzone files={files.map(f => f.file)} onChange={(newFiles) => addFiles(newFiles)} accept={tool.accept} multiple={tool.multiple} />
+              <PdfDropzone
+                files={files.map(f => f.file)}
+                onChange={(newFiles) => {
+                  if (!tool.multiple) {
+                    // Single-file tools: always replace, never accumulate.
+                    clearFiles();
+                    if (newFiles.length > 0) addFiles([newFiles[0]]);
+                  } else {
+                    // Multi-file tools (merge): append but dedupe.
+                    const existing = new Set(files.map(f => `${f.file.name}:${f.file.size}:${f.file.lastModified}`));
+                    const toAdd = newFiles.filter(f => !existing.has(`${f.name}:${f.size}:${f.lastModified}`));
+                    if (toAdd.length > 0) addFiles(toAdd);
+                  }
+                }}
+                accept={tool.accept}
+                multiple={tool.multiple}
+                showFileList={!isMergeTool}
+              />
 
               {tool.kind === "merge" && files.length > 0 && (
                 <div className="mt-6">
