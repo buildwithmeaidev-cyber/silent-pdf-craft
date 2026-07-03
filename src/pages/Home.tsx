@@ -54,38 +54,6 @@ const TOOL_META: Record<string, { category: Exclude<CategoryId, "all">; useCase:
   "e-sign-pdf":        { category: "signing",      useCase: "Send contracts for e-signature",   time: "2 minutes" },
 };
 
-const WORKFLOWS = [
-  {
-    name: "Resume submission",
-    audience: "Job seekers",
-    steps: [
-      { label: "Word to PDF", to: "/word-to-pdf" },
-      { label: "Compress",    to: "/compress-pdf" },
-      { label: "Sign",        to: "/sign-pdf" },
-    ],
-    accent: "from-primary/15 to-primary/0",
-  },
-  {
-    name: "Business contract",
-    audience: "Founders & ops",
-    steps: [
-      { label: "Merge",   to: "/merge-pdf" },
-      { label: "Protect", to: "/protect-pdf" },
-      { label: "E-Sign",  to: "/e-sign-pdf" },
-    ],
-    accent: "from-accent/15 to-accent/0",
-  },
-  {
-    name: "Student assignment",
-    audience: "Students",
-    steps: [
-      { label: "Photo to PDF", to: "/photo-to-pdf" },
-      { label: "Compress",     to: "/compress-pdf" },
-      { label: "Merge",        to: "/merge-pdf" },
-    ],
-    accent: "from-ink/10 to-ink/0",
-  },
-];
 
 const Home = () => {
   const [category, setCategory] = useState<CategoryId>("all");
@@ -165,52 +133,24 @@ const Home = () => {
         </div>
       </section>
 
-      {/* POPULAR WORKFLOWS — show the product, not just the parts */}
-      <section className="py-24 border-t bg-surface/40">
-        <div className="container-px mx-auto max-w-7xl">
-          <SectionHeading
-            eyebrow="Popular workflows"
-            title="Real jobs, end to end."
-            subtitle="Chain a few quiet tools together to finish the work you actually came for."
-          />
-          <div className="mt-14 grid md:grid-cols-3 gap-5">
-            {WORKFLOWS.map((w) => (
-              <motion.div
-                key={w.name}
-                {...fadeUp}
-                className={cn(
-                  "relative rounded-3xl border bg-card p-7 shadow-soft hover:shadow-lift transition-all overflow-hidden"
-                )}
-              >
-                <div className={cn("absolute inset-0 -z-0 bg-gradient-to-br", w.accent)} />
-                <div className="relative">
-                  <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{w.audience}</span>
-                  <h3 className="mt-2 font-serif text-3xl text-balance">{w.name}</h3>
-
-                  <div className="mt-6 flex flex-wrap items-center gap-2">
-                    {w.steps.map((s, i) => (
-                      <div key={s.to} className="flex items-center gap-2">
-                        <Link
-                          to={s.to}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-background border px-3 py-1.5 text-sm font-medium hover:border-primary/40 hover:text-primary transition-colors"
-                        >
-                          {s.label}
-                        </Link>
-                        {i < w.steps.length - 1 && <ArrowRight className="size-3.5 text-muted-foreground" />}
-                      </div>
-                    ))}
-                  </div>
-
-                  <Link
-                    to={w.steps[0].to}
-                    className="mt-7 inline-flex items-center gap-1 text-sm font-medium text-primary"
-                  >
-                    Start this workflow <ArrowRight className="size-4" />
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
+      {/* Workflows CTA — full experience lives at /workflows */}
+      <section className="py-16 border-t bg-surface/40">
+        <div className="container-px mx-auto max-w-7xl flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="max-w-xl">
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Popular workflows</span>
+            <h2 className="mt-2 font-serif text-3xl md:text-4xl leading-tight text-balance">
+              Chain tools end to end.
+            </h2>
+            <p className="mt-2 text-muted-foreground">
+              Run preset workflows or build your own — upload once and each tool's output flows into the next.
+            </p>
           </div>
+          <Link
+            to="/workflows"
+            className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-medium hover:bg-primary/90 transition-colors self-start"
+          >
+            Explore workflows <ArrowRight className="size-4" />
+          </Link>
         </div>
       </section>
 
