@@ -32,7 +32,9 @@ import {
 const ToolPage = () => {
   const { slug = "" } = useParams();
   const tool = getTool(slug);
-  const { files, addFiles, removeFile, clearFiles, moveFile } = useUpload();
+  const { files, addFiles, removeFile, clearFiles, moveFile, setError: setUploadError, error: uploadError } = useUpload();
+  const MAX_UPLOAD_MB = 50;
+  const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
   const [range, setRange] = useState("");
   const [password, setPassword] = useState("");
   const [rotation, setRotation] = useState<90 | 180 | 270>(90);
