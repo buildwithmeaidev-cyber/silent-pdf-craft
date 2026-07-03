@@ -59,6 +59,11 @@ const App = () => (
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
 
+              {/* Workflows (must be registered BEFORE the /:slug catch-all) */}
+              <Route path="/workflows" element={<Workflows />} />
+              <Route path="/workflows/custom" element={<CustomWorkflowBuilder />} />
+              <Route path="/workflows/run/:id" element={<WorkflowRunner />} />
+
               {/* Programmatic landing pages (root-level slugs) */}
               <Route path="/compress-pdf-for-email" element={<ProgrammaticPage />} />
               <Route path="/compress-pdf-to-1mb" element={<ProgrammaticPage />} />
