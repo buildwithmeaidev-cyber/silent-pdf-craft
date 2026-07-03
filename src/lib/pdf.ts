@@ -201,13 +201,12 @@ export async function compressPdf(file: File, config?: CompressionConfig): Promi
   // Map level → render scale + JPEG quality
   const preset = (() => {
     switch (level) {
-      case "light":  return { scale: 1.5, quality: 0.92 };
-      case "medium": return { scale: 1.25, quality: 0.75 };
-      case "strong": return { scale: 1.0, quality: 0.55 };
+      case "light":  return { scale: 1.25, quality: 0.9 };
+      case "medium": return { scale: 1.0,  quality: 0.72 };
+      case "strong": return { scale: 0.85, quality: 0.5 };
       case "custom": {
         const q = Math.min(100, Math.max(20, config?.quality ?? 75)) / 100;
-        // Scale tracks quality so lower quality = smaller pages too.
-        const scale = 0.8 + q * 0.9;
+        const scale = 0.7 + q * 0.75;
         return { scale, quality: q };
       }
     }
