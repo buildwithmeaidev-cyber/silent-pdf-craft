@@ -32,7 +32,9 @@ import {
 const ToolPage = () => {
   const { slug = "" } = useParams();
   const tool = getTool(slug);
-  const { files, addFiles, removeFile, clearFiles, moveFile } = useUpload();
+  const { files, addFiles, removeFile, clearFiles, moveFile, setError: setUploadError, error: uploadError } = useUpload();
+  const MAX_UPLOAD_MB = 50;
+  const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
   const [range, setRange] = useState("");
   const [password, setPassword] = useState("");
   const [rotation, setRotation] = useState<90 | 180 | 270>(90);
@@ -154,14 +156,21 @@ const ToolPage = () => {
               <PdfDropzone
                 files={files.map(f => f.file)}
                 onChange={(newFiles) => {
-                  if (!tool.multiple) {
-                    // Single-file tools: always replace, never accumulate.
-                    clearFiles();
-                    if (newFiles.length > 0) addFiles([newFiles[0]]);
+                  // Enforce 50MB per-file cap across all tools.
+                  const oversized = newFiles.filter(f => f.size > MAX_UPLOAD_BYTES);
+                  const accepted = newFiles.filter(f => f.size <= MAX_UPLOAD_BYTES);
+                  if (oversized.length > 0) {
+                    setUploadError(`${oversized[0].name} is over ${MAX_UPLOAD_MB}MB. Split or compress it first.`);
                   } else {
-                    // Multi-file tools (merge): append but dedupe.
+                    setUploadError(null);
+                  }
+                  if (accepted.length === 0) return;
+                  if (!tool.multiple) {
+                    clearFiles();
+                    addFiles([accepted[0]]);
+                  } else {
                     const existing = new Set(files.map(f => `${f.file.name}:${f.file.size}:${f.file.lastModified}`));
-                    const toAdd = newFiles.filter(f => !existing.has(`${f.name}:${f.size}:${f.lastModified}`));
+                    const toAdd = accepted.filter(f => !existing.has(`${f.name}:${f.size}:${f.lastModified}`));
                     if (toAdd.length > 0) addFiles(toAdd);
                   }
                 }}
@@ -169,6 +178,13 @@ const ToolPage = () => {
                 multiple={tool.multiple}
                 showFileList={!isMergeTool}
               />
+
+              {uploadError && (
+                <div className="mt-4 flex gap-3 rounded-xl border border-accent/30 bg-accent-soft p-3">
+                  <AlertCircle className="size-4 text-accent shrink-0 mt-0.5" />
+                  <p className="text-sm text-accent">{uploadError}</p>
+                </div>
+              )}
 
               {tool.kind === "merge" && files.length > 0 && (
                 <div className="mt-6">

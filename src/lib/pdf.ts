@@ -201,13 +201,12 @@ export async function compressPdf(file: File, config?: CompressionConfig): Promi
   // Map level → render scale + JPEG quality
   const preset = (() => {
     switch (level) {
-      case "light":  return { scale: 1.5, quality: 0.92 };
-      case "medium": return { scale: 1.25, quality: 0.75 };
-      case "strong": return { scale: 1.0, quality: 0.55 };
+      case "light":  return { scale: 1.25, quality: 0.9 };
+      case "medium": return { scale: 1.0,  quality: 0.72 };
+      case "strong": return { scale: 0.85, quality: 0.5 };
       case "custom": {
         const q = Math.min(100, Math.max(20, config?.quality ?? 75)) / 100;
-        // Scale tracks quality so lower quality = smaller pages too.
-        const scale = 0.8 + q * 0.9;
+        const scale = 0.7 + q * 0.75;
         return { scale, quality: q };
       }
     }
@@ -286,16 +285,21 @@ export async function imageToPdf(files: File[]): Promise<ToolResult> {
         el.src = url;
       });
       const canvas = document.createElement("canvas");
-      canvas.width = bitmap.naturalWidth || 1;
-      canvas.height = bitmap.naturalHeight || 1;
+      // Cap longest side to 2000px so huge phone photos don't bloat the PDF or stall the encoder.
+      const MAX_SIDE = 2000;
+      const srcW = bitmap.naturalWidth || 1;
+      const srcH = bitmap.naturalHeight || 1;
+      const ratio = Math.min(1, MAX_SIDE / Math.max(srcW, srcH));
+      canvas.width = Math.max(1, Math.round(srcW * ratio));
+      canvas.height = Math.max(1, Math.round(srcH * ratio));
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas not available");
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(bitmap, 0, 0);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
       const blob: Blob = await new Promise((resolve, reject) =>
-        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Encode failed"))), "image/jpeg", 0.92)
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Encode failed"))), "image/jpeg", 0.85)
       );
       img = await out.embedJpg(new Uint8Array(await blob.arrayBuffer()));
     }
