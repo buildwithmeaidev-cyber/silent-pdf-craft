@@ -156,14 +156,21 @@ const ToolPage = () => {
               <PdfDropzone
                 files={files.map(f => f.file)}
                 onChange={(newFiles) => {
-                  if (!tool.multiple) {
-                    // Single-file tools: always replace, never accumulate.
-                    clearFiles();
-                    if (newFiles.length > 0) addFiles([newFiles[0]]);
+                  // Enforce 50MB per-file cap across all tools.
+                  const oversized = newFiles.filter(f => f.size > MAX_UPLOAD_BYTES);
+                  const accepted = newFiles.filter(f => f.size <= MAX_UPLOAD_BYTES);
+                  if (oversized.length > 0) {
+                    setUploadError(`${oversized[0].name} is over ${MAX_UPLOAD_MB}MB. Split or compress it first.`);
                   } else {
-                    // Multi-file tools (merge): append but dedupe.
+                    setUploadError(null);
+                  }
+                  if (accepted.length === 0) return;
+                  if (!tool.multiple) {
+                    clearFiles();
+                    addFiles([accepted[0]]);
+                  } else {
                     const existing = new Set(files.map(f => `${f.file.name}:${f.file.size}:${f.file.lastModified}`));
-                    const toAdd = newFiles.filter(f => !existing.has(`${f.name}:${f.size}:${f.lastModified}`));
+                    const toAdd = accepted.filter(f => !existing.has(`${f.name}:${f.size}:${f.lastModified}`));
                     if (toAdd.length > 0) addFiles(toAdd);
                   }
                 }}
