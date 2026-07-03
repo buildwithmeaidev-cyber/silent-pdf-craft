@@ -22,6 +22,9 @@ import NotFound from "./pages/NotFound";
 import ProgrammaticPage from "./pages/ProgrammaticPage";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Workflows from "./pages/workflows/Workflows";
+import CustomWorkflowBuilder from "./pages/workflows/CustomWorkflowBuilder";
+import WorkflowRunner from "./pages/workflows/WorkflowRunner";
 
 // Custom PDF Tools
 
