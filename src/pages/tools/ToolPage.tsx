@@ -1,5 +1,5 @@
 // src/pages/tools/ToolPage.tsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Link, useParams } from "react-router-dom";
 import {
@@ -16,15 +16,17 @@ import { getTool } from "@/lib/tools";
 import { useUpload } from "@/context/UploadContext";
 import { PdfDropzone } from "@/components/PdfDropzone";
 import { UnifiedFileList } from "@/components/UnifiedFileList";
+import { SignatureEditor } from "@/components/tools/SignatureEditor";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { usePdfJob } from "@/hooks/usePdfJob";
+import { capMbFor, capBytesFor } from "@/lib/uploadLimits";
 import {
   mergePdfs,
   splitPdf, rotatePdf, removePages, compressPdf, protectPdf,
   imageToPdf, watermarkPdf, removeWatermarkPdf, reorderPdf,
-  addBlankPages, exportPdf, signPdf, pdfToWord, wordToPdf, editPdfPassthrough,
+  addBlankPages, exportPdf, signPdf, pdfToWord, wordToPdf, editPdfWithAnnotations,
   downloadBlob, formatBytes,
 } from "@/lib/pdf";
 
@@ -32,9 +34,9 @@ import {
 const ToolPage = () => {
   const { slug = "" } = useParams();
   const tool = getTool(slug);
-  const { files, addFiles, removeFile, clearFiles, moveFile, setError: setUploadError, error: uploadError } = useUpload();
-  const MAX_UPLOAD_MB = 50;
-  const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+  const { files, addFiles, clearFiles, setError: setUploadError, error: uploadError } = useUpload();
+  const MAX_UPLOAD_MB = capMbFor(tool?.kind);
+  const MAX_UPLOAD_BYTES = capBytesFor(tool?.kind);
   const [range, setRange] = useState("");
   const [password, setPassword] = useState("");
   const [rotation, setRotation] = useState<90 | 180 | 270>(90);
@@ -43,23 +45,41 @@ const ToolPage = () => {
   );
   const [customQuality, setCustomQuality] = useState(80);
   const [watermarkText, setWatermarkText] = useState("CONFIDENTIAL");
-  const [signatureText, setSignatureText] = useState("");
+  const [watermarkColor, setWatermarkColor] = useState("#b21818");
+  const [watermarkOpacity, setWatermarkOpacity] = useState(25);
+  const [watermarkSize, setWatermarkSize] = useState(72);
+  const [watermarkRotation, setWatermarkRotation] = useState(45);
+  const [watermarkTile, setWatermarkTile] = useState(false);
+  const [signatureImg, setSignatureImg] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
   const [addCount, setAddCount] = useState(1);
   const [exportName, setExportName] = useState("");
 
-  // Initialize hooks for PDF jobs and merge processing
-  // Single unified PDF job hook — every tool routes through it.
-  const { progress, state, result, error: jobError, run: runJob, reset: resetJob } = usePdfJob();
+  const { progress, state, result, error: jobError, run: runJob, reset: resetJob, setProgress } = usePdfJob();
 
+  // Clear stale uploads and settings when navigating to a new tool.
+  useEffect(() => {
+    clearFiles();
+    resetJob();
+    setUploadError(null);
+    setRange("");
+    setPassword("");
+    setSignatureImg(null);
+    setEditText("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
 
   const rawFiles = useMemo(() => files.map((f) => f.file), [files]);
 
   const needsWatermarkText = tool?.kind === "watermark";
-  const needsSignatureText = tool?.kind === "sign" || tool?.kind === "e-sign";
+  const needsSignature = tool?.kind === "sign" || tool?.kind === "e-sign";
   const needsAddCount = tool?.kind === "addpages";
   const needsExportName = tool?.kind === "export";
   const needsReorderInput = tool?.kind === "reorder";
+  const needsEditText = tool?.kind === "edit";
   const isMergeTool = tool?.kind === "merge";
+  const isPhotoTool = tool?.kind === "photo-to-pdf";
+  const useSortableList = isMergeTool || isPhotoTool;
 
   const canRun = useMemo(() => {
     if (!tool || files.length === 0) return false;
@@ -68,16 +88,25 @@ const ToolPage = () => {
     if (needsReorderInput && !range.trim()) return false;
     if (tool.needsPassword && password.length < 4) return false;
     if (needsWatermarkText && !watermarkText.trim()) return false;
-    if (needsSignatureText && !signatureText.trim()) return false;
+    if (needsSignature && !signatureImg) return false;
     if (needsAddCount && (!addCount || addCount < 1)) return false;
+    if (needsEditText && !editText.trim()) return false;
     return true;
-  }, [tool, files, range, password, isMergeTool, needsReorderInput, needsWatermarkText, watermarkText, needsSignatureText, signatureText, needsAddCount, addCount]);
+  }, [tool, files, range, password, isMergeTool, needsReorderInput, needsWatermarkText, watermarkText, needsSignature, signatureImg, needsAddCount, addCount, needsEditText, editText]);
 
   const reset = () => {
     clearFiles();
     resetJob();
     setCompressionLevel("medium");
     setCustomQuality(80);
+    setSignatureImg(null);
+    setEditText("");
+  };
+
+  const hexToRgb = (hex: string) => {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!m) return { r: 0.7, g: 0.1, b: 0.1 };
+    return { r: parseInt(m[1], 16) / 255, g: parseInt(m[2], 16) / 255, b: parseInt(m[3], 16) / 255 };
   };
 
   const runTool = async () => {
@@ -85,7 +114,6 @@ const ToolPage = () => {
       const f = rawFiles[0];
       switch (tool?.kind) {
         case "merge": return await mergePdfs(rawFiles);
-
         case "split": return await splitPdf(f, range);
         case "rotate": return await rotatePdf(f, rotation);
         case "remove": return await removePages(f, range);
@@ -93,23 +121,34 @@ const ToolPage = () => {
           return await compressPdf(f, {
             level: compressionLevel,
             quality: compressionLevel === "custom" ? customQuality : undefined,
-          });
+          }, (pct) => setProgress(Math.max(50, Math.min(99, pct))));
         case "protect": return await protectPdf(f, password);
-        case "watermark": return await watermarkPdf(f, watermarkText);
+        case "watermark": return await watermarkPdf(f, {
+          text: watermarkText,
+          color: hexToRgb(watermarkColor),
+          opacity: watermarkOpacity / 100,
+          fontSize: watermarkSize,
+          rotation: watermarkRotation,
+          tile: watermarkTile,
+        });
         case "removewatermark": return await removeWatermarkPdf(f);
         case "reorder": return await reorderPdf(f, range);
         case "addpages": return await addBlankPages(f, addCount);
         case "export": return await exportPdf(f, exportName);
         case "sign":
-        case "e-sign": return await signPdf(f, signatureText);
+        case "e-sign": return await signPdf(f, { imageDataUrl: signatureImg ?? undefined });
         case "pdf-to-word": return await pdfToWord(f);
         case "word-to-pdf": return await wordToPdf(f);
         case "photo-to-pdf": return await imageToPdf(rawFiles);
-        case "edit": return await editPdfPassthrough(f);
+        case "edit":
+          return await editPdfWithAnnotations(f, [{
+            page: 1, kind: "text", text: editText, x: 0.1, y: 0.1, size: 16,
+          }]);
         default: throw new Error("Unsupported tool");
       }
     });
   };
+
 
   if (!tool) {
     return (
@@ -186,11 +225,13 @@ const ToolPage = () => {
                 </div>
               )}
 
-              {tool.kind === "merge" && files.length > 0 && (
+              {useSortableList && files.length > 0 && (
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-medium text-lg">Arrange PDF Order</h2>
-                    <p className="text-sm text-muted-foreground">Files merge from top to bottom</p>
+                    <h2 className="font-medium text-lg">
+                      {isMergeTool ? "Arrange PDF Order" : "Arrange Image Order"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">Drag to reorder · top → bottom</p>
                   </div>
                   <UnifiedFileList />
                 </div>
@@ -199,8 +240,8 @@ const ToolPage = () => {
               {/* Step 3 — Required inputs (P2 workflow) */}
               {files.length > 0 && (
                 tool.needsRange || tool.needsPassword || tool.needsRotation ||
-                tool.kind === "compress" || needsWatermarkText || needsSignatureText ||
-                needsAddCount || needsExportName || needsReorderInput
+                tool.kind === "compress" || needsWatermarkText || needsSignature ||
+                needsAddCount || needsExportName || needsReorderInput || needsEditText
               ) && (
                 <div className="mt-6 rounded-2xl border bg-background p-5 space-y-4">
                   <div className="flex items-baseline justify-between">
@@ -306,30 +347,69 @@ const ToolPage = () => {
 
 
                   {needsWatermarkText && (
-                    <div>
-                      <label className="text-sm font-medium block mb-1.5">Watermark text</label>
-                      <input
-                        type="text"
-                        value={watermarkText}
-                        onChange={(e) => setWatermarkText(e.target.value)}
-                        placeholder="CONFIDENTIAL"
-                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
-                      />
-                      <p className="mt-1.5 text-xs text-muted-foreground">Diagonal, semi-transparent, on every page.</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium block mb-1.5">Watermark text</label>
+                        <input
+                          type="text"
+                          value={watermarkText}
+                          onChange={(e) => setWatermarkText(e.target.value)}
+                          placeholder="CONFIDENTIAL"
+                          className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Color</label>
+                          <input type="color" value={watermarkColor} onChange={(e) => setWatermarkColor(e.target.value)}
+                            className="h-10 w-full rounded-lg border cursor-pointer" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Rotation ({watermarkRotation}°)</label>
+                          <input type="range" min={-90} max={90} step={5} value={watermarkRotation}
+                            onChange={(e) => setWatermarkRotation(parseInt(e.target.value, 10))}
+                            className="w-full accent-primary" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Opacity ({watermarkOpacity}%)</label>
+                          <input type="range" min={5} max={100} step={5} value={watermarkOpacity}
+                            onChange={(e) => setWatermarkOpacity(parseInt(e.target.value, 10))}
+                            className="w-full accent-primary" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Size ({watermarkSize}pt)</label>
+                          <input type="range" min={12} max={200} step={4} value={watermarkSize}
+                            onChange={(e) => setWatermarkSize(parseInt(e.target.value, 10))}
+                            className="w-full accent-primary" />
+                        </div>
+                      </div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={watermarkTile}
+                          onChange={(e) => setWatermarkTile(e.target.checked)} />
+                        Tile across every page (repeat pattern)
+                      </label>
                     </div>
                   )}
 
-                  {needsSignatureText && (
+                  {needsSignature && (
                     <div>
-                      <label className="text-sm font-medium block mb-1.5">Your signature</label>
+                      <label className="text-sm font-medium block mb-2">Your signature</label>
+                      <SignatureEditor onChange={setSignatureImg} />
+                      <p className="mt-2 text-xs text-muted-foreground">Signature is placed at the bottom-right of the last page.</p>
+                    </div>
+                  )}
+
+                  {needsEditText && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Text to add</label>
                       <input
                         type="text"
-                        value={signatureText}
-                        onChange={(e) => setSignatureText(e.target.value)}
-                        placeholder="Type your name"
-                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary font-serif italic"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        placeholder="Type text to overlay on page 1"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
                       />
-                      <p className="mt-1.5 text-xs text-muted-foreground">Rendered on the last page, bottom-right.</p>
+                      <p className="mt-1.5 text-xs text-muted-foreground">Placed near the top-left of page 1. Visual placer coming soon.</p>
                     </div>
                   )}
 

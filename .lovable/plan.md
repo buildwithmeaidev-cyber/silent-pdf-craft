@@ -1,68 +1,93 @@
-## Goal
+## Fixes and upgrades across all PDF tools
 
-Remove the "Popular workflows" section from Home and move it into a dedicated Workflows experience: a preset list, a runnable chain for each preset, and a custom workflow builder that pipes one tool's output into the next through a single upload.
+### 1. Cross-tool bugs (shared)
 
-## Changes
+**Stale upload between tools** — UploadProvider persists file state across route changes, so opening a second tool shows the prior file. Fix: clear the upload store on tool route change in `ToolPage.tsx` (`useEffect` on `slug` calls `clearFiles()` + `resetJob()` + `setUploadError(null)`).
 
-### 1. Home cleanup
-- `src/pages/Home.tsx`: delete the "POPULAR WORKFLOWS" section (lines ~168–215) and the `WORKFLOWS` constant (lines 57–88). Leave a small nav link/CTA in the Home flow pointing to `/workflows`.
+**pdf.js worker resolution error** ("Failed to resolve module specifier `pdfjs-dist/build/pdf.worker.min.mjs?url`") — the `/* @vite-ignore */` dynamic import bypasses Vite's URL handling in prod. Fix in `src/lib/pdf.ts`: import the worker statically:
+```ts
+import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+```
+This resolves the Compress + PDF→Word failures.
 
-### 2. Shared workflow data
-- New `src/lib/workflows.ts` exporting:
-  - `Workflow` type: `{ id, name, audience, description, steps: WorkflowStep[], accent }`
-  - `WorkflowStep`: `{ kind: ToolKind, label, config? }` where `config` holds tool-specific params (compression level, watermark text, rotation, page range, password, etc.)
-  - `PRESET_WORKFLOWS`: the existing 3 (Resume, Business contract, Student assignment) plus a few more:
-    - "Scan to searchable archive" — Photo to PDF → Compress → Protect
-    - "Legal delivery pack" — Merge → Watermark → Protect
-    - "Web publishing" — Compress → Watermark → Export (rename)
-  - `CHAINABLE_KINDS`: subset of `ToolKind` safe for chaining (input is a single PDF, output is a single PDF). Excludes multi-file-only tools like `merge` and `photo-to-pdf` from being placed mid-chain; those are allowed only as the first step.
+**Upload size limit** — bump `MAX_UPLOAD_MB` per-tool: 100MB for `compress`, `split`, `pdf-to-word`, `word-to-pdf`; keep 50MB elsewhere. Move the cap into `uploadLimits.ts` as a `capFor(kind)` helper and read it in both `ToolPage.tsx` and `WorkflowRunner.tsx`.
 
-### 3. Routes
-- `src/App.tsx`: add these BEFORE the `/:slug` catch-all so they resolve correctly:
-  - `/workflows` → `Workflows` (index/list)
-  - `/workflows/custom` → `CustomWorkflowBuilder`
-  - `/workflows/run/:id` → `WorkflowRunner` (preset)
-  - `/workflows/run/custom` → `WorkflowRunner` (reads steps from `location.state`)
+### 2. Reorder / Merge list UX
 
-### 4. Workflows index page
-- `src/pages/workflows/Workflows.tsx`
-  - Hero: same eyebrow/title/subtitle as the removed Home section.
-  - Grid of preset cards from `PRESET_WORKFLOWS` (same visual as today).
-  - Each card shows the step chips and a primary "Run workflow" button that navigates to `/workflows/run/:id`. Secondary "Open first tool" link keeps the current behavior for users who only want one step.
-  - Prominent "Build a custom workflow" card at the top of the grid → `/workflows/custom`.
+- Replace `UnifiedFileList` arrow buttons with true drag-and-drop using `@dnd-kit/sortable` (already installed). Drag handle icon on the left, keyboard-accessible, no clickable-arrow area.
+- Remove the "clickable area" hint text from Merge.
+- Use the same sortable list on **Photo→PDF** so users can reorder images before conversion (currently missing).
 
-### 5. Custom workflow builder
-- `src/pages/workflows/CustomWorkflowBuilder.tsx`
-  - Step A — pick tools: browse tool catalog (from `src/lib/tools.ts`), click to append to an ordered list. Reorder (up/down) and remove chips.
-  - Rule: the first step defines the input contract (PDF, image, or Word). Subsequent steps must be `CHAINABLE_KINDS`; UI disables non-chainable options after step 1.
-  - Step B — per-step config: inline expand for steps that need params (compress level + quality, rotate degrees, remove/split range, protect password, watermark text, sign text, add-pages count, export filename).
-  - "Run workflow" navigates to `/workflows/run/custom` with `{ name: "Custom workflow", steps }` in router state.
+### 3. Individual tool fixes
 
-### 6. Workflow runner (shared)
-- `src/pages/workflows/WorkflowRunner.tsx`
-  - Resolves the workflow: preset by `id`, or custom from `location.state`.
-  - Header shows the ordered step chips with a live status per step (queued / running / done / error).
-  - Single unified upload zone using `PdfDropzone`, accept-type derived from the FIRST step (PDF for most, images for photo-to-pdf, Word for word-to-pdf). Multi-file only when step 1 is `merge` or `photo-to-pdf`.
-  - "Run" button executes steps sequentially:
-    - Step 1 receives the uploaded `File[]`.
-    - Each subsequent step receives the previous step's result blob wrapped as a `File` (PDF).
-    - Each step calls the matching function from `src/lib/pdf.ts` (`mergePdfs`, `compressPdf`, `protectPdf`, `watermarkPdf`, `signPdf`, `removeWatermarkPdf`, `rotatePdf`, `removePages`, `reorderPdf`, `addBlankPages`, `exportPdf`, `imageToPdf`, `pdfToWord`, `wordToPdf`, `editPdfPassthrough`) with the step's stored config.
-  - Progress bar across all steps (progress = completed / total, with per-step spinner).
-  - Result panel identical to the current tool success card: filename, size, Download, Restart. If the final output is not a PDF (e.g. ends with `pdf-to-word`), download offers `.docx`.
-  - Errors: stop the chain, mark the failing step red, keep the last good intermediate downloadable.
+**Compress** — after the worker fix, keep current pipeline but stream page-by-page with `requestIdleCallback` yields so the UI stays responsive; add a running "page X of N" progress via the existing `setProgress`.
 
-### 7. Home CTA
-- In `src/pages/Home.tsx`, replace the removed section with a slim single-row CTA: "Workflows: chain tools end-to-end →" linking to `/workflows`. Keeps the page rhythm without duplicating the grid.
+**Word → PDF** ("WinAnsi cannot encode '⇒'") — Helvetica standard font is WinAnsi-only. Fix: bundle Noto Sans (or use `pdf-lib`'s `fontkit` + a bundled TTF) so Unicode glyphs like `⇒`, curly quotes, em-dash, emoji-adjacent symbols encode. Fall back: strip/replace unencodable chars with ASCII equivalents (`⇒`→`=>`, `→`→`->`, smart quotes→straight) before drawing. Ship the sanitizer as the primary fix (no new asset bytes) and keep font-embed as a follow-up if the user wants full glyph coverage.
 
-### 8. Nav
-- `src/components/layout/Navbar.tsx`: add a "Workflows" link between Tools and Guides (verify existing nav structure and match its styling).
+**PDF → Word** — fixed by worker resolution fix above.
 
-## Technical notes
-- No new dependencies. All chaining uses the existing browser-only functions in `src/lib/pdf.ts`.
-- Reuses `UploadContext`, `PdfDropzone`, `usePdfJob` patterns; runner uses its own local sequential runner (since `usePdfJob` handles a single job — a thin `useWorkflowRunner` hook in the runner file wraps it per step).
-- Enforces the existing 50MB per-file cap already added in ToolPage — factored into a small helper `src/lib/uploadLimits.ts` so both places share it.
-- Route order matters: register `/workflows*` before `/:slug` catch-all.
+**Protect PDF** — pdf-lib genuinely can't encrypt; current implementation is a no-op. Fix: swap to `qpdf-wasm` (browser WASM build) OR `pdf-lib` fork with encryption. Recommended: use **`@cantoo/pdf-lib`** (drop-in fork with AES-128 encryption) — real password protection, browser-side. Update `protectPdf` to call `.save({ encrypt: { userPassword, ownerPassword: userPassword, permissions: {...} } })`.
 
-## Out of scope
-- Saving custom workflows across sessions (would need Lovable Cloud). Custom workflows live in router state for now; can be added later.
-- OCR, cloud queues, or server-side chaining. Everything stays in-browser.
+**Edit PDF** — currently a passthrough. Replace with a minimal in-browser editor page: page thumbnail list (pdf.js render), click a page to open an overlay canvas where the user can add text boxes and free-draw ink annotations, then save via pdf-lib `drawText` / `drawSvgPath`. Scope: text + draw only (no image insert this pass).
+
+**E-sign** — currently only types text. Rebuild:
+- Signature source tabs: **Type**, **Draw** (canvas), **Upload** (PNG/JPG with transparent bg).
+- Page thumbnail strip — click a page to open.
+- Drag signature onto the page, resize with a corner handle, drag to reposition.
+- Confirm → pdf-lib embeds PNG at the chosen page/x/y/w/h. Multi-signature per doc supported.
+
+**Watermark PDF** — rebuild as visual placer:
+- Type: text or image (upload sticker/PNG).
+- Controls: font size, color picker, opacity slider (0–100%), rotation, tile mode (single vs. repeated across page).
+- Drag onto page preview to position; "Apply to all pages" toggle; multiple watermarks per page.
+- pdf-lib `drawText` / `drawImage` with `opacity` and `rotate` per placement.
+
+**Remove Watermark** — the current implementation only strips annotations (which is why it "does nothing" for image/text stamps embedded in the page content stream). Realistic scope in-browser:
+1. Parse each page's content stream with `pdf-lib`; detect and drop operators for high-transparency text (`Tj`/`TJ` after `gs` with low `CA`) and images with common watermark heuristics (repeated identical XObject on every page, low opacity, diagonal rotation).
+2. Also strip form XObject overlays that appear on every page (typical for stamped watermarks).
+3. UI: after upload, show detected candidates with per-item checkboxes (thumbnail + "Text: CONFIDENTIAL — 12 pages" / "Image stamp — 12 pages"), user confirms which to remove.
+4. If nothing detected, show a clear message rather than silently returning the same file. Update the tool blurb to reflect the broader capability.
+
+**Photo → PDF** — add sortable image list with thumbnails (dnd-kit) before conversion; page size + orientation + margin options.
+
+### 4. Performance / "slow download"
+
+- Move heavy work off the main thread using a **Web Worker** (`pdf.worker.ts` in `src/workers/`) for Compress, PDF→Word, Word→PDF. Use `Comlink` (add dep) for ergonomic RPC. Progress reported via `postMessage`.
+- Stream the final blob straight to a download via `URL.createObjectURL` immediately on completion (already done) — but drop the extra `await out.save()` allocation by using `saveAsBase64: false` and `useObjectStreams: true` on every save.
+
+### 5. Files touched
+
+```text
+src/lib/pdf.ts                        (worker import, unicode-safe fonts, encryption via @cantoo/pdf-lib, watermark detector)
+src/lib/uploadLimits.ts               (per-kind cap helper)
+src/pages/tools/ToolPage.tsx          (clear on route change, per-kind cap, wire editor/sign/watermark UIs)
+src/components/UnifiedFileList.tsx    (dnd-kit sortable, drag handle)
+src/components/PdfDropzone.tsx        (respect per-kind cap)
+src/components/tools/PageThumbStrip.tsx        NEW
+src/components/tools/SignaturePad.tsx          NEW  (type/draw/upload tabs)
+src/components/tools/OverlayPlacer.tsx         NEW  (drag/resize/rotate on page)
+src/components/tools/WatermarkStudio.tsx       NEW
+src/components/tools/PdfEditor.tsx             NEW
+src/workers/pdfWorker.ts                       NEW  (Comlink-exposed compress/convert)
+src/pages/workflows/WorkflowRunner.tsx (per-kind cap)
+package.json                          (+@cantoo/pdf-lib, +comlink; keep pdf-lib for readers)
+```
+
+### 6. Dependencies to add
+
+- `@cantoo/pdf-lib` — AES-encryption drop-in for Protect PDF.
+- `comlink` — worker RPC for compress/convert.
+- (Already installed: `@dnd-kit/*`, `pdfjs-dist`, `pdf-lib`, `mammoth`, `docx`.)
+
+### 7. Order of execution
+
+1. **Blockers first** (shipped as one pass): worker import fix, Word→PDF sanitizer, clear-on-route-change, upload cap bump. This alone unblocks Compress, PDF→Word, Word→PDF, and the "stale file" complaint.
+2. **Sortable list** (Merge + Photo→PDF) with dnd-kit.
+3. **Protect** via `@cantoo/pdf-lib`.
+4. **Watermark studio** + **Remove Watermark** heuristic detector.
+5. **E-sign** (type/draw/upload + drag placer).
+6. **Edit** (text + ink annotations).
+7. **Worker offload** for perf.
+
+Steps 1–3 are low-risk and land the fixes for the reported errors. Steps 4–7 are larger UI builds and each is a self-contained follow-up.

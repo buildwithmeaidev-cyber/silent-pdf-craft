@@ -13,6 +13,7 @@ interface UploadContextProps {
   replaceFile: (id: string, newFile: File) => void;
   removeFile: (id: string) => void;
   moveFile: (id: string, direction: "up" | "down") => void;
+  reorderFiles: (next: UploadedFile[]) => void;
   clearFiles: () => void;
   error: string | null;
   setError: (msg: string | null) => void;
@@ -55,6 +56,7 @@ export const UploadProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const clearFiles = () => setFiles([]);
+  const reorderFiles = (next: UploadedFile[]) => setFiles(next);
 
   return (
     <UploadContext.Provider
@@ -64,6 +66,7 @@ export const UploadProvider = ({ children }: { children: ReactNode }) => {
         replaceFile,
         removeFile,
         moveFile,
+        reorderFiles,
         clearFiles,
         error,
         setError,

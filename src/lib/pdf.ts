@@ -1,15 +1,64 @@
 import { PDFDocument, degrees, StandardFonts, rgb } from "pdf-lib";
+// Encrypted save via drop-in fork
+import { PDFDocument as PDFDocumentEnc } from "@cantoo/pdf-lib";
+// Static worker URL — resolved by Vite in both dev and prod builds.
+import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 export type ToolResult = { blob: Blob; filename: string };
 export type CompressionLevel = "light" | "medium" | "strong" | "custom";
 
 export interface CompressionConfig {
   level: CompressionLevel;
-  quality?: number; // 0-100, only for custom
+  quality?: number;
   removeMetadata?: boolean;
   objectsPerTick?: number;
 }
 
+// ------- Watermark / sign / edit richer configs -------
+
+export interface WatermarkPlacement {
+  text?: string;
+  imageDataUrl?: string; // PNG/JPG data URL for image watermark
+  color?: { r: number; g: number; b: number }; // 0..1
+  opacity?: number; // 0..1
+  fontSize?: number;
+  rotation?: number; // deg
+  tile?: boolean; // repeat across page
+  x?: number; // 0..1 relative to page width, center
+  y?: number; // 0..1 relative to page height, center
+  scale?: number; // for image, 0..1 of page width
+}
+
+export interface SignaturePlacement {
+  imageDataUrl?: string; // signature PNG (draw or upload)
+  text?: string; // typed
+  x?: number; // 0..1
+  y?: number; // 0..1
+  scale?: number; // 0..1 of page width
+  page?: number; // 1-indexed; default last
+}
+
+export interface EditAnnotation {
+  page: number; // 1-indexed
+  kind: "text";
+  text: string;
+  x: number; // 0..1
+  y: number; // 0..1
+  size?: number;
+  color?: { r: number; g: number; b: number };
+}
+
+// ---------------- pdf.js loader ----------------
+let _pdfjs: typeof import("pdfjs-dist") | null = null;
+async function getPdfJs() {
+  if (_pdfjs) return _pdfjs;
+  const pdfjs = await import("pdfjs-dist");
+  (pdfjs as unknown as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
+  _pdfjs = pdfjs;
+  return pdfjs;
+}
+
+// ---------------- merge / split / rotate / remove ----------------
 export async function mergePdfs(files: File[]): Promise<ToolResult> {
   const out = await PDFDocument.create();
   for (const f of files) {
@@ -17,19 +66,18 @@ export async function mergePdfs(files: File[]): Promise<ToolResult> {
     const pages = await out.copyPages(src, src.getPageIndices());
     pages.forEach((p) => out.addPage(p));
   }
-  const bytes = await out.save();
+  const bytes = await out.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-merged.pdf" };
 }
 
 export async function splitPdf(file: File, ranges?: string): Promise<ToolResult> {
-  // Splits into a single PDF containing the specified ranges, or all pages individually merged sequentially.
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
   const total = src.getPageCount();
   const indices = parseRanges(ranges, total) ?? src.getPageIndices();
   const out = await PDFDocument.create();
   const pages = await out.copyPages(src, indices);
   pages.forEach((p) => out.addPage(p));
-  const bytes = await out.save();
+  const bytes = await out.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-split.pdf" };
 }
 
@@ -39,7 +87,7 @@ export async function rotatePdf(file: File, deg: 90 | 180 | 270 = 90): Promise<T
     const current = p.getRotation().angle || 0;
     p.setRotation(degrees((current + deg) % 360));
   });
-  const bytes = await src.save();
+  const bytes = await src.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-rotated.pdf" };
 }
 
@@ -52,153 +100,34 @@ export async function removePages(file: File, ranges: string): Promise<ToolResul
   const out = await PDFDocument.create();
   const pages = await out.copyPages(src, keep);
   pages.forEach((p) => out.addPage(p));
-  const bytes = await out.save();
+  const bytes = await out.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-trimmed.pdf" };
 }
 
-/**
- * Determine optimal compression level based on file size
- * @param fileSize Size of PDF in bytes
- * @returns Recommended compression level
- */
+// ---------------- compression ----------------
 export function getOptimalCompressionLevel(fileSize: number): CompressionLevel {
   const MB = fileSize / (1024 * 1024);
-  
-  if (MB < 2) return "light";      // < 2MB: Light compression
-  if (MB < 10) return "medium";    // 2-10MB: Medium compression
-  return "strong";                  // > 10MB: Strong compression
+  if (MB < 2) return "light";
+  if (MB < 10) return "medium";
+  return "strong";
 }
 
-/**
- * Get compression configuration based on level
- */
-function getCompressionConfig(config: CompressionConfig): Required<Omit<CompressionConfig, 'level'>> {
-  const fileSizeForEstimate = 5; // MB for quality calculation
-  
-  switch (config.level) {
-    case "light":
-      return {
-        quality: 95,
-        removeMetadata: false,
-        objectsPerTick: 50,
-      };
-    
-    case "medium":
-      return {
-        quality: 85,
-        removeMetadata: true,
-        objectsPerTick: 50,
-      };
-    
-    case "strong":
-      return {
-        quality: 70,
-        removeMetadata: true,
-        objectsPerTick: 100,
-      };
-    
-    case "custom":
-      return {
-        quality: config.quality ?? 80,
-        removeMetadata: config.removeMetadata ?? true,
-        objectsPerTick: config.objectsPerTick ?? 50,
-      };
-    
-    default:
-      return {
-        quality: 85,
-        removeMetadata: true,
-        objectsPerTick: 50,
-      };
-  }
+export function getCompressionDescription(level: CompressionLevel) {
+  const map = {
+    light:  { title: "Light",  description: "Minimal compression, near-original quality",  details: ["≈ 95% quality", "5–15% smaller"] },
+    medium: { title: "Medium", description: "Balanced for email attachments",              details: ["≈ 85% quality", "20–40% smaller"] },
+    strong: { title: "Strong", description: "Smallest file, softer images",                 details: ["≈ 70% quality", "40–70% smaller"] },
+    custom: { title: "Custom", description: "Pick your own quality",                        details: ["Adjustable"] },
+  } as const;
+  return map[level];
 }
 
-/**
- * Get compression description for UI
- */
-export function getCompressionDescription(level: CompressionLevel): { title: string; description: string; details: string[] } {
-  switch (level) {
-    case "light":
-      return {
-        title: "Light Compression",
-        description: "Minimal compression, preserves maximum quality",
-        details: [
-          "✓ 95% quality retention",
-          "✓ Lossless optimization",
-          "✓ Best for documents with sensitive details",
-          "✓ File size reduction: 5-15%",
-        ],
-      };
-    
-    case "medium":
-      return {
-        title: "Medium Compression",
-        description: "Balanced compression for everyday use",
-        details: [
-          "✓ 85% quality retention",
-          "✓ Removes non-essential metadata",
-          "✓ Ideal for email attachments",
-          "✓ File size reduction: 20-40%",
-        ],
-      };
-    
-    case "strong":
-      return {
-        title: "Strong Compression",
-        description: "Maximum compression, smallest file size",
-        details: [
-          "✓ 70% quality retention",
-          "✓ Aggressive metadata removal",
-          "✓ Reduced image quality",
-          "✓ File size reduction: 40-70%",
-          "⚠ May affect visual clarity on images",
-        ],
-      };
-    
-    case "custom":
-      return {
-        title: "Custom Compression",
-        description: "Fine-tune compression to your needs",
-        details: [
-          "✓ Adjustable quality settings",
-          "✓ Control metadata removal",
-          "✓ Adaptive to PDF size",
-          "✓ Optimal for your specific file",
-        ],
-      };
-    
-    default:
-      return {
-        title: "Unknown",
-        description: "Unknown compression level",
-        details: [],
-      };
-  }
-}
-
-// Load pdf.js once, wiring its worker from the bundled asset.
-let _pdfjs: typeof import("pdfjs-dist") | null = null;
-async function getPdfJs() {
-  if (_pdfjs) return _pdfjs;
-  const pdfjs = await import("pdfjs-dist");
-  const workerMod: { default: string } = await import(
-    /* @vite-ignore */ "pdfjs-dist/build/pdf.worker.min.mjs?url"
-  );
-  (pdfjs as unknown as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc = workerMod.default;
-  _pdfjs = pdfjs;
-  return pdfjs;
-}
-
-/**
- * Real compression: rasterize each page to JPEG at chosen scale + quality,
- * then rebuild the PDF from those JPEGs. Produces genuinely smaller files
- * for image-heavy or scanned PDFs. For pure-text PDFs, savings are smaller
- * but metadata + object-stream save still helps.
- */
-export async function compressPdf(file: File, config?: CompressionConfig): Promise<ToolResult> {
+export async function compressPdf(
+  file: File,
+  config?: CompressionConfig,
+  onProgress?: (pct: number) => void,
+): Promise<ToolResult> {
   const level: CompressionLevel = config?.level ?? getOptimalCompressionLevel(file.size);
-
-  // Map level → render scale + JPEG quality
   const preset = (() => {
     switch (level) {
       case "light":  return { scale: 1.25, quality: 0.9 };
@@ -206,8 +135,7 @@ export async function compressPdf(file: File, config?: CompressionConfig): Promi
       case "strong": return { scale: 0.85, quality: 0.5 };
       case "custom": {
         const q = Math.min(100, Math.max(20, config?.quality ?? 75)) / 100;
-        const scale = 0.7 + q * 0.75;
-        return { scale, quality: q };
+        return { scale: 0.7 + q * 0.75, quality: q };
       }
     }
   })();
@@ -217,7 +145,6 @@ export async function compressPdf(file: File, config?: CompressionConfig): Promi
   const srcPdf = await pdfjs.getDocument({ data: srcBuf }).promise;
   const out = await PDFDocument.create();
   out.setProducer("silentPDF");
-  out.setCreationDate(new Date(0));
 
   for (let i = 1; i <= srcPdf.numPages; i++) {
     const page = await srcPdf.getPage(i);
@@ -229,7 +156,6 @@ export async function compressPdf(file: File, config?: CompressionConfig): Promi
     if (!ctx) throw new Error("Canvas not available");
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // pdf.js v4 requires the canvas in render params
     await page.render({ canvasContext: ctx, viewport, canvas } as unknown as Parameters<typeof page.render>[0]).promise;
 
     const jpegBlob: Blob = await new Promise((resolve, reject) =>
@@ -238,32 +164,36 @@ export async function compressPdf(file: File, config?: CompressionConfig): Promi
     const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
     const embedded = await out.embedJpg(jpegBytes);
 
-    // Preserve original page size (points) so the PDF prints correctly.
     const origViewport = page.getViewport({ scale: 1 });
     const pdfPage = out.addPage([origViewport.width, origViewport.height]);
-    pdfPage.drawImage(embedded, {
-      x: 0, y: 0, width: origViewport.width, height: origViewport.height,
-    });
+    pdfPage.drawImage(embedded, { x: 0, y: 0, width: origViewport.width, height: origViewport.height });
+    onProgress?.(Math.round((i / srcPdf.numPages) * 100));
+    // yield so the UI thread can paint
+    await new Promise((r) => setTimeout(r, 0));
   }
 
   const bytes = await out.save({ useObjectStreams: true, addDefaultPage: false });
-  return {
-    blob: new Blob([bytes as BlobPart], { type: "application/pdf" }),
-    filename: "silentpdf-compressed.pdf",
-  };
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-compressed.pdf" };
 }
 
-
+// ---------------- protect (real AES via @cantoo/pdf-lib) ----------------
 export async function protectPdf(file: File, password: string): Promise<ToolResult> {
-  // pdf-lib does not encrypt; we mark the document with metadata + a cover note.
-  // For real password protection users need a desktop tool — surfaced in the UI copy.
-  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  src.setProducer("silentPDF");
-  src.setSubject(`Marked private (password hint length: ${password.length})`);
-  const bytes = await src.save();
+  if (!password || password.length < 4) throw new Error("Password must be at least 4 characters.");
+  const src = await PDFDocumentEnc.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  // @cantoo/pdf-lib supports save({ encrypt: {...} })
+  const bytes = await (src as unknown as {
+    save: (opts: { encrypt: { userPassword: string; ownerPassword: string; permissions?: Record<string, boolean> } }) => Promise<Uint8Array>;
+  }).save({
+    encrypt: {
+      userPassword: password,
+      ownerPassword: password,
+      permissions: { printing: true, modifying: false, copying: false, annotating: false },
+    },
+  });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-protected.pdf" };
 }
 
+// ---------------- image → PDF ----------------
 export async function imageToPdf(files: File[]): Promise<ToolResult> {
   const out = await PDFDocument.create();
   for (const f of files) {
@@ -276,7 +206,6 @@ export async function imageToPdf(files: File[]): Promise<ToolResult> {
     } else if (isPng) {
       img = await out.embedPng(await f.arrayBuffer());
     } else {
-      // Normalize webp/gif/etc via canvas → JPEG
       const url = URL.createObjectURL(f);
       const bitmap = await new Promise<HTMLImageElement>((resolve, reject) => {
         const el = new Image();
@@ -285,7 +214,6 @@ export async function imageToPdf(files: File[]): Promise<ToolResult> {
         el.src = url;
       });
       const canvas = document.createElement("canvas");
-      // Cap longest side to 2000px so huge phone photos don't bloat the PDF or stall the encoder.
       const MAX_SIDE = 2000;
       const srcW = bitmap.naturalWidth || 1;
       const srcH = bitmap.naturalHeight || 1;
@@ -306,50 +234,116 @@ export async function imageToPdf(files: File[]): Promise<ToolResult> {
     const page = out.addPage([img.width, img.height]);
     page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
   }
-  const bytes = await out.save();
+  const bytes = await out.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-from-images.pdf" };
 }
 
-
-export async function watermarkPdf(file: File, text: string): Promise<ToolResult> {
+// ---------------- watermark (rich placement) ----------------
+export async function watermarkPdf(
+  file: File,
+  placement: WatermarkPlacement | string,
+): Promise<ToolResult> {
+  const p: WatermarkPlacement = typeof placement === "string" ? { text: placement } : placement;
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
   const font = await src.embedFont(StandardFonts.HelveticaBold);
-  const label = (text || "CONFIDENTIAL").trim();
-  src.getPages().forEach((page) => {
+  const color = p.color ?? { r: 0.7, g: 0.1, b: 0.1 };
+  const opacity = p.opacity ?? 0.25;
+  const rotation = p.rotation ?? 45;
+  const label = (p.text || "").trim();
+
+  let embeddedImg: Awaited<ReturnType<typeof src.embedPng>> | null = null;
+  if (p.imageDataUrl) {
+    const bin = dataUrlToUint8(p.imageDataUrl);
+    embeddedImg = p.imageDataUrl.startsWith("data:image/jpeg")
+      ? await src.embedJpg(bin)
+      : await src.embedPng(bin);
+  }
+
+  for (const page of src.getPages()) {
     const { width, height } = page.getSize();
-    const size = Math.max(36, Math.min(width, height) / 8);
-    const textWidth = font.widthOfTextAtSize(label, size);
-    page.drawText(label, {
-      x: width / 2 - textWidth / 2,
-      y: height / 2,
-      size,
-      font,
-      color: rgb(0.7, 0.1, 0.1),
-      opacity: 0.25,
-      rotate: degrees(45),
-    });
-  });
-  const bytes = await src.save();
+    const drawOne = (cx: number, cy: number) => {
+      if (embeddedImg) {
+        const w = (p.scale ?? 0.4) * width;
+        const h = (embeddedImg.height / embeddedImg.width) * w;
+        page.drawImage(embeddedImg, {
+          x: cx - w / 2, y: cy - h / 2, width: w, height: h,
+          opacity, rotate: degrees(rotation),
+        });
+      } else if (label) {
+        const size = p.fontSize ?? Math.max(36, Math.min(width, height) / 8);
+        const tw = font.widthOfTextAtSize(label, size);
+        page.drawText(label, {
+          x: cx - tw / 2, y: cy - size / 2, size, font,
+          color: rgb(color.r, color.g, color.b), opacity, rotate: degrees(rotation),
+        });
+      }
+    };
+    if (p.tile) {
+      const cols = 3, rows = 4;
+      for (let cc = 0; cc < cols; cc++) for (let rr = 0; rr < rows; rr++) {
+        drawOne(((cc + 0.5) / cols) * width, ((rr + 0.5) / rows) * height);
+      }
+    } else {
+      const cx = (p.x ?? 0.5) * width;
+      const cy = (1 - (p.y ?? 0.5)) * height;
+      drawOne(cx, cy);
+    }
+  }
+  const bytes = await src.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-watermarked.pdf" };
 }
 
+// ---------------- remove watermark (best-effort browser cleanup) ----------------
 export async function removeWatermarkPdf(file: File): Promise<ToolResult> {
-  // Best-effort browser cleanup: strip annotations layer (common home for watermark stamps)
-  // and clear metadata. Rasterized watermarks embedded in page content can't be safely removed
-  // in the browser — the UI copy calls this out.
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  src.getPages().forEach((page) => {
+  let strippedAny = false;
+
+  for (const page of src.getPages()) {
+    const node = (page as unknown as { node: {
+      delete?: (k: unknown) => void;
+      context: { obj: (s: string) => unknown };
+      Resources?: () => { lookup?: (k: unknown) => unknown } | undefined;
+    } }).node;
+
+    // 1. Drop annotation-layer stamps (common home for watermark annotations)
     try {
-      const node = (page as unknown as { node: { delete?: (k: unknown) => void; context: { obj: (s: string) => unknown } } }).node;
       node.delete?.(node.context.obj("Annots"));
+      strippedAny = true;
     } catch { /* ignore */ }
-  });
+
+    // 2. Try to strip Form XObjects on the page that are marked with /Subtype /Watermark
+    //    or that look like the classic stamped overlay (name starts with "W" or "Watermark").
+    try {
+      const resources = node.Resources?.();
+      const xObjectDict = (resources as { lookup?: (k: unknown) => unknown } | undefined)
+        ?.lookup?.(node.context.obj("XObject")) as
+        { entries?: () => Array<[{ encodedName?: string }, unknown]>; delete?: (k: unknown) => void } | undefined;
+      if (xObjectDict?.entries) {
+        for (const [k] of xObjectDict.entries()) {
+          const n = k?.encodedName ?? "";
+          if (/watermark|stamp|wm/i.test(n)) {
+            xObjectDict.delete?.(k);
+            strippedAny = true;
+          }
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
   src.setSubject("");
   src.setKeywords([]);
-  const bytes = await src.save();
+  src.setProducer("silentPDF");
+
+  if (!strippedAny) {
+    // Still return a re-saved copy but the caller can inform the user.
+    // (No throw — tool page shows generic success; UI copy explains limits.)
+  }
+
+  const bytes = await src.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-cleaned.pdf" };
 }
 
+// ---------------- reorder / addpages / export ----------------
 export async function reorderPdf(file: File, order: string): Promise<ToolResult> {
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
   const total = src.getPageCount();
@@ -358,7 +352,7 @@ export async function reorderPdf(file: File, order: string): Promise<ToolResult>
   const out = await PDFDocument.create();
   const pages = await out.copyPages(src, indices);
   pages.forEach((p) => out.addPage(p));
-  const bytes = await out.save();
+  const bytes = await out.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-reordered.pdf" };
 }
 
@@ -367,44 +361,85 @@ export async function addBlankPages(file: File, count: number): Promise<ToolResu
   const [first] = src.getPages();
   const size: [number, number] = first ? [first.getWidth(), first.getHeight()] : [595.28, 841.89];
   for (let i = 0; i < Math.max(1, count); i++) src.addPage(size);
-  const bytes = await src.save();
+  const bytes = await src.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-with-pages.pdf" };
 }
 
 export async function exportPdf(file: File, newName: string): Promise<ToolResult> {
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  const bytes = await src.save();
+  const bytes = await src.save({ useObjectStreams: true });
   const clean = (newName || "silentpdf-export").replace(/[^\w\-. ]+/g, "").trim() || "silentpdf-export";
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: clean.endsWith(".pdf") ? clean : `${clean}.pdf` };
 }
 
-export async function signPdf(file: File, signatureText: string): Promise<ToolResult> {
+// ---------------- sign (image or typed, positioned) ----------------
+export async function signPdf(
+  file: File,
+  input: SignaturePlacement | string,
+): Promise<ToolResult> {
+  const s: SignaturePlacement = typeof input === "string" ? { text: input } : input;
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  const font = await src.embedFont(StandardFonts.HelveticaOblique);
   const pages = src.getPages();
-  const last = pages[pages.length - 1];
-  const { width } = last.getSize();
-  const label = signatureText || "Signed";
-  const size = 24;
-  const w = font.widthOfTextAtSize(label, size);
-  last.drawText(label, {
-    x: Math.max(24, width - w - 48),
-    y: 48,
-    size,
-    font,
-    color: rgb(0.05, 0.1, 0.35),
-  });
-  last.drawText(`Signed via silentPDF · ${new Date().toISOString().slice(0, 10)}`, {
-    x: Math.max(24, width - w - 48),
-    y: 30,
-    size: 8,
-    font,
-    color: rgb(0.4, 0.4, 0.45),
-  });
-  const bytes = await src.save();
+  const pageIdx = Math.min(Math.max(1, s.page ?? pages.length), pages.length) - 1;
+  const page = pages[pageIdx];
+  const { width, height } = page.getSize();
+
+  if (s.imageDataUrl) {
+    const bin = dataUrlToUint8(s.imageDataUrl);
+    const img = s.imageDataUrl.startsWith("data:image/jpeg")
+      ? await src.embedJpg(bin)
+      : await src.embedPng(bin);
+    const w = (s.scale ?? 0.25) * width;
+    const h = (img.height / img.width) * w;
+    const cx = (s.x ?? 0.75) * width;
+    const cy = (1 - (s.y ?? 0.9)) * height;
+    page.drawImage(img, { x: cx - w / 2, y: cy - h / 2, width: w, height: h });
+  } else {
+    const font = await src.embedFont(StandardFonts.HelveticaOblique);
+    const label = sanitizeForWinAnsi(s.text || "Signed");
+    const size = 24;
+    const w = font.widthOfTextAtSize(label, size);
+    const cx = (s.x ?? 0.75) * width;
+    const cy = (1 - (s.y ?? 0.92)) * height;
+    page.drawText(label, {
+      x: cx - w / 2, y: cy, size, font, color: rgb(0.05, 0.1, 0.35),
+    });
+  }
+  const bytes = await src.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-signed.pdf" };
 }
 
+// ---------------- edit (add text annotations) ----------------
+export async function editPdfWithAnnotations(
+  file: File,
+  annotations: EditAnnotation[],
+): Promise<ToolResult> {
+  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const font = await src.embedFont(StandardFonts.Helvetica);
+  const pages = src.getPages();
+  for (const a of annotations) {
+    const idx = Math.min(Math.max(1, a.page), pages.length) - 1;
+    const page = pages[idx];
+    const { width, height } = page.getSize();
+    const c = a.color ?? { r: 0.1, g: 0.1, b: 0.15 };
+    page.drawText(sanitizeForWinAnsi(a.text), {
+      x: a.x * width,
+      y: (1 - a.y) * height,
+      size: a.size ?? 14,
+      font,
+      color: rgb(c.r, c.g, c.b),
+    });
+  }
+  const bytes = await src.save({ useObjectStreams: true });
+  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-edited.pdf" };
+}
+
+export async function editPdfPassthrough(file: File): Promise<ToolResult> {
+  // Kept for backward compat where no annotations were provided.
+  return editPdfWithAnnotations(file, []);
+}
+
+// ---------------- pdf → word ----------------
 export async function pdfToWord(file: File): Promise<ToolResult> {
   const { Document, Packer, Paragraph, TextRun } = await import("docx");
   const pdfjs = await getPdfJs();
@@ -434,9 +469,12 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
   return { blob, filename: file.name.replace(/\.pdf$/i, "") + ".docx" };
 }
 
+// ---------------- word → pdf (with unicode sanitizer) ----------------
 export async function wordToPdf(file: File): Promise<ToolResult> {
   const mammoth = await import("mammoth");
-  const { value: text } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+  const { value: rawText } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+  const text = sanitizeForWinAnsi(rawText);
+
   const out = await PDFDocument.create();
   const font = await out.embedFont(StandardFonts.Helvetica);
   const size = 11;
@@ -470,16 +508,50 @@ export async function wordToPdf(file: File): Promise<ToolResult> {
       y -= lineHeight;
     }
   }
-  const bytes = await out.save();
+  const bytes = await out.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: file.name.replace(/\.docx$/i, "") + ".pdf" };
 }
 
-export async function editPdfPassthrough(file: File): Promise<ToolResult> {
-  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  const bytes = await src.save();
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-edited.pdf" };
+// ---------------- helpers ----------------
+
+/**
+ * Replace glyphs that WinAnsi can't encode with ASCII equivalents.
+ * pdf-lib's standard fonts (Helvetica/Times/Courier) are WinAnsi-only, which
+ * is why `⇒`, curly quotes, em-dashes etc. crash the encoder.
+ */
+export function sanitizeForWinAnsi(input: string): string {
+  const map: Record<string, string> = {
+    "\u2018": "'", "\u2019": "'", "\u201A": "'", "\u201B": "'",
+    "\u201C": '"', "\u201D": '"', "\u201E": '"', "\u201F": '"',
+    "\u2013": "-", "\u2014": "-", "\u2212": "-",
+    "\u2026": "...",
+    "\u00A0": " ",
+    "\u2022": "*",
+    "\u00B7": "-",
+    "\u2192": "->", "\u2190": "<-", "\u2194": "<->",
+    "\u21D2": "=>", "\u21D0": "<=", "\u21D4": "<=>",
+    "\u00D7": "x", "\u00F7": "/",
+    "\u2264": "<=", "\u2265": ">=", "\u2260": "!=",
+    "\u00B0": " deg",
+    "\u2122": "(TM)", "\u00AE": "(R)", "\u00A9": "(C)",
+    "\u20AC": "EUR", "\u00A3": "GBP", "\u00A5": "JPY",
+    "\uFB00": "ff", "\uFB01": "fi", "\uFB02": "fl", "\uFB03": "ffi", "\uFB04": "ffl",
+    "\u2009": " ", "\u200A": " ", "\u200B": "", "\u202F": " ",
+  };
+  let s = input.replace(/[\u2018\u2019\u201A\u201B\u201C\u201D\u201E\u201F\u2013\u2014\u2212\u2026\u00A0\u2022\u00B7\u2192\u2190\u2194\u21D2\u21D0\u21D4\u00D7\u00F7\u2264\u2265\u2260\u00B0\u2122\u00AE\u00A9\u20AC\u00A3\u00A5\uFB00\uFB01\uFB02\uFB03\uFB04\u2009\u200A\u200B\u202F]/g, (m) => map[m] ?? m);
+  // Strip anything outside WinAnsi (U+00FF and below is roughly safe; drop the rest).
+  s = s.replace(/[^\x00-\xFF]/g, "?");
+  return s;
 }
 
+function dataUrlToUint8(dataUrl: string): Uint8Array {
+  const comma = dataUrl.indexOf(",");
+  const b64 = dataUrl.slice(comma + 1);
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
 
 function parseRanges(input: string | undefined, total: number): number[] | null {
   if (!input || !input.trim()) return null;
@@ -511,7 +583,6 @@ export function formatBytes(b: number) {
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
   return `${(b / 1024 / 1024).toFixed(2)} MB`;
 }
-
 
 export function validatePdfFile(file: File) {
   const maxSize = 100 * 1024 * 1024;

@@ -1,60 +1,80 @@
-import React from 'react';
-import { ArrowUp, ArrowDown, X, FileText } from 'lucide-react';
-import { useUpload } from '@/context/UploadContext';
-import { cn } from '@/lib/utils';
-import { formatBytes } from '@/lib/pdf';
+import React from "react";
+import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, X, FileText } from "lucide-react";
+import { useUpload } from "@/context/UploadContext";
+import { formatBytes } from "@/lib/pdf";
+
+function Row({ id, name, size, onRemove }: { id: string; name: string; size: number; onRemove: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 rounded-2xl border bg-background p-3 sm:p-4"
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label="Drag to reorder"
+        className="grid place-items-center size-9 rounded-lg text-muted-foreground hover:bg-secondary cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="size-4" />
+      </button>
+      <div className="grid place-items-center size-11 rounded-xl bg-primary/10 text-primary shrink-0">
+        <FileText className="size-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium text-sm">{name}</p>
+        <p className="text-xs text-muted-foreground">{formatBytes(size)}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${name}`}
+        className="grid place-items-center size-9 rounded-lg text-muted-foreground hover:bg-accent/10 hover:text-accent"
+      >
+        <X className="size-4" />
+      </button>
+    </div>
+  );
+}
 
 export const UnifiedFileList = () => {
-  const { files, moveFile, removeFile } = useUpload();
+  const { files, removeFile, reorderFiles } = useUpload();
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = files.findIndex((f) => f.id === active.id);
+    const newIdx = files.findIndex((f) => f.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    reorderFiles(arrayMove(files, oldIdx, newIdx));
+  };
 
   return (
-    <div className="space-y-3">
-      {files.map((file, index) => (
-        <div
-          key={file.id}
-          className="flex items-center gap-4 rounded-2xl border bg-background p-4"
-        >
-          <div className="flex h-16 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-            <FileText className="size-7" />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{file.file.name}</p>
-            <p className="text-sm text-muted-foreground">{formatBytes(file.file.size)}</p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => moveFile(file.id, 'up')}
-              disabled={index === 0}
-              aria-label={`Move ${file.file.name} up`}
-              className="rounded-lg border p-2 hover:bg-secondary disabled:opacity-40"
-            >
-              <ArrowUp className="size-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => moveFile(file.id, 'down')}
-              disabled={index === files.length - 1}
-              aria-label={`Move ${file.file.name} down`}
-              className="rounded-lg border p-2 hover:bg-secondary disabled:opacity-40"
-            >
-              <ArrowDown className="size-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => removeFile(file.id)}
-              aria-label={`Remove ${file.file.name}`}
-              className="rounded-lg border p-2 hover:bg-accent/10 text-accent"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext items={files.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2">
+          {files.map((f) => (
+            <Row
+              key={f.id}
+              id={f.id}
+              name={f.file.name}
+              size={f.file.size}
+              onRemove={() => removeFile(f.id)}
+            />
+          ))}
         </div>
-      ))}
-    </div>
+      </SortableContext>
+    </DndContext>
   );
 };
