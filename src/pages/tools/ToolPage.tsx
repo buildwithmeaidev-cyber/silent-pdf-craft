@@ -225,11 +225,13 @@ const ToolPage = () => {
                 </div>
               )}
 
-              {tool.kind === "merge" && files.length > 0 && (
+              {useSortableList && files.length > 0 && (
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-medium text-lg">Arrange PDF Order</h2>
-                    <p className="text-sm text-muted-foreground">Files merge from top to bottom</p>
+                    <h2 className="font-medium text-lg">
+                      {isMergeTool ? "Arrange PDF Order" : "Arrange Image Order"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">Drag to reorder · top → bottom</p>
                   </div>
                   <UnifiedFileList />
                 </div>
@@ -238,8 +240,8 @@ const ToolPage = () => {
               {/* Step 3 — Required inputs (P2 workflow) */}
               {files.length > 0 && (
                 tool.needsRange || tool.needsPassword || tool.needsRotation ||
-                tool.kind === "compress" || needsWatermarkText || needsSignatureText ||
-                needsAddCount || needsExportName || needsReorderInput
+                tool.kind === "compress" || needsWatermarkText || needsSignature ||
+                needsAddCount || needsExportName || needsReorderInput || needsEditText
               ) && (
                 <div className="mt-6 rounded-2xl border bg-background p-5 space-y-4">
                   <div className="flex items-baseline justify-between">
