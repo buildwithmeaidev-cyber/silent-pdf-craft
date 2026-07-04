@@ -347,30 +347,69 @@ const ToolPage = () => {
 
 
                   {needsWatermarkText && (
-                    <div>
-                      <label className="text-sm font-medium block mb-1.5">Watermark text</label>
-                      <input
-                        type="text"
-                        value={watermarkText}
-                        onChange={(e) => setWatermarkText(e.target.value)}
-                        placeholder="CONFIDENTIAL"
-                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
-                      />
-                      <p className="mt-1.5 text-xs text-muted-foreground">Diagonal, semi-transparent, on every page.</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium block mb-1.5">Watermark text</label>
+                        <input
+                          type="text"
+                          value={watermarkText}
+                          onChange={(e) => setWatermarkText(e.target.value)}
+                          placeholder="CONFIDENTIAL"
+                          className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Color</label>
+                          <input type="color" value={watermarkColor} onChange={(e) => setWatermarkColor(e.target.value)}
+                            className="h-10 w-full rounded-lg border cursor-pointer" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Rotation ({watermarkRotation}°)</label>
+                          <input type="range" min={-90} max={90} step={5} value={watermarkRotation}
+                            onChange={(e) => setWatermarkRotation(parseInt(e.target.value, 10))}
+                            className="w-full accent-primary" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Opacity ({watermarkOpacity}%)</label>
+                          <input type="range" min={5} max={100} step={5} value={watermarkOpacity}
+                            onChange={(e) => setWatermarkOpacity(parseInt(e.target.value, 10))}
+                            className="w-full accent-primary" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Size ({watermarkSize}pt)</label>
+                          <input type="range" min={12} max={200} step={4} value={watermarkSize}
+                            onChange={(e) => setWatermarkSize(parseInt(e.target.value, 10))}
+                            className="w-full accent-primary" />
+                        </div>
+                      </div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={watermarkTile}
+                          onChange={(e) => setWatermarkTile(e.target.checked)} />
+                        Tile across every page (repeat pattern)
+                      </label>
                     </div>
                   )}
 
-                  {needsSignatureText && (
+                  {needsSignature && (
                     <div>
-                      <label className="text-sm font-medium block mb-1.5">Your signature</label>
+                      <label className="text-sm font-medium block mb-2">Your signature</label>
+                      <SignatureEditor onChange={setSignatureImg} />
+                      <p className="mt-2 text-xs text-muted-foreground">Signature is placed at the bottom-right of the last page.</p>
+                    </div>
+                  )}
+
+                  {needsEditText && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Text to add</label>
                       <input
                         type="text"
-                        value={signatureText}
-                        onChange={(e) => setSignatureText(e.target.value)}
-                        placeholder="Type your name"
-                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary font-serif italic"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        placeholder="Type text to overlay on page 1"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
                       />
-                      <p className="mt-1.5 text-xs text-muted-foreground">Rendered on the last page, bottom-right.</p>
+                      <p className="mt-1.5 text-xs text-muted-foreground">Placed near the top-left of page 1. Visual placer coming soon.</p>
                     </div>
                   )}
 
