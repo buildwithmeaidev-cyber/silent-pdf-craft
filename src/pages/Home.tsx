@@ -185,12 +185,8 @@ const Home = () => {
                       )}>
                         <Icon className="size-5" strokeWidth={1.8} />
                       </div>
-                      {meta?.time && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-secondary rounded-full px-2 py-1">
-                          <Clock className="size-3" /> {meta.time}
-                        </span>
-                      )}
                     </div>
+
 
                     <h3 className="mt-5 font-medium text-base">{t.title}</h3>
                     <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">{t.short}</p>
