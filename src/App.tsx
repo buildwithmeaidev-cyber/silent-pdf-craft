@@ -14,6 +14,15 @@ import Home from "./pages/Home";
 import Tools from "./pages/Tools";
 import Privacy from "./pages/Privacy";
 import About from "./pages/About";
+import Guides from "./pages/Guides";
+import UseCases from "./pages/UseCases";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import Terms from "./pages/legal/Terms";
+import Dpa from "./pages/legal/Dpa";
+import Security from "./pages/legal/Security";
+import Contact from "./pages/legal/Contact";
+import Cookies from "./pages/legal/Cookies";
 
 import ToolPage from "./pages/tools/ToolPage";
 import NotFound from "./pages/NotFound";
@@ -53,6 +62,16 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/privacy-policy" element={<Privacy />} />
               <Route path="/about" element={<About />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/guides" element={<Guides />} />
+              <Route path="/use-cases" element={<UseCases />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/dpa" element={<Dpa />} />
+              <Route path="/security" element={<Security />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/cookies" element={<Cookies />} />
+
 
               {/* Resource Center */}
               <Route path="/resources" element={<ResourceIndex />} />
