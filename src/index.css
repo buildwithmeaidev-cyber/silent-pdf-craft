@@ -157,8 +157,8 @@
 
   .grid-bg {
     background-image:
-      linear-gradient(hsl(222 47% 11% / 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(222 47% 11% / 0.04) 1px, transparent 1px);
+      linear-gradient(hsl(var(--foreground) / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground) / 0.05) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 }

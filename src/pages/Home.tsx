@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import {
   ArrowUpRight, ShieldCheck, ServerOff, Lock, Trash2, Sparkles,
   GraduationCap, Briefcase, Users, BookOpen, Building2, ArrowRight, FileText,
-  Combine, Minimize2, Lock as LockIcon, Clock, Zap, CheckCircle2,
+  Zap,
 } from "lucide-react";
 import { TOOLS } from "@/lib/tools";
 import { cn } from "@/lib/utils";
