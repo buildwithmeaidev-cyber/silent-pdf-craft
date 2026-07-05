@@ -1,97 +1,102 @@
 import { Link } from "react-router-dom";
-import { FileText, Github, Twitter, Linkedin } from "lucide-react";
-import { TOOLS } from "@/lib/tools";
+import { FileText, Github, Twitter, Linkedin, ShieldCheck } from "lucide-react";
+
+const cols = [
+  {
+    title: "Product",
+    links: [
+      ["All Tools", "/tools"],
+      ["Workflows", "/workflows"],
+      ["Custom Workflow", "/workflows/custom"],
+      ["Compress PDF", "/compress-pdf"],
+      ["Merge PDF", "/merge-pdf"],
+      ["PDF to Word", "/pdf-to-word"],
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      ["Guides", "/guides"],
+      ["Blog", "/blog"],
+      ["Use Cases", "/use-cases"],
+      ["Resource Center", "/resources"],
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      ["About", "/about"],
+      ["Contact", "/contact"],
+      ["Security", "/security"],
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      ["Privacy", "/privacy"],
+      ["Terms", "/terms"],
+      ["DPA", "/dpa"],
+      ["Cookies", "/cookies"],
+    ],
+  },
+];
 
 export const Footer = () => {
   return (
-    <footer className="bg-ink text-ink-foreground mt-24">
+    <footer className="mt-24 border-t border-border bg-card/40">
       <div className="container-px mx-auto max-w-7xl py-16">
-        <div className="grid gap-12 md:grid-cols-5">
-          <div className="md:col-span-1">
+        <div className="grid gap-12 lg:grid-cols-6">
+          <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2">
-              <span className="grid place-items-center size-8 rounded-lg bg-white/10">
+              <span className="grid place-items-center size-9 rounded-xl border border-primary/20 bg-primary/10 text-primary">
                 <FileText className="size-4" />
               </span>
-              <span className="font-semibold">silentPDF</span>
+              <span className="font-semibold text-lg">silentPDF</span>
             </Link>
-            <p className="mt-4 text-sm text-white/60 max-w-xs">
+            <p className="mt-4 text-sm text-muted-foreground max-w-xs leading-relaxed">
               Fast, private PDF tools that actually work — built for people who care about their files.
             </p>
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1.5 text-xs text-muted-foreground">
+              <ShieldCheck className="size-3.5 text-primary" />
+              Files processed in your browser
+            </div>
             <div className="mt-6 flex items-center gap-3">
               {[
-                { Icon: Twitter, label: "silentPDF on Twitter" },
-                { Icon: Github, label: "silentPDF on GitHub" },
-                { Icon: Linkedin, label: "silentPDF on LinkedIn" },
-              ].map(({ Icon, label }) => (
-                <a key={label} href="#" aria-label={label} className="grid place-items-center size-9 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
+                { Icon: Twitter, label: "silentPDF on Twitter", href: "#" },
+                { Icon: Github, label: "silentPDF on GitHub", href: "#" },
+                { Icon: Linkedin, label: "silentPDF on LinkedIn", href: "#" },
+              ].map(({ Icon, label, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  className="grid place-items-center size-9 rounded-full border border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+                >
                   <Icon className="size-4" />
                 </a>
               ))}
             </div>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold text-white/90">Tools</h3>
-            <ul className="mt-4 space-y-2.5">
-              {TOOLS.slice(0, 6).map((t) => (
-                <li key={t.slug}>
-                  <Link to={`/${t.slug}`} className="text-sm text-white/60 hover:text-white transition-colors">
-                    {t.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-white/90">Popular tasks</h3>
-            <ul className="mt-4 space-y-2.5">
-              {[
-                ["Compress PDF for email", "/compress-pdf-for-email"],
-                ["Compress PDF to 1MB", "/compress-pdf-to-1mb"],
-                ["Merge 2 PDFs", "/merge-2-pdfs"],
-                ["PDF to Word online", "/pdf-to-word-online"],
-                ["Sign PDF online", "/sign-pdf-online"],
-                ["Watermark a PDF", "/watermark-pdf-online"],
-              ].map(([l, h]) => (
-                <li key={l}><Link to={h} className="text-sm text-white/60 hover:text-white transition-colors">{l}</Link></li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-white/90">Product</h3>
-            <ul className="mt-4 space-y-2.5">
-              {[
-                ["All Tools", "/tools"],
-                ["Blog", "/blog"],
-                ["Use Cases", "/use-cases"],
-                ["Guides", "/guides"],
-              ].map(([l, h]) => (
-                <li key={l}><Link to={h} className="text-sm text-white/60 hover:text-white transition-colors">{l}</Link></li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-white/90">Trust</h3>
-            <ul className="mt-4 space-y-2.5">
-              {[
-                ["Privacy", "/privacy"],
-                ["Security", "/privacy"],
-                ["Terms", "#"],
-                ["DPA", "#"],
-                ["Contact", "#"],
-              ].map(([l, h]) => (
-                <li key={l}><Link to={h} className="text-sm text-white/60 hover:text-white transition-colors">{l}</Link></li>
-              ))}
-            </ul>
-          </div>
+          {cols.map((col) => (
+            <div key={col.title}>
+              <h3 className="text-sm font-semibold text-foreground">{col.title}</h3>
+              <ul className="mt-4 space-y-2.5">
+                {col.links.map(([l, h]) => (
+                  <li key={l}>
+                    <Link to={h} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {l}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-14 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/50">© {new Date().getFullYear()} silentPDF. All rights reserved.</p>
-          <p className="text-xs text-white/50">Built with care. Files processed locally whenever possible.</p>
+        <div className="mt-14 pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} silentPDF. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">Built with care · Files never leave your browser for core tools.</p>
         </div>
       </div>
     </footer>
