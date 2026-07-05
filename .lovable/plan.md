@@ -1,93 +1,116 @@
-## Fixes and upgrades across all PDF tools
 
-### 1. Cross-tool bugs (shared)
+# Full rollout plan — 5 phases, no-regression guardrails
 
-**Stale upload between tools** — UploadProvider persists file state across route changes, so opening a second tool shows the prior file. Fix: clear the upload store on tool route change in `ToolPage.tsx` (`useEffect` on `slug` calls `clearFiles()` + `resetJob()` + `setUploadError(null)`).
+I'll ship all 17 items in 5 phases. Each phase is independently deployable and preview-verified before starting the next, so we never break the live app.
 
-**pdf.js worker resolution error** ("Failed to resolve module specifier `pdfjs-dist/build/pdf.worker.min.mjs?url`") — the `/* @vite-ignore */` dynamic import bypasses Vite's URL handling in prod. Fix in `src/lib/pdf.ts`: import the worker statically:
-```ts
-import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
-```
-This resolves the Compress + PDF→Word failures.
+Waiting on you: **paste the PDF Blender key files/repo link** — I'll fold its smooth-scroll setup, OCR pipeline, and editor internals into Phase 3 & 4. If it doesn't arrive by Phase 3, I'll rebuild inspired by it (Lenis + tesseract.js + pdf.js/pdf-lib) and note the differences.
 
-**Upload size limit** — bump `MAX_UPLOAD_MB` per-tool: 100MB for `compress`, `split`, `pdf-to-word`, `word-to-pdf`; keep 50MB elsewhere. Move the cap into `uploadLimits.ts` as a `capFor(kind)` helper and read it in both `ToolPage.tsx` and `WorkflowRunner.tsx`.
+---
 
-### 2. Reorder / Merge list UX
+## Phase 1 — Polish, fixes, dark mode, cleanup (low risk)
 
-- Replace `UnifiedFileList` arrow buttons with true drag-and-drop using `@dnd-kit/sortable` (already installed). Drag handle icon on the left, keyboard-accessible, no clickable-arrow area.
-- Remove the "clickable area" hint text from Merge.
-- Use the same sortable list on **Photo→PDF** so users can reorder images before conversion (currently missing).
+**Items:** 1, 2, 7, 14, 15, partial 4
 
-### 3. Individual tool fixes
+- **Dark mode overhaul** — audit `src/index.css` tokens; introduce a proper deep palette (bg `hsl(222 25% 6%)`, surfaces `hsl(222 20% 9%)`, borders at 8% alpha, elevated `--card` w/ subtle inner glow); fix hardcoded `text-white`/`bg-black` occurrences via grep sweep; add `DarkModeToggle` into `Navbar`; persist choice to `localStorage` + honor `prefers-color-scheme`.
+- **Navbar** — add active-underline indicator, dark-mode toggle, resource dropdown (Guides/Blog/Use Cases/Workflows), mobile drawer polish, sticky glass with tuned blur & border for both themes.
+- **Footer** — replace current thin footer with 4-column: Product (Tools, Workflows, PDF Editor, OCR), Resources (Guides, Blog, Use Cases, Changelog), Company (About, Contact, Security), Legal (Privacy, Terms, DPA, Cookie Policy). Newsletter capture, socials, build hash line.
+- **Kill fake timers** — remove all "~15s / ~10s" strings from `tools.ts`, `ToolPage.tsx`, tool cards, and workflow steps. Replace with real progress % from `usePdfJob`.
+- **Fix `/blog` 404** — register `Blog` and `BlogPost` routes in `App.tsx` (currently unrouted); wire to `content/blog/posts.ts`.
+- **Stub legal routes** so Phase 2 has homes: `/terms`, `/dpa`, `/security`, `/contact`, `/cookies` with basic scaffolds.
 
-**Compress** — after the worker fix, keep current pipeline but stream page-by-page with `requestIdleCallback` yields so the UI stays responsive; add a running "page X of N" progress via the existing `setProgress`.
+## Phase 2 — Legal & trust pages, homepage refactor, workflow UX (items 3, 4, 5, 6, 8)
 
-**Word → PDF** ("WinAnsi cannot encode '⇒'") — Helvetica standard font is WinAnsi-only. Fix: bundle Noto Sans (or use `pdf-lib`'s `fontkit` + a bundled TTF) so Unicode glyphs like `⇒`, curly quotes, em-dash, emoji-adjacent symbols encode. Fall back: strip/replace unencodable chars with ASCII equivalents (`⇒`→`=>`, `→`→`->`, smart quotes→straight) before drawing. Ship the sanitizer as the primary fix (no new asset bytes) and keep font-embed as a follow-up if the user wants full glyph coverage.
+- **Remove from homepage**: "Popular workflows / Chain tools end to end" block.
+- **Add homepage "How workflows work"** 4-step visual explainer with animated diagram; CTA "Explore Workflows" → `/workflows`.
+- **Homepage Product section** now lists Tools, Workflows (linked), PDF Editor, OCR.
+- **Use Cases page** — rewrite each case (Legal, HR, Sales, Education, Finance, Freelance) with problem → recommended workflow (linked) → tools used → sample outcome. Each use case links to a matching pre-built workflow.
+- **Workflows page** — add 8 more curated workflows (Redact & Send, Contract Prep, Invoice Batch, Scan → OCR → Word, Presentation Cleanup, Photo Album PDF, Legal Discovery, Report Publisher). Improved cards w/ step preview, tool chips, est. output. Better spacing/grid.
+- **Legal pages** with real, app-specific content:
+  - `/privacy` — expanded: what's collected (nothing server-side for tools), how browser-only processing works, third-party services (Cloudflare CDN only), cookie usage, DSR rights, retention. Diagram: "Your file → Your browser (WASM) → Your download". Follows trust-page-generation skill.
+  - `/security` — threat model, browser sandbox, no upload guarantee, CSP, dependency scanning, incident contact.
+  - `/terms`, `/dpa`, `/cookies`, `/contact` (form → mailto, no backend).
 
-**PDF → Word** — fixed by worker resolution fix above.
+## Phase 3 — Deferred tech: drag-to-place editors + Comlink worker + previews (items 11, 17, partial 10)
 
-**Protect PDF** — pdf-lib genuinely can't encrypt; current implementation is a no-op. Fix: swap to `qpdf-wasm` (browser WASM build) OR `pdf-lib` fork with encryption. Recommended: use **`@cantoo/pdf-lib`** (drop-in fork with AES-128 encryption) — real password protection, browser-side. Update `protectPdf` to call `.save({ encrypt: { userPassword, ownerPassword: userPassword, permissions: {...} } })`.
+- **`src/workers/pdfWorker.ts`** — Comlink-exposed `compress`, `wordToPdf`, `pdfToWord`, `ocrPage`, `removeWatermark`. `ToolPage` awaits worker RPC; UI stays 60fps; real progress via `postMessage`.
+- **PageThumbStrip component** — renders pdf.js thumbnails w/ virtualization for large PDFs.
+- **OverlayPlacer** — drag/resize/rotate handles on top of page thumbnail (react-moveable OR custom pointer events).
+- Wire OverlayPlacer into **E-Sign, Watermark, Edit PDF, Remove Watermark** (region-select mode).
+- **Result Preview** — after every job, render output pdf.js thumbnails inline before download; download button + "Send to another tool" quick action.
+- **Smooth scroll** — add Lenis (from PDF Blender inspiration) globally with `prefers-reduced-motion` guard.
 
-**Edit PDF** — currently a passthrough. Replace with a minimal in-browser editor page: page thumbnail list (pdf.js render), click a page to open an overlay canvas where the user can add text boxes and free-draw ink annotations, then save via pdf-lib `drawText` / `drawSvgPath`. Scope: text + draw only (no image insert this pass).
+## Phase 4 — New tools + missing category tools (items 12, 13, rest of 10)
 
-**E-sign** — currently only types text. Rebuild:
-- Signature source tabs: **Type**, **Draw** (canvas), **Upload** (PNG/JPG with transparent bg).
-- Page thumbnail strip — click a page to open.
-- Drag signature onto the page, resize with a corner handle, drag to reposition.
-- Confirm → pdf-lib embeds PNG at the chosen page/x/y/w/h. Multi-signature per doc supported.
+New tools registered in `tools.ts` and routed:
+- **OCR PDF** — tesseract.js in-browser (fully private, WASM), language picker, searchable-PDF output via pdf-lib text layer.
+- **PDF Editor** (full) — pdf.js render + fabric.js overlay for text/shape/image/highlight, page reorder, save via pdf-lib.
+- **Redact PDF** — draw black boxes, flatten.
+- **Crop PDF**, **Rotate PDF** (per-page), **Extract Pages**, **Delete Pages**, **Reorder Pages**, **N-up (2/4 per sheet)**, **PDF to JPG**, **PDF to PNG**, **Excel↔PDF**, **PPT↔PDF (import only via docx-like path)**, **HTML→PDF**, **Number Pages**, **Add Header/Footer**, **Compare PDFs (diff)**, **Repair PDF**, **Grayscale PDF**, **Unlock PDF**.
+- Category buckets on `/tools` re-balanced: Conversion, Editing, Organization, Security, Signing, OCR.
 
-**Watermark PDF** — rebuild as visual placer:
-- Type: text or image (upload sticker/PNG).
-- Controls: font size, color picker, opacity slider (0–100%), rotation, tile mode (single vs. repeated across page).
-- Drag onto page preview to position; "Apply to all pages" toggle; multiple watermarks per page.
-- pdf-lib `drawText` / `drawImage` with `opacity` and `rotate` per placement.
+## Phase 5 — Content: guides, blogs, programmatic pages (items 9, 16)
 
-**Remove Watermark** — the current implementation only strips annotations (which is why it "does nothing" for image/text stamps embedded in the page content stream). Realistic scope in-browser:
-1. Parse each page's content stream with `pdf-lib`; detect and drop operators for high-transparency text (`Tj`/`TJ` after `gs` with low `CA`) and images with common watermark heuristics (repeated identical XObject on every page, low opacity, diagonal rotation).
-2. Also strip form XObject overlays that appear on every page (typical for stamped watermarks).
-3. UI: after upload, show detected candidates with per-item checkboxes (thumbnail + "Text: CONFIDENTIAL — 12 pages" / "Image stamp — 12 pages"), user confirms which to remove.
-4. If nothing detected, show a clear message rather than silently returning the same file. Update the tool blurb to reflect the broader capability.
+- **Guides** — replace dummy `GUIDES` in `Home.tsx` with 12 real guides in `src/content/guides/`, each with hero image (generated), step screenshots, linked tool CTA, JSON-LD HowTo.
+- **Blog posts** — pipeline:
+  - 5 hand-crafted flagship posts for top 6 tools (Compress, Merge, PDF↔Word, Sign, Watermark, OCR) = 30 posts, ~1200 words each.
+  - Templated but real content for remaining ~19 tools × 5 = ~95 posts (~700 words each), generated from a per-tool JSON spec so every post has unique intro/steps/FAQ/comparison.
+  - 8 workflow deep-dive posts.
+  - All posts link to parent tool + 3 related tools + 1 programmatic page (per existing `ContentAsset` shape).
+- **Programmatic pages** — extend `programmatic.ts` with per-tool intent pages (e.g., `/ocr-scanned-pdf`, `/edit-pdf-online`, `/redact-pdf-free`); each links back to its parent tool + workflow.
+- **Sitemap.xml + llms.txt** regenerated.
 
-**Photo → PDF** — add sortable image list with thumbnails (dnd-kit) before conversion; page size + orientation + margin options.
+---
 
-### 4. Performance / "slow download"
+## Technical section
 
-- Move heavy work off the main thread using a **Web Worker** (`pdf.worker.ts` in `src/workers/`) for Compress, PDF→Word, Word→PDF. Use `Comlink` (add dep) for ergonomic RPC. Progress reported via `postMessage`.
-- Stream the final blob straight to a download via `URL.createObjectURL` immediately on completion (already done) — but drop the extra `await out.save()` allocation by using `saveAsBase64: false` and `useObjectStreams: true` on every save.
+**No-regression guardrails**
+- Each phase gated by: `bun run build` clean, `tsgo` clean, manual Playwright pass on `/`, `/tools`, `/workflows`, one tool run, `/blog`.
+- Feature flags in `src/lib/featureFlags.ts` for the big new surfaces (`pdfEditorV2`, `ocr`, `workerOffload`) so half-shipped work never breaks prod.
+- Every new tool registered in `tools.ts` but hidden until its handler + preview both pass smoke test.
 
-### 5. Files touched
+**New deps** (installed once, Phase 3): `comlink`, `tesseract.js`, `fabric`, `lenis`, `react-moveable`.
 
+**New files**
 ```text
-src/lib/pdf.ts                        (worker import, unicode-safe fonts, encryption via @cantoo/pdf-lib, watermark detector)
-src/lib/uploadLimits.ts               (per-kind cap helper)
-src/pages/tools/ToolPage.tsx          (clear on route change, per-kind cap, wire editor/sign/watermark UIs)
-src/components/UnifiedFileList.tsx    (dnd-kit sortable, drag handle)
-src/components/PdfDropzone.tsx        (respect per-kind cap)
-src/components/tools/PageThumbStrip.tsx        NEW
-src/components/tools/SignaturePad.tsx          NEW  (type/draw/upload tabs)
-src/components/tools/OverlayPlacer.tsx         NEW  (drag/resize/rotate on page)
-src/components/tools/WatermarkStudio.tsx       NEW
-src/components/tools/PdfEditor.tsx             NEW
-src/workers/pdfWorker.ts                       NEW  (Comlink-exposed compress/convert)
-src/pages/workflows/WorkflowRunner.tsx (per-kind cap)
-package.json                          (+@cantoo/pdf-lib, +comlink; keep pdf-lib for readers)
+src/workers/pdfWorker.ts
+src/lib/featureFlags.ts
+src/lib/ocr.ts
+src/lib/pdfEditor.ts
+src/components/tools/PageThumbStrip.tsx
+src/components/tools/OverlayPlacer.tsx
+src/components/tools/ResultPreview.tsx
+src/components/tools/PdfEditorCanvas.tsx
+src/components/layout/Footer.tsx           (rewrite)
+src/components/ui/ThemeProvider.tsx
+src/pages/Terms.tsx
+src/pages/Dpa.tsx
+src/pages/Security.tsx
+src/pages/Contact.tsx
+src/pages/Cookies.tsx
+src/pages/tools/OcrPdf.tsx
+src/pages/tools/PdfEditor.tsx
+src/content/guides/*.ts                    (12 real guides)
+src/content/blog/*.ts                      (~130 posts across files)
 ```
 
-### 6. Dependencies to add
+**Files rewritten**
+- `src/App.tsx` (routes)
+- `src/index.css` + `tailwind.config.ts` (dark tokens)
+- `src/components/layout/Navbar.tsx`
+- `src/pages/Home.tsx` (remove Popular Workflows, add How-it-works, product/use-case links)
+- `src/pages/UseCases.tsx`
+- `src/pages/workflows/Workflows.tsx`
+- `src/lib/tools.ts` (new tools, no time strings)
+- `src/pages/tools/ToolPage.tsx` (worker RPC, preview, editor mounts)
 
-- `@cantoo/pdf-lib` — AES-encryption drop-in for Protect PDF.
-- `comlink` — worker RPC for compress/convert.
-- (Already installed: `@dnd-kit/*`, `pdfjs-dist`, `pdf-lib`, `mammoth`, `docx`.)
+**Estimated LOC:** ~8–10k added, ~1k removed. Content files dominate.
 
-### 7. Order of execution
+---
 
-1. **Blockers first** (shipped as one pass): worker import fix, Word→PDF sanitizer, clear-on-route-change, upload cap bump. This alone unblocks Compress, PDF→Word, Word→PDF, and the "stale file" complaint.
-2. **Sortable list** (Merge + Photo→PDF) with dnd-kit.
-3. **Protect** via `@cantoo/pdf-lib`.
-4. **Watermark studio** + **Remove Watermark** heuristic detector.
-5. **E-sign** (type/draw/upload + drag placer).
-6. **Edit** (text + ink annotations).
-7. **Worker offload** for perf.
+## Sequence
 
-Steps 1–3 are low-risk and land the fixes for the reported errors. Steps 4–7 are larger UI builds and each is a self-contained follow-up.
+1. Approve this plan → I ship Phase 1 (safest, immediate visible upgrade) and pause.
+2. You paste PDF Blender files after Phase 1.
+3. Phases 2–5 ship sequentially with a preview check between each.
+
+Say "go" to start Phase 1.

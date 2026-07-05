@@ -7,7 +7,7 @@ const Workflows = () => {
   return (
     <div className="container-px mx-auto max-w-7xl py-16 md:py-24">
       <div className="max-w-2xl">
-        <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Popular workflows</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Workflows</span>
         <h1 className="mt-3 font-serif text-4xl md:text-5xl leading-tight text-balance">
           Real jobs, end to end.
         </h1>

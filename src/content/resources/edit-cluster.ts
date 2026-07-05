@@ -34,7 +34,7 @@ export const EDIT_CLUSTER: ContentAsset[] = [
     ],
     parentToolSlug: "edit-pdf",
     relatedToolSlugs: ["esign-pdf", "pdf-to-word", "watermark-pdf"],
-    relatedAssetSlugs: ["annotating-pdfs-for-review"],
+    relatedAssetSlugs: ["annotating-pdfs-for-review", "annotating-pdfs-for-review"],
     relatedProgrammaticSlug: "edit-pdf"
   },
   {
@@ -60,7 +60,7 @@ export const EDIT_CLUSTER: ContentAsset[] = [
     faq: [],
     parentToolSlug: "edit-pdf",
     relatedToolSlugs: ["merge-pdf", "protect-pdf", "compress-pdf"],
-    relatedAssetSlugs: ["how-to-write-on-a-pdf"],
+    relatedAssetSlugs: ["how-to-write-on-a-pdf", "how-to-write-on-a-pdf"],
     relatedProgrammaticSlug: "edit-pdf"
   }
 ];
