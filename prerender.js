@@ -31,7 +31,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const toAbsolute = (p) => path.resolve(__dirname, p);
 
 const template = fs.readFileSync(toAbsolute('dist/index.html'), 'utf-8');
-const { render } = await import('./dist/server/entry-server.js');
+
 
 // Determine routes to pre-render
 const routesToPrerender = [
@@ -53,12 +53,8 @@ const routesToPrerender = [
   '/addpages-pdf',
   '/removewatermark-pdf',
   '/rotatepages-pdf',
-  '/guides',
-  '/use-cases',
-  '/privacy',
   '/privacy-policy',
   '/about',
-  '/blog',
   '/compress-pdf-for-email',
   '/compress-pdf-to-1mb',
   '/compress-pdf-to-500kb',
@@ -75,6 +71,18 @@ const routesToPrerender = [
   '/watermark-pdf-online',
   '/add-logo-watermark-pdf'
 ];
+
+const { render, RESOURCES } = await import('./dist/server/entry-server.js');
+
+// Add the dynamic resource routes
+routesToPrerender.push('/resources');
+
+// Get unique categories
+const categories = Array.from(new Set(RESOURCES.map(r => r.category)));
+categories.forEach(cat => routesToPrerender.push(`/resources/${cat}`));
+
+// Add individual assets
+RESOURCES.forEach(r => routesToPrerender.push(`/resources/${r.category}/${r.slug}`));
 
 (async () => {
   for (const url of routesToPrerender) {
@@ -110,7 +118,7 @@ const routesToPrerender = [
   fs.rmSync(toAbsolute('dist/server'), { recursive: true, force: true });
   
   // Generate sitemap.xml
-  const siteUrl = 'https://silentpdfai.pages.dev';
+  const siteUrl = process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev';
   const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${routesToPrerender.map(route => `  <url>

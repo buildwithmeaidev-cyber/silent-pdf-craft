@@ -9,6 +9,7 @@ import {
 import { getProgrammatic, PROGRAMMATIC } from "@/lib/programmatic";
 import { TOOLS } from "@/lib/tools";
 import Breadcrumbs from "@/core/Breadcrumbs";
+import ToolPage from "./tools/ToolPage";
 
 export default function ProgrammaticPage() {
   const { slug = "" } = useParams();
@@ -26,28 +27,17 @@ export default function ProgrammaticPage() {
       <div className="mx-auto max-w-4xl px-4 md:px-6 py-12 md:py-16">
         <Breadcrumbs current={variant.title} />
 
-        {/* Hero */}
-        <header className="mt-6 space-y-5">
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-            {parent?.title ?? "PDF Tool"}
-          </p>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
-            {variant.title}
-          </h1>
-          <p className="text-lg text-slate-600 leading-relaxed">
-            {variant.intent}
-          </p>
-          {parent && (
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Link
-                to={`/${parent.slug}`}
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white font-semibold transition hover:bg-blue-700"
-              >
-                Open {parent.title} <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          )}
-        </header>
+        {/* Embedded Tool directly on page */}
+        {parent && (
+          <div className="mt-6 mb-12">
+            <ToolPage 
+              toolSlug={parent.slug} 
+              hideHeader={true} 
+              overrideTitle={variant.title} 
+              overrideDescription={variant.intent} 
+            />
+          </div>
+        )}
 
         {/* Scenario */}
         <section className="mt-12 rounded-3xl border border-slate-200 bg-white p-6 md:p-8">
@@ -87,21 +77,7 @@ export default function ProgrammaticPage() {
           </ol>
         </section>
 
-        {/* CTA */}
-        {parent && (
-          <section className="mt-12 rounded-3xl bg-slate-900 p-8 md:p-10 text-white text-center">
-            <h2 className="text-2xl md:text-3xl font-bold">Ready to {variant.title.toLowerCase()}?</h2>
-            <p className="mt-3 text-slate-300">
-              Free, no signup, no watermark. Runs in your browser.
-            </p>
-            <Link
-              to={`/${parent.slug}`}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-slate-900 font-semibold transition hover:bg-slate-100"
-            >
-              Open {parent.title} <ArrowRight className="h-4 w-4" />
-            </Link>
-          </section>
-        )}
+
 
         {/* FAQ */}
         <section className="mt-12 space-y-6">

@@ -2,10 +2,10 @@ import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import { TOOLS } from "@/lib/tools";
 import { getProgrammatic } from "@/lib/programmatic";
-import { getPost, POSTS } from "@/content/blog/posts";
+import { RESOURCES, getResource } from "@/content/resources";
 import { HOME_FAQ } from "@/components/home/HomeFaq";
 
-const SITE_URL = "https://silentpdfai.pages.dev";
+const SITE_URL = import.meta.env.VITE_SITE_URL || "https://silentpdfai.pages.dev";
 const SITE_NAME = "silentPDF AI";
 const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
@@ -55,15 +55,9 @@ const STATIC_META: Record<string, RouteMeta> = {
     description:
       "Every silentPDF tool in one place: merge, split, compress, convert, rotate, sign, watermark, and more. All private, all in your browser.",
   },
-  "/guides": {
-    title: "PDF Guides & Tutorials — silentPDF AI",
-    description:
-      "Plain-language guides for the PDF tasks people actually run into: shrinking files for email, signing contracts, merging scans.",
-  },
-  "/use-cases": {
-    title: "PDF Use Cases for Students, Teams & Freelancers — silentPDF AI",
-    description:
-      "How students, HR teams, teachers, freelancers, and small businesses use silentPDF every day.",
+  "/resources": {
+    title: "PDF Knowledge Base & Resource Center — silentPDF AI",
+    description: "The most comprehensive PDF knowledge base on the internet. Master your documents with guides, comparisons, and industry resources.",
   },
   "/privacy": {
     title: "Privacy Policy — silentPDF AI",
@@ -190,77 +184,102 @@ function buildProgrammaticMeta(slug: string): RouteMeta | null {
   return { title: v.seoTitle, description: v.metaDescription, jsonLd };
 }
 
-function buildBlogIndexMeta(): RouteMeta {
+function buildResourceCategoryMeta(category: string): RouteMeta | null {
+  const valid = ["blog", "guides", "comparisons", "checklists", "templates", "glossary", "use-cases"];
+  if (!valid.includes(category)) return null;
+  const title = category.charAt(0).toUpperCase() + category.slice(1).replace("-", " ");
+  
   return {
-    title: "PDF Guides & How-Tos — silentPDF Blog",
-    description:
-      "Practical posts about compressing, merging, converting, and protecting PDFs — for real situations, not search engines.",
+    title: `PDF ${title} — silentPDF AI Resource Center`,
+    description: `Explore our collection of PDF ${title.toLowerCase()} to master document management.`,
     jsonLd: [
       {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        name: "silentPDF Blog",
-        url: `${SITE_URL}/blog`,
-        hasPart: POSTS.map((p) => ({
-          "@type": "BlogPosting",
-          headline: p.title,
-          url: `${SITE_URL}/blog/${p.slug}`,
-          datePublished: p.publishedAt,
+        name: `silentPDF ${title}`,
+        url: `${SITE_URL}/resources/${category}`,
+        hasPart: RESOURCES.filter(r => r.category === category).map((r) => ({
+          "@type": "Article",
+          headline: r.title,
+          url: `${SITE_URL}/resources/${r.category}/${r.slug}`,
+          datePublished: r.publishedAt,
         })),
       },
     ],
   };
 }
 
-function buildBlogPostMeta(slug: string): RouteMeta | null {
-  const post = getPost(slug);
-  if (!post) return null;
-  const url = `${SITE_URL}/blog/${post.slug}`;
+function buildResourceAssetMeta(category: string, slug: string): RouteMeta | null {
+  const asset = getResource(slug);
+  if (!asset || asset.category !== category) return null;
+  const url = `${SITE_URL}/resources/${asset.category}/${asset.slug}`;
+  
   const jsonLd: Record<string, unknown>[] = [
     {
       "@context": "https://schema.org",
       "@type": "Article",
-      headline: post.title,
-      description: post.excerpt,
-      datePublished: post.publishedAt,
+      headline: asset.title,
+      description: asset.metaDescription,
+      datePublished: asset.publishedAt,
       url,
       author: { "@type": "Organization", name: SITE_NAME },
       publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: `${SITE_URL}/logo-512.png` } },
+      // AI Search Content Rules
+      articleSection: asset.definition ? "Definition" : undefined,
+      abstract: asset.quickAnswer,
     },
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
-        { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
-        { "@type": "ListItem", position: 3, name: post.title, item: url },
+        { "@type": "ListItem", position: 2, name: "Resources", item: `${SITE_URL}/resources` },
+        { "@type": "ListItem", position: 3, name: asset.category, item: `${SITE_URL}/resources/${asset.category}` },
+        { "@type": "ListItem", position: 4, name: asset.title, item: url },
       ],
     },
   ];
-  if (post.faq?.length) {
+
+  if (asset.faq?.length) {
     jsonLd.push({
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      mainEntity: post.faq.map((f) => ({
+      mainEntity: asset.faq.map((f) => ({
         "@type": "Question",
         name: f.q,
         acceptedAnswer: { "@type": "Answer", text: f.a },
       })),
     });
   }
-  return { title: post.seoTitle, description: post.metaDescription, jsonLd };
+
+  if (asset.stepByStep?.length) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: asset.title,
+      step: asset.stepByStep.map((s, i) => ({
+        "@type": "HowToStep",
+        position: i + 1,
+        name: s.name,
+        text: s.text,
+      })),
+    });
+  }
+
+  return { title: asset.seoTitle, description: asset.metaDescription, jsonLd };
 }
 
 export const Seo = () => {
   const { pathname } = useLocation();
-  const toolSlug = toolSlugFromPath(pathname);
-  const blogPostMatch = pathname.match(/^\/blog\/([^/]+)\/?$/);
+  const resourceCatMatch = pathname.match(/^\/resources\/([^/]+)\/?$/);
+  const resourceAssetMatch = pathname.match(/^\/resources\/([^/]+)\/([^/]+)\/?$/);
   const rootSlugMatch = pathname.match(/^\/([^/]+)\/?$/);
-  const isBlogIndex = pathname === "/blog";
 
   let meta: RouteMeta | null = STATIC_META[pathname] ?? null;
-  if (!meta && isBlogIndex) meta = buildBlogIndexMeta();
-  if (!meta && blogPostMatch) meta = buildBlogPostMeta(blogPostMatch[1]);
+  
+  if (!meta && resourceAssetMatch) meta = buildResourceAssetMeta(resourceAssetMatch[1], resourceAssetMatch[2]);
+  if (!meta && resourceCatMatch) meta = buildResourceCategoryMeta(resourceCatMatch[1]);
+  
   if (!meta && rootSlugMatch) {
     const slug = rootSlugMatch[1];
     meta = buildProgrammaticMeta(slug) || buildToolMeta(slug);

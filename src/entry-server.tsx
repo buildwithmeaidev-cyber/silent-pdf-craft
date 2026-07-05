@@ -3,6 +3,7 @@ import { renderToString } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
 import { HelmetProvider } from 'react-helmet-async';
 import App from './App';
+import { UploadProvider } from './context/UploadContext';
 
 /**
  * Render the page for a given URL on the server.
@@ -15,10 +16,14 @@ export function render(url: string, helmetContext?: Record<string, unknown>) {
     <HelmetProvider context={context}>
       <React.StrictMode>
         <StaticRouter location={url}>
-          <App />
+          <UploadProvider>
+            <App />
+          </UploadProvider>
         </StaticRouter>
       </React.StrictMode>
     </HelmetProvider>
   );
   return { html, helmetContext: context };
 }
+
+export { RESOURCES } from './content/resources';

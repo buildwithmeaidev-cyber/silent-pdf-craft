@@ -12,16 +12,17 @@ import AppErrorBoundary from "@/core/AppErrorBoundary";
 
 import Home from "./pages/Home";
 import Tools from "./pages/Tools";
-import Guides from "./pages/Guides";
-import UseCases from "./pages/UseCases";
 import Privacy from "./pages/Privacy";
 import About from "./pages/About";
 
 import ToolPage from "./pages/tools/ToolPage";
 import NotFound from "./pages/NotFound";
 import ProgrammaticPage from "./pages/ProgrammaticPage";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
+
+// Resources
+import ResourceIndex from "./pages/resources/ResourceIndex";
+import ResourceCategoryIndex from "./pages/resources/ResourceCategoryIndex";
+import ResourceAssetPage from "./pages/resources/ResourceAssetPage";
 import Workflows from "./pages/workflows/Workflows";
 import CustomWorkflowBuilder from "./pages/workflows/CustomWorkflowBuilder";
 import WorkflowRunner from "./pages/workflows/WorkflowRunner";
@@ -49,15 +50,14 @@ const App = () => (
 
               {/* Tools list */}
 
-              <Route path="/guides" element={<Guides />} />
-              <Route path="/use-cases" element={<UseCases />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/privacy-policy" element={<Privacy />} />
               <Route path="/about" element={<About />} />
 
-              {/* Blog */}
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
+              {/* Resource Center */}
+              <Route path="/resources" element={<ResourceIndex />} />
+              <Route path="/resources/:category" element={<ResourceCategoryIndex />} />
+              <Route path="/resources/:category/:slug" element={<ResourceAssetPage />} />
 
               {/* Workflows (must be registered BEFORE the /:slug catch-all) */}
               <Route path="/workflows" element={<Workflows />} />

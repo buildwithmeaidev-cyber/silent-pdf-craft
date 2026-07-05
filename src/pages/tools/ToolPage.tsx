@@ -31,8 +31,9 @@ import {
 } from "@/lib/pdf";
 
 
-const ToolPage = () => {
-  const { slug = "" } = useParams();
+const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: { toolSlug?: string, hideHeader?: boolean, overrideTitle?: string, overrideDescription?: string }) => {
+  const { slug: routeSlug = "" } = useParams();
+  const slug = toolSlug || routeSlug;
   const tool = getTool(slug);
   const { files, addFiles, clearFiles, setError: setUploadError, error: uploadError } = useUpload();
   const MAX_UPLOAD_MB = capMbFor(tool?.kind);
@@ -164,13 +165,15 @@ const ToolPage = () => {
   const Icon = tool.icon;
 
   return (
-    <div className="container-px mx-auto max-w-3xl py-12 md:py-16">
-      <Link
-        to="/tools"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
-      >
-        <ArrowLeft className="size-4" /> All tools
-      </Link>
+    <div className={cn("mx-auto max-w-3xl", !hideHeader && "container-px py-12 md:py-16")}>
+      {!hideHeader && (
+        <Link
+          to="/tools"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
+        >
+          <ArrowLeft className="size-4" /> All tools
+        </Link>
+      )}
 
       <div className="flex items-start gap-4">
         <div
@@ -183,8 +186,8 @@ const ToolPage = () => {
         </div>
 
         <div>
-          <h1 className="font-serif text-4xl md:text-5xl leading-tight text-balance">{tool.title}</h1>
-          <p className="mt-2 text-muted-foreground max-w-xl">{tool.description}</p>
+          <h1 className="font-serif text-4xl md:text-5xl leading-tight text-balance">{overrideTitle || tool.title}</h1>
+          <p className="mt-2 text-muted-foreground max-w-xl">{overrideDescription || tool.description}</p>
         </div>
       </div>
 
