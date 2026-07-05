@@ -30,28 +30,28 @@ const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "signing", label: "Signing" },
 ];
 
-const TOOL_META: Record<string, { category: Exclude<CategoryId, "all">; useCase: string; time: string }> = {
-  "merge-pdf":         { category: "organization", useCase: "Combine resume + cover letter",    time: "Seconds" },
-  "split-pdf":         { category: "organization", useCase: "Pull a signed page from a contract", time: "Seconds" },
-  "compress-pdf":      { category: "organization", useCase: "Email-ready attachments",          time: "Under 10s" },
-  "reorder-pdf":       { category: "organization", useCase: "Fix scan order",                   time: "Seconds" },
-  "rotate-pages":      { category: "organization", useCase: "Flip sideways scans",              time: "Instant" },
-  "remove-pages":      { category: "organization", useCase: "Drop blank or duplicate pages",    time: "Instant" },
-  "add-pages":         { category: "organization", useCase: "Insert a cover page",              time: "Seconds" },
+const TOOL_META: Record<string, { category: Exclude<CategoryId, "all">; useCase: string }> = {
+  "merge-pdf":         { category: "organization", useCase: "Combine resume + cover letter" },
+  "split-pdf":         { category: "organization", useCase: "Pull a signed page from a contract" },
+  "compress-pdf":      { category: "organization", useCase: "Email-ready attachments" },
+  "reorder-pdf":       { category: "organization", useCase: "Fix scan order" },
+  "rotate-pages":      { category: "organization", useCase: "Flip sideways scans" },
+  "remove-pages":      { category: "organization", useCase: "Drop blank or duplicate pages" },
+  "add-pages":         { category: "organization", useCase: "Insert a cover page" },
 
-  "pdf-to-word":       { category: "conversion",   useCase: "Edit a locked contract",           time: "~15s" },
-  "word-to-pdf":       { category: "conversion",   useCase: "Send a resume in PDF",             time: "~10s" },
-  "photo-to-pdf":      { category: "conversion",   useCase: "Submit phone scans as one PDF",    time: "Seconds" },
-  "export-pdf":        { category: "conversion",   useCase: "Save pages as images",             time: "Seconds" },
+  "pdf-to-word":       { category: "conversion",   useCase: "Edit a locked contract" },
+  "word-to-pdf":       { category: "conversion",   useCase: "Send a resume in PDF" },
+  "photo-to-pdf":      { category: "conversion",   useCase: "Submit phone scans as one PDF" },
+  "export-pdf":        { category: "conversion",   useCase: "Save pages as images" },
 
-  "edit-pdf":          { category: "editing",      useCase: "Tweak text, add notes",            time: "Live" },
-  "watermark-pdf":     { category: "editing",      useCase: "Brand drafts with a logo",         time: "Seconds" },
-  "remove-watermark":  { category: "editing",      useCase: "Clean approved templates",         time: "Seconds" },
+  "edit-pdf":          { category: "editing",      useCase: "Tweak text, add notes" },
+  "watermark-pdf":     { category: "editing",      useCase: "Brand drafts with a logo" },
+  "remove-watermark":  { category: "editing",      useCase: "Clean approved templates" },
 
-  "protect-pdf":       { category: "security",     useCase: "Password-lock sensitive files",    time: "Instant" },
+  "protect-pdf":       { category: "security",     useCase: "Password-lock sensitive files" },
 
-  "sign-pdf":          { category: "signing",      useCase: "Add a handwritten signature",      time: "1 minute" },
-  "e-sign-pdf":        { category: "signing",      useCase: "Send contracts for e-signature",   time: "2 minutes" },
+  "sign-pdf":          { category: "signing",      useCase: "Add a handwritten signature" },
+  "e-sign-pdf":        { category: "signing",      useCase: "Send contracts for e-signature" },
 };
 
 
@@ -133,26 +133,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Workflows CTA — full experience lives at /workflows */}
-      <section className="py-16 border-t bg-surface/40">
-        <div className="container-px mx-auto max-w-7xl flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="max-w-xl">
-            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Popular workflows</span>
-            <h2 className="mt-2 font-serif text-3xl md:text-4xl leading-tight text-balance">
-              Chain tools end to end.
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              Run preset workflows or build your own — upload once and each tool's output flows into the next.
-            </p>
-          </div>
-          <Link
-            to="/workflows"
-            className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-medium hover:bg-primary/90 transition-colors self-start"
-          >
-            Explore workflows <ArrowRight className="size-4" />
-          </Link>
-        </div>
-      </section>
+      {/* Workflow explainer lives further down; the Home hero now flows straight into tools */}
+
 
       {/* TOOLS GRID with category nav */}
       <section id="tools" className="py-24">
