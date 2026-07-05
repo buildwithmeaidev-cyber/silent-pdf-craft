@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Seo } from "@/components/Seo";
+import { Helmet } from "react-helmet-async";
 import { ArrowRight, Mail } from "lucide-react";
 
 const LEGAL_LINKS = [
@@ -29,7 +29,10 @@ export default function LegalLayout({
 }) {
   return (
     <div className="bg-background text-foreground">
-      <Seo title={seoTitle ?? `${title} — silentPDF`} description={metaDescription ?? intro} />
+      <Helmet>
+        <title>{seoTitle ?? `${title} — silentPDF`}</title>
+        <meta name="description" content={metaDescription ?? intro} />
+      </Helmet>
       <div className="container-px mx-auto max-w-5xl py-14 md:py-20 grid lg:grid-cols-[220px_1fr] gap-12">
         <aside className="lg:sticky lg:top-24 self-start">
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Legal & Trust</p>

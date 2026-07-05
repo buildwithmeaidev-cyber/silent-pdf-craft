@@ -34,7 +34,7 @@ export const SPLIT_CLUSTER: ContentAsset[] = [
     ],
     parentToolSlug: "split-pdf",
     relatedToolSlugs: ["remove-pages", "merge-pdf", "compress-pdf"],
-    relatedAssetSlugs: ["extracting-specific-pages-from-pdf"],
+    relatedAssetSlugs: ["extracting-specific-pages-from-pdf", "extracting-specific-pages-from-pdf"],
     relatedProgrammaticSlug: "split-pdf"
   },
   {
@@ -60,7 +60,7 @@ export const SPLIT_CLUSTER: ContentAsset[] = [
     faq: [],
     parentToolSlug: "split-pdf",
     relatedToolSlugs: ["merge-pdf", "rotate-pdf", "remove-pages"],
-    relatedAssetSlugs: ["how-to-split-large-pdf-files"],
+    relatedAssetSlugs: ["how-to-split-large-pdf-files", "how-to-split-large-pdf-files"],
     relatedProgrammaticSlug: "split-pdf"
   }
 ];

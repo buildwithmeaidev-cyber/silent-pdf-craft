@@ -34,7 +34,7 @@ export const PROTECT_CLUSTER: ContentAsset[] = [
     ],
     parentToolSlug: "protect-pdf",
     relatedToolSlugs: ["watermark-pdf", "esign-pdf", "compress-pdf"],
-    relatedAssetSlugs: ["best-practices-for-secure-pdfs"],
+    relatedAssetSlugs: ["best-practices-for-secure-pdfs", "best-practices-for-secure-pdfs"],
     relatedProgrammaticSlug: "protect-pdf"
   },
   {
@@ -60,7 +60,7 @@ export const PROTECT_CLUSTER: ContentAsset[] = [
     faq: [],
     parentToolSlug: "protect-pdf",
     relatedToolSlugs: ["watermark-pdf", "edit-pdf", "merge-pdf"],
-    relatedAssetSlugs: ["how-to-password-protect-pdf"],
+    relatedAssetSlugs: ["how-to-password-protect-pdf", "how-to-password-protect-pdf"],
     relatedProgrammaticSlug: "protect-pdf"
   }
 ];
