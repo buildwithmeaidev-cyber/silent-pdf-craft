@@ -55,6 +55,7 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
   const [editText, setEditText] = useState("");
   const [addCount, setAddCount] = useState(1);
   const [exportName, setExportName] = useState("");
+  const [removeWatermarkText, setRemoveWatermarkText] = useState("CONFIDENTIAL, DRAFT, COPY, SAMPLE, SPECIMEN, WATERMARK");
 
   const { progress, state, result, error: jobError, run: runJob, reset: resetJob, setProgress } = usePdfJob();
 
@@ -132,7 +133,10 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
           rotation: watermarkRotation,
           tile: watermarkTile,
         });
-        case "removewatermark": return await removeWatermarkPdf(f);
+        case "removewatermark": {
+          const phrases = removeWatermarkText.split(/[,\n;]+/).map((s) => s.trim()).filter(Boolean);
+          return await removeWatermarkPdf(f, phrases.length > 0 ? phrases : undefined);
+        }
         case "reorder": return await reorderPdf(f, range);
         case "addpages": return await addBlankPages(f, addCount);
         case "export": return await exportPdf(f, exportName);
