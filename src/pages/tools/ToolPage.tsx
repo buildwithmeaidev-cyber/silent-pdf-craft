@@ -248,13 +248,31 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
               {files.length > 0 && (
                 tool.needsRange || tool.needsPassword || tool.needsRotation ||
                 tool.kind === "compress" || needsWatermarkText || needsSignature ||
-                needsAddCount || needsExportName || needsReorderInput || needsEditText
+                needsAddCount || needsExportName || needsReorderInput || needsEditText ||
+                tool.kind === "removewatermark"
               ) && (
                 <div className="mt-6 rounded-2xl border bg-background p-5 space-y-4">
                   <div className="flex items-baseline justify-between">
                     <h3 className="font-medium">Settings</h3>
                     <span className="text-xs text-muted-foreground">Step 3 of 4</span>
                   </div>
+
+                  {tool.kind === "removewatermark" && (
+                    <div>
+                      <label className="text-sm font-medium block mb-1.5">Watermark phrases to strip</label>
+                      <textarea
+                        value={removeWatermarkText}
+                        onChange={(e) => setRemoveWatermarkText(e.target.value)}
+                        rows={2}
+                        placeholder="CONFIDENTIAL, DRAFT, COPY"
+                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary resize-none"
+                      />
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        Comma-separated. Any text overlay containing one of these phrases (case-insensitive) is covered in white. Annotation and XObject watermarks are always stripped.
+                      </p>
+                    </div>
+                  )}
+
 
                   {tool.needsPassword && (
                     <div>
