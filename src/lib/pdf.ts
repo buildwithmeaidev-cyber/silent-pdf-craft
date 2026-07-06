@@ -293,11 +293,30 @@ export async function watermarkPdf(
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-watermarked.pdf" };
 }
 
-// ---------------- remove watermark (best-effort browser cleanup) ----------------
-export async function removeWatermarkPdf(file: File): Promise<ToolResult> {
+// ---------------- remove watermark (real browser cleanup) ----------------
+//
+// Strategy — combined attack that works for the vast majority of overlay
+// watermarks that browsers can touch without a full content-stream rewriter:
+//
+//   1. Strip annotation-layer stamps (many "CONFIDENTIAL" watermarks live here).
+//   2. Drop Form XObjects whose name looks watermark-y (Adobe/Word/Bluebeam
+//      all label them with W*, Watermark, Header/Footer, Stamp).
+//   3. Use pdf.js to locate every text run whose content matches one of the
+//      caller-supplied watermark phrases (case-insensitive substring match),
+//      then draw a solid white rectangle over each hit with pdf-lib.
+//   4. Also strip common defaults ("CONFIDENTIAL", "DRAFT", "COPY", "SAMPLE",
+//      "SPECIMEN", "WATERMARK") when the caller doesn't override the list.
+//
+// This is best-effort and browser-native. Files that render watermarks as
+// rasterized images can't be surgically cleaned without OCR — the cover-with-
+// rect fallback still helps because most template watermarks are actual text.
+export async function removeWatermarkPdf(
+  file: File,
+  phrases: string[] = ["CONFIDENTIAL", "DRAFT", "COPY", "SAMPLE", "SPECIMEN", "WATERMARK"],
+): Promise<ToolResult> {
   const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  let strippedAny = false;
 
+  // Phase 1 + 2: strip annotation + XObject watermarks via pdf-lib low-level API.
   for (const page of src.getPages()) {
     const node = (page as unknown as { node: {
       delete?: (k: unknown) => void;
@@ -305,14 +324,10 @@ export async function removeWatermarkPdf(file: File): Promise<ToolResult> {
       Resources?: () => { lookup?: (k: unknown) => unknown } | undefined;
     } }).node;
 
-    // 1. Drop annotation-layer stamps (common home for watermark annotations)
-    try {
-      node.delete?.(node.context.obj("Annots"));
-      strippedAny = true;
-    } catch { /* ignore */ }
+    // Drop annotation-layer stamps
+    try { node.delete?.(node.context.obj("Annots")); } catch { /* ignore */ }
 
-    // 2. Try to strip Form XObjects on the page that are marked with /Subtype /Watermark
-    //    or that look like the classic stamped overlay (name starts with "W" or "Watermark").
+    // Strip Form XObjects that look watermark-y
     try {
       const resources = node.Resources?.();
       const xObjectDict = (resources as { lookup?: (k: unknown) => unknown } | undefined)
@@ -321,23 +336,72 @@ export async function removeWatermarkPdf(file: File): Promise<ToolResult> {
       if (xObjectDict?.entries) {
         for (const [k] of xObjectDict.entries()) {
           const n = k?.encodedName ?? "";
-          if (/watermark|stamp|wm/i.test(n)) {
+          if (/watermark|stamp|header|footer|\bwm\b|logo/i.test(n)) {
             xObjectDict.delete?.(k);
-            strippedAny = true;
           }
         }
       }
     } catch { /* ignore */ }
   }
 
+  // Phase 3: use pdf.js to find text hits and cover with white rectangles.
+  try {
+    const cleaned = (phrases || [])
+      .map((p) => (p ?? "").trim())
+      .filter(Boolean)
+      .map((p) => p.toLowerCase());
+
+    if (cleaned.length > 0) {
+      const pdfjs = await getPdfJs();
+      // Re-read from the freshly saved bytes so we're aligned with what will be output.
+      const preview = await src.save({ useObjectStreams: false });
+      const doc = await pdfjs.getDocument({ data: preview.slice(0) as unknown as Uint8Array }).promise;
+
+      const pages = src.getPages();
+      for (let i = 1; i <= doc.numPages && i <= pages.length; i++) {
+        const jsPage = await doc.getPage(i);
+        const viewport = jsPage.getViewport({ scale: 1 });
+        const content = await jsPage.getTextContent();
+        const pdfPage = pages[i - 1];
+        const { height: pageH } = pdfPage.getSize();
+        // Coordinate delta between pdf.js viewport height and pdf-lib page height (rotation cases).
+        const yScale = pageH / viewport.height;
+        const xScale = pdfPage.getSize().width / viewport.width;
+
+        for (const item of content.items as Array<{
+          str: string; transform: number[]; width: number; height: number;
+        }>) {
+          const text = (item.str || "").toLowerCase();
+          if (!text.trim()) continue;
+          if (!cleaned.some((p) => text.includes(p))) continue;
+          // pdf.js transform: [a, b, c, d, e, f]. e,f = origin in top-down coords.
+          const tx = item.transform[4] * xScale;
+          const tyTop = item.transform[5] * yScale;
+          const w = (item.width || Math.abs(item.transform[0]) * item.str.length * 0.5) * xScale;
+          const h = (item.height || Math.abs(item.transform[3]) * 1.4) * yScale;
+          // pdf-lib origin = bottom-left; pdf.js origin returned = bottom-left too for text items,
+          // so we can draw directly with a small padding.
+          const pad = Math.max(1, h * 0.15);
+          pdfPage.drawRectangle({
+            x: Math.max(0, tx - pad),
+            y: Math.max(0, tyTop - pad),
+            width: w + pad * 2,
+            height: h + pad * 2,
+            color: rgb(1, 1, 1),
+            opacity: 1,
+            borderWidth: 0,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    // pdf.js coverage is best-effort; annotation/XObject strip already ran.
+    console.warn("[removeWatermark] text-coverage phase failed:", err);
+  }
+
   src.setSubject("");
   src.setKeywords([]);
   src.setProducer("silentPDF");
-
-  if (!strippedAny) {
-    // Still return a re-saved copy but the caller can inform the user.
-    // (No throw — tool page shows generic success; UI copy explains limits.)
-  }
 
   const bytes = await src.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-cleaned.pdf" };

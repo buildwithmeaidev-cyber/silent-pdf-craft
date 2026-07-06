@@ -29,7 +29,7 @@ export const KIND_META: Record<ToolKind, KindMeta> = {
   reorder:         { input: "pdf",       output: "pdf",  label: "Reorder Pages",  slug: "reorder-pdf" },
   export:          { input: "pdf",       output: "pdf",  label: "Export & Rename",slug: "export-pdf" },
   addpages:        { input: "pdf",       output: "pdf",  label: "Add Pages",      slug: "addpages-pdf" },
-  removewatermark: { input: "pdf",       output: "pdf",  label: "Remove Watermark", slug: "Removewatermark-pdf" },
+  removewatermark: { input: "pdf",       output: "pdf",  label: "Remove Watermark", slug: "removewatermark-pdf" },
 };
 
 export interface StepConfig {
@@ -54,6 +54,7 @@ export interface Workflow {
   name: string;
   audience: string;
   description: string;
+  outcome?: string;
   steps: WorkflowStep[];
   accent: string; // tailwind gradient tail
 }
@@ -64,10 +65,11 @@ export const PRESET_WORKFLOWS: Workflow[] = [
     name: "Resume submission",
     audience: "Job seekers",
     description: "Turn your resume Word doc into a signed, right-sized PDF ready for any portal.",
+    outcome: "One signed PDF under 1 MB.",
     steps: [
       { kind: "word-to-pdf" },
       { kind: "compress", config: { compressionLevel: "medium" } },
-      { kind: "sign", config: { signatureText: "" } },
+      { kind: "sign" },
     ],
     accent: "from-primary/15 to-primary/0",
   },
@@ -76,10 +78,11 @@ export const PRESET_WORKFLOWS: Workflow[] = [
     name: "Business contract",
     audience: "Founders & ops",
     description: "Combine contract pages, lock them with a password, and route for e-signature.",
+    outcome: "Password-protected, e-signed PDF.",
     steps: [
       { kind: "merge" },
-      { kind: "protect", config: { password: "" } },
-      { kind: "e-sign", config: { signatureText: "" } },
+      { kind: "protect" },
+      { kind: "e-sign" },
     ],
     accent: "from-accent/15 to-accent/0",
   },
@@ -88,6 +91,7 @@ export const PRESET_WORKFLOWS: Workflow[] = [
     name: "Student assignment",
     audience: "Students",
     description: "Snap photos of handwritten pages, compress them, and merge into one submission.",
+    outcome: "Portal-ready assignment PDF.",
     steps: [
       { kind: "photo-to-pdf" },
       { kind: "compress", config: { compressionLevel: "medium" } },
@@ -99,10 +103,11 @@ export const PRESET_WORKFLOWS: Workflow[] = [
     name: "Scan to archive",
     audience: "Admins & records",
     description: "Convert scanned photos into a compressed, password-protected archive PDF.",
+    outcome: "Locked archive-ready PDF.",
     steps: [
       { kind: "photo-to-pdf" },
       { kind: "compress", config: { compressionLevel: "strong" } },
-      { kind: "protect", config: { password: "" } },
+      { kind: "protect" },
     ],
     accent: "from-primary/15 to-primary/0",
   },
@@ -111,10 +116,11 @@ export const PRESET_WORKFLOWS: Workflow[] = [
     name: "Legal delivery pack",
     audience: "Legal teams",
     description: "Merge exhibits, stamp them CONFIDENTIAL, and lock the file before sending.",
+    outcome: "Confidential, locked exhibit pack.",
     steps: [
       { kind: "merge" },
       { kind: "watermark", config: { watermarkText: "CONFIDENTIAL" } },
-      { kind: "protect", config: { password: "" } },
+      { kind: "protect" },
     ],
     accent: "from-accent/15 to-accent/0",
   },
@@ -123,12 +129,92 @@ export const PRESET_WORKFLOWS: Workflow[] = [
     name: "Web publishing",
     audience: "Marketing",
     description: "Shrink a report, add a draft watermark, and rename it for your CMS.",
+    outcome: "CMS-ready draft PDF.",
     steps: [
       { kind: "compress", config: { compressionLevel: "medium" } },
       { kind: "watermark", config: { watermarkText: "DRAFT" } },
       { kind: "export", config: { exportName: "report" } },
     ],
     accent: "from-ink/10 to-ink/0",
+  },
+  {
+    id: "redact-and-send",
+    name: "Redact & send",
+    audience: "Legal & HR",
+    description: "Strip existing DRAFT/CONFIDENTIAL watermarks from a clean template, then re-stamp for the current release.",
+    outcome: "Fresh, correctly-stamped copy.",
+    steps: [
+      { kind: "removewatermark" },
+      { kind: "watermark", config: { watermarkText: "FINAL" } },
+      { kind: "export" },
+    ],
+    accent: "from-accent/15 to-accent/0",
+  },
+  {
+    id: "invoice-batch",
+    name: "Monthly invoice batch",
+    audience: "Finance",
+    description: "Combine a month of invoices, compress the pack, then password-lock it for the accountant.",
+    outcome: "Locked monthly invoice pack.",
+    steps: [
+      { kind: "merge" },
+      { kind: "compress", config: { compressionLevel: "medium" } },
+      { kind: "protect" },
+    ],
+    accent: "from-primary/15 to-primary/0",
+  },
+  {
+    id: "photo-album",
+    name: "Photo album PDF",
+    audience: "Anyone",
+    description: "Turn a shoot into a compact, orderable photo album PDF ready to share.",
+    outcome: "Slim shareable album.",
+    steps: [
+      { kind: "photo-to-pdf" },
+      { kind: "reorder" },
+      { kind: "compress", config: { compressionLevel: "light" } },
+    ],
+    accent: "from-primary/15 to-primary/0",
+  },
+  {
+    id: "presentation-cleanup",
+    name: "Presentation cleanup",
+    audience: "Consultants",
+    description: "Drop rehearsal notes and speaker prompts before shipping the deck to a client.",
+    outcome: "Client-safe deck PDF.",
+    steps: [
+      { kind: "remove" },
+      { kind: "watermark", config: { watermarkText: "CLIENT COPY" } },
+      { kind: "export" },
+    ],
+    accent: "from-ink/10 to-ink/0",
+  },
+  {
+    id: "contract-prep",
+    name: "Contract prep",
+    audience: "Sales",
+    description: "Fix scan rotation, drop signature pages, then merge with the current MSA.",
+    outcome: "Signature-ready contract.",
+    steps: [
+      { kind: "rotate" },
+      { kind: "merge" },
+      { kind: "sign" },
+    ],
+    accent: "from-primary/15 to-primary/0",
+  },
+  {
+    id: "report-publisher",
+    name: "Report publisher",
+    audience: "Comms",
+    description: "Reorder pages, add a cover, compress, and export with a clean file name.",
+    outcome: "Publishable report PDF.",
+    steps: [
+      { kind: "reorder" },
+      { kind: "addpages" },
+      { kind: "compress", config: { compressionLevel: "medium" } },
+      { kind: "export" },
+    ],
+    accent: "from-accent/15 to-accent/0",
   },
 ];
 
