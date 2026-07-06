@@ -1,116 +1,95 @@
 
-# Full rollout plan — 5 phases, no-regression guardrails
+# Ship Phases 2–5 in one pass
 
-I'll ship all 17 items in 5 phases. Each phase is independently deployable and preview-verified before starting the next, so we never break the live app.
+PDF Blender confirmed (`src/lib/{file-utils,merged-store,blog-posts,use-cases}.ts` + route-based UI). I'll port its clean file-flow ergonomics, smooth motion, and blog/use-case content shape into silentPDF as inspiration — no verbatim copy.
 
-Waiting on you: **paste the PDF Blender key files/repo link** — I'll fold its smooth-scroll setup, OCR pipeline, and editor internals into Phase 3 & 4. If it doesn't arrive by Phase 3, I'll rebuild inspired by it (Lenis + tesseract.js + pdf.js/pdf-lib) and note the differences.
-
----
-
-## Phase 1 — Polish, fixes, dark mode, cleanup (low risk)
-
-**Items:** 1, 2, 7, 14, 15, partial 4
-
-- **Dark mode overhaul** — audit `src/index.css` tokens; introduce a proper deep palette (bg `hsl(222 25% 6%)`, surfaces `hsl(222 20% 9%)`, borders at 8% alpha, elevated `--card` w/ subtle inner glow); fix hardcoded `text-white`/`bg-black` occurrences via grep sweep; add `DarkModeToggle` into `Navbar`; persist choice to `localStorage` + honor `prefers-color-scheme`.
-- **Navbar** — add active-underline indicator, dark-mode toggle, resource dropdown (Guides/Blog/Use Cases/Workflows), mobile drawer polish, sticky glass with tuned blur & border for both themes.
-- **Footer** — replace current thin footer with 4-column: Product (Tools, Workflows, PDF Editor, OCR), Resources (Guides, Blog, Use Cases, Changelog), Company (About, Contact, Security), Legal (Privacy, Terms, DPA, Cookie Policy). Newsletter capture, socials, build hash line.
-- **Kill fake timers** — remove all "~15s / ~10s" strings from `tools.ts`, `ToolPage.tsx`, tool cards, and workflow steps. Replace with real progress % from `usePdfJob`.
-- **Fix `/blog` 404** — register `Blog` and `BlogPost` routes in `App.tsx` (currently unrouted); wire to `content/blog/posts.ts`.
-- **Stub legal routes** so Phase 2 has homes: `/terms`, `/dpa`, `/security`, `/contact`, `/cookies` with basic scaffolds.
-
-## Phase 2 — Legal & trust pages, homepage refactor, workflow UX (items 3, 4, 5, 6, 8)
-
-- **Remove from homepage**: "Popular workflows / Chain tools end to end" block.
-- **Add homepage "How workflows work"** 4-step visual explainer with animated diagram; CTA "Explore Workflows" → `/workflows`.
-- **Homepage Product section** now lists Tools, Workflows (linked), PDF Editor, OCR.
-- **Use Cases page** — rewrite each case (Legal, HR, Sales, Education, Finance, Freelance) with problem → recommended workflow (linked) → tools used → sample outcome. Each use case links to a matching pre-built workflow.
-- **Workflows page** — add 8 more curated workflows (Redact & Send, Contract Prep, Invoice Batch, Scan → OCR → Word, Presentation Cleanup, Photo Album PDF, Legal Discovery, Report Publisher). Improved cards w/ step preview, tool chips, est. output. Better spacing/grid.
-- **Legal pages** with real, app-specific content:
-  - `/privacy` — expanded: what's collected (nothing server-side for tools), how browser-only processing works, third-party services (Cloudflare CDN only), cookie usage, DSR rights, retention. Diagram: "Your file → Your browser (WASM) → Your download". Follows trust-page-generation skill.
-  - `/security` — threat model, browser sandbox, no upload guarantee, CSP, dependency scanning, incident contact.
-  - `/terms`, `/dpa`, `/cookies`, `/contact` (form → mailto, no backend).
-
-## Phase 3 — Deferred tech: drag-to-place editors + Comlink worker + previews (items 11, 17, partial 10)
-
-- **`src/workers/pdfWorker.ts`** — Comlink-exposed `compress`, `wordToPdf`, `pdfToWord`, `ocrPage`, `removeWatermark`. `ToolPage` awaits worker RPC; UI stays 60fps; real progress via `postMessage`.
-- **PageThumbStrip component** — renders pdf.js thumbnails w/ virtualization for large PDFs.
-- **OverlayPlacer** — drag/resize/rotate handles on top of page thumbnail (react-moveable OR custom pointer events).
-- Wire OverlayPlacer into **E-Sign, Watermark, Edit PDF, Remove Watermark** (region-select mode).
-- **Result Preview** — after every job, render output pdf.js thumbnails inline before download; download button + "Send to another tool" quick action.
-- **Smooth scroll** — add Lenis (from PDF Blender inspiration) globally with `prefers-reduced-motion` guard.
-
-## Phase 4 — New tools + missing category tools (items 12, 13, rest of 10)
-
-New tools registered in `tools.ts` and routed:
-- **OCR PDF** — tesseract.js in-browser (fully private, WASM), language picker, searchable-PDF output via pdf-lib text layer.
-- **PDF Editor** (full) — pdf.js render + fabric.js overlay for text/shape/image/highlight, page reorder, save via pdf-lib.
-- **Redact PDF** — draw black boxes, flatten.
-- **Crop PDF**, **Rotate PDF** (per-page), **Extract Pages**, **Delete Pages**, **Reorder Pages**, **N-up (2/4 per sheet)**, **PDF to JPG**, **PDF to PNG**, **Excel↔PDF**, **PPT↔PDF (import only via docx-like path)**, **HTML→PDF**, **Number Pages**, **Add Header/Footer**, **Compare PDFs (diff)**, **Repair PDF**, **Grayscale PDF**, **Unlock PDF**.
-- Category buckets on `/tools` re-balanced: Conversion, Editing, Organization, Security, Signing, OCR.
-
-## Phase 5 — Content: guides, blogs, programmatic pages (items 9, 16)
-
-- **Guides** — replace dummy `GUIDES` in `Home.tsx` with 12 real guides in `src/content/guides/`, each with hero image (generated), step screenshots, linked tool CTA, JSON-LD HowTo.
-- **Blog posts** — pipeline:
-  - 5 hand-crafted flagship posts for top 6 tools (Compress, Merge, PDF↔Word, Sign, Watermark, OCR) = 30 posts, ~1200 words each.
-  - Templated but real content for remaining ~19 tools × 5 = ~95 posts (~700 words each), generated from a per-tool JSON spec so every post has unique intro/steps/FAQ/comparison.
-  - 8 workflow deep-dive posts.
-  - All posts link to parent tool + 3 related tools + 1 programmatic page (per existing `ContentAsset` shape).
-- **Programmatic pages** — extend `programmatic.ts` with per-tool intent pages (e.g., `/ocr-scanned-pdf`, `/edit-pdf-online`, `/redact-pdf-free`); each links back to its parent tool + workflow.
-- **Sitemap.xml + llms.txt** regenerated.
+Guardrails across every phase: `bun run build` + `tsgo` clean, feature flags in `src/lib/featureFlags.ts` (`pdfEditorV2`, `ocr`, `workerOffload`) so half-shipped surfaces never break prod, each new tool hidden in `tools.ts` until its handler + preview pass a smoke test.
 
 ---
 
-## Technical section
+## Phase 2 — Workflows, homepage refactor, legal & use-case content
 
-**No-regression guardrails**
-- Each phase gated by: `bun run build` clean, `tsgo` clean, manual Playwright pass on `/`, `/tools`, `/workflows`, one tool run, `/blog`.
-- Feature flags in `src/lib/featureFlags.ts` for the big new surfaces (`pdfEditorV2`, `ocr`, `workerOffload`) so half-shipped work never breaks prod.
-- Every new tool registered in `tools.ts` but hidden until its handler + preview both pass smoke test.
+- Rewrite `src/pages/Home.tsx`: remove any residual "Popular workflows" strip, add a 4-step "How workflows work" explainer (animated), Product section with Tools / Workflows / PDF Editor / OCR links, real Guides preview pulling from new `src/content/guides/`.
+- Rewrite `src/pages/workflows/Workflows.tsx` and `src/lib/workflows.ts`: add 8 curated workflows (Redact & Send, Contract Prep, Invoice Batch, Scan→OCR→Word, Presentation Cleanup, Photo Album PDF, Legal Discovery, Report Publisher) with step preview, tool chips, expected output; better spacing/grid; deep-link to each tool.
+- Rewrite `src/pages/UseCases.tsx`: 6 personas (Legal, HR, Sales, Education, Finance, Freelance) each = problem → linked workflow → tools → sample outcome; inspired by PDF Blender's `use-cases.ts` shape.
+- Flesh out legal pages under `src/pages/legal/` (Privacy, Security, Terms, DPA, Cookies, Contact) with real, app-specific browser-processing / Cloudflare-only / DSR / retention copy per trust-page skill. Keep already-shipped `LegalLayout.tsx`.
+- Add contact form (mailto, no backend), FAQ block on Security page.
 
-**New deps** (installed once, Phase 3): `comlink`, `tesseract.js`, `fabric`, `lenis`, `react-moveable`.
+## Phase 3 — Deferred tech: worker offload, drag-to-place editors, live previews
 
-**New files**
+- `src/workers/pdfWorker.ts` (Comlink) exposing `compress`, `wordToPdf`, `pdfToWord`, `ocrPage`, `removeWatermark`, `mergePdfs`, `splitPdf`. `ToolPage` and `usePdfJob` await worker RPC; real % via `postMessage`, UI stays 60fps.
+- `src/components/tools/PageThumbStrip.tsx`: virtualized pdf.js thumbnails for large PDFs.
+- `src/components/tools/OverlayPlacer.tsx`: drag / resize / rotate on thumbnails via `react-moveable`.
+- Wire into E-Sign, Watermark, Edit PDF, Remove Watermark (region-select mode → surgical text/image strip).
+- `src/components/tools/ResultPreview.tsx`: post-job inline pdf.js preview + Download + "Send to another tool" chip → workflow chaining.
+- Global smooth scroll via Lenis with `prefers-reduced-motion` guard (inspired by PDF Blender feel).
+- Fix Merge reorder: replace clickable up/down with true drag-and-drop (dnd-kit sortable), unified across every reorder surface (Merge, Split, PDF-to-Image, Image-to-PDF, Reorder Pages).
+- Add image reorder in Image-to-PDF (missing today).
+
+## Phase 4 — New tools + fixes
+
+- **OCR PDF** (`src/pages/tools/OcrPdf.tsx`, `src/lib/ocr.ts`): tesseract.js in-browser WASM, language picker, outputs searchable PDF via pdf-lib text layer. Fully private.
+- **PDF Editor** (`src/pages/tools/PdfEditor.tsx`, `src/lib/pdfEditor.ts`, `PdfEditorCanvas.tsx`): pdf.js render + fabric.js overlay (text, shape, image, highlight, freehand), page reorder, save via pdf-lib.
+- **Remove Watermark v2**: real strip — parse content stream, remove text ops matching user-picked strings (case-insensitive, regex option) AND user-drawn image regions; fall back to overlay-white for raster. Currently returns input untouched — this is the fix.
+- New tools registered in `src/lib/tools.ts` + routed: Redact, Crop, Rotate (per-page), Extract Pages, Delete Pages, Reorder Pages, N-up, PDF→JPG, PDF→PNG, Excel↔PDF, PPT→PDF, HTML→PDF, Number Pages, Header/Footer, Compare PDFs, Repair PDF, Grayscale, Unlock PDF.
+- `/tools` category buckets rebalanced: Conversion, Editing, Organization, Security, Signing, OCR.
+
+## Phase 5 — Content: guides, blog, programmatic pages
+
+- 12 real guides in `src/content/guides/*.ts` with generated hero images, step screenshots, JSON-LD `HowTo`, linked tool CTA.
+- Blog:
+  - 5 flagship posts × 6 top tools (Compress, Merge, PDF↔Word, Sign, Watermark, OCR) ≈ 30 hand-crafted posts (~1200 words).
+  - 10 flagship long-form posts spanning workflows + privacy explainers.
+  - Fix `/blog` routing edge cases and add per-post JSON-LD `Article`.
+- Extend `src/lib/programmatic.ts` with `/ocr-scanned-pdf`, `/edit-pdf-online`, `/redact-pdf-free`, `/rotate-pdf-online`, `/split-pdf-in-half`, `/pdf-to-jpg-high-quality` — each linked to parent tool + workflow.
+- Regenerate `public/sitemap.xml` and `public/llms.txt`.
+
+---
+
+## Technical notes
+
+- New deps (single install): `comlink`, `tesseract.js`, `fabric`, `lenis`, `react-moveable`, `@dnd-kit/core`, `@dnd-kit/sortable`.
+- Bundle guard: dynamic-import the worker, tesseract, fabric on route entry only — keep initial JS < current baseline.
+- `usePdfJob` gains `progress: number` sourced from worker; all `~15s / ~10s / Instant` strings already removed in Phase 1 stay gone.
+- `UnifiedFileList` (existing) becomes the single source of truth for reorder — every tool re-uses it with dnd-kit, killing the divergent "clickable arrows" UX in Merge.
+- Feature flags let me merge tool files even if a handler needs a follow-up; hidden tools never appear in `/tools` or sitemap.
+- No backend added; still 100% browser processing.
+
+### File plan (delta)
+
 ```text
-src/workers/pdfWorker.ts
-src/lib/featureFlags.ts
-src/lib/ocr.ts
-src/lib/pdfEditor.ts
-src/components/tools/PageThumbStrip.tsx
-src/components/tools/OverlayPlacer.tsx
-src/components/tools/ResultPreview.tsx
-src/components/tools/PdfEditorCanvas.tsx
-src/components/layout/Footer.tsx           (rewrite)
-src/components/ui/ThemeProvider.tsx
-src/pages/Terms.tsx
-src/pages/Dpa.tsx
-src/pages/Security.tsx
-src/pages/Contact.tsx
-src/pages/Cookies.tsx
-src/pages/tools/OcrPdf.tsx
-src/pages/tools/PdfEditor.tsx
-src/content/guides/*.ts                    (12 real guides)
-src/content/blog/*.ts                      (~130 posts across files)
+new
+  src/workers/pdfWorker.ts
+  src/lib/{featureFlags,ocr,pdfEditor,smoothScroll}.ts
+  src/components/tools/{PageThumbStrip,OverlayPlacer,ResultPreview,PdfEditorCanvas,DndSortable}.tsx
+  src/pages/tools/{OcrPdf,PdfEditor,Redact,Crop,Rotate,ExtractPages,DeletePages,ReorderPages,Nup,PdfToJpg,PdfToPng,ExcelToPdf,PdfToExcel,PptToPdf,HtmlToPdf,NumberPages,HeaderFooter,ComparePdf,RepairPdf,Grayscale,UnlockPdf}.tsx
+  src/content/guides/*.ts            (12)
+  src/content/blog/flagship/*.ts     (~40)
+
+rewrite
+  src/pages/Home.tsx
+  src/pages/UseCases.tsx
+  src/pages/workflows/Workflows.tsx
+  src/lib/workflows.ts
+  src/lib/tools.ts
+  src/pages/tools/ToolPage.tsx
+  src/hooks/usePdfJob.ts
+  src/components/UnifiedFileList.tsx
+  src/pages/legal/{Privacy,Security,Terms,Dpa,Cookies,Contact}.tsx
+  src/lib/programmatic.ts
+  src/App.tsx (new routes)
+  public/{sitemap.xml,llms.txt}
 ```
 
-**Files rewritten**
-- `src/App.tsx` (routes)
-- `src/index.css` + `tailwind.config.ts` (dark tokens)
-- `src/components/layout/Navbar.tsx`
-- `src/pages/Home.tsx` (remove Popular Workflows, add How-it-works, product/use-case links)
-- `src/pages/UseCases.tsx`
-- `src/pages/workflows/Workflows.tsx`
-- `src/lib/tools.ts` (new tools, no time strings)
-- `src/pages/tools/ToolPage.tsx` (worker RPC, preview, editor mounts)
+Estimated LOC: ~9k added, ~1k removed (content-dominant).
 
-**Estimated LOC:** ~8–10k added, ~1k removed. Content files dominate.
+### Sequence inside the single build pass
 
----
+1. Install deps + scaffold `featureFlags.ts` + `pdfWorker.ts` skeleton.
+2. Phase 3 core (worker, dnd-kit reorder, ResultPreview, OverlayPlacer) — unblocks tool rewrites.
+3. Phase 4 tools + Remove Watermark real fix.
+4. Phase 2 homepage/workflows/use-cases/legal.
+5. Phase 5 guides/blog/programmatic + sitemap.
+6. Build + tsgo + Playwright smoke on `/`, `/tools`, `/workflows`, `/blog`, one tool run, `/dpa`.
 
-## Sequence
-
-1. Approve this plan → I ship Phase 1 (safest, immediate visible upgrade) and pause.
-2. You paste PDF Blender files after Phase 1.
-3. Phases 2–5 ship sequentially with a preview check between each.
-
-Say "go" to start Phase 1.
+On approval I execute all five in one continuous build pass and report back with the smoke-check results.

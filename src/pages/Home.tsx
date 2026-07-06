@@ -106,7 +106,7 @@ const Home = () => {
                 <ArrowUpRight className="size-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
               <a href="#tools" className="inline-flex items-center gap-2 text-base font-medium text-foreground/80 hover:text-foreground transition-colors px-2">
-                Browse all 17 tools
+                Browse all {TOOLS.length} tools
                 <ArrowRight className="size-4" />
               </a>
             </motion.div>
