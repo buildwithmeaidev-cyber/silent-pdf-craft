@@ -604,7 +604,7 @@ export function sanitizeForWinAnsi(input: string): string {
   };
   let s = input.replace(/[\u2018\u2019\u201A\u201B\u201C\u201D\u201E\u201F\u2013\u2014\u2212\u2026\u00A0\u2022\u00B7\u2192\u2190\u2194\u21D2\u21D0\u21D4\u00D7\u00F7\u2264\u2265\u2260\u00B0\u2122\u00AE\u00A9\u20AC\u00A3\u00A5\uFB00\uFB01\uFB02\uFB03\uFB04\u2009\u200A\u200B\u202F]/g, (m) => map[m] ?? m);
   // Strip anything outside WinAnsi (U+00FF and below is roughly safe; drop the rest).
-  s = s.replace(/[^\x00-\xFF]/g, "?");
+  s = s.replace(/[^\u0020-\u00FF]/g, "?");
   return s;
 }
 

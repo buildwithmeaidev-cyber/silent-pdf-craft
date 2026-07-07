@@ -1,0 +1,2 @@
+/guides/*   /resources/guides/:splat   301
+/use-cases/*   /resources/use-cases/:splat   301
