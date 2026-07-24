@@ -15,6 +15,7 @@ import { EXPORT_CLUSTER } from "./export-cluster";
 import { ADDPAGES_CLUSTER } from "./addpages-cluster";
 import { REMOVEWATERMARK_CLUSTER } from "./removewatermark-cluster";
 import { REMOVE_CLUSTER } from "./remove-cluster";
+import { TEMPLATES_CLUSTER } from "./templates/templates-cluster";
 
 export const RESOURCES: ContentAsset[] = [
   ...COMPRESS_CLUSTER,
@@ -33,6 +34,7 @@ export const RESOURCES: ContentAsset[] = [
   ...ADDPAGES_CLUSTER,
   ...REMOVEWATERMARK_CLUSTER,
   ...REMOVE_CLUSTER,
+  ...TEMPLATES_CLUSTER,
 ].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
 export function getResource(slug: string): ContentAsset | undefined {

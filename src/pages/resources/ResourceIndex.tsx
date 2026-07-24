@@ -1,15 +1,15 @@
 import { Link } from "react-router-dom";
-import { BookOpen, FileText, CheckSquare, Layers, FileCode, Users } from "lucide-react";
+import { FileText, CheckSquare, Layers, FileCode } from "lucide-react";
 import Breadcrumbs from "@/core/Breadcrumbs";
 
 const CATEGORIES = [
-  { name: "Guides", slug: "guides", desc: "Step-by-step PDF tutorials", icon: BookOpen },
   { name: "Comparisons", slug: "comparisons", desc: "Detailed tool comparisons", icon: Layers },
   { name: "Checklists", slug: "checklists", desc: "PDF workflow standards", icon: CheckSquare },
   { name: "Templates", slug: "templates", desc: "Standard PDF layouts", icon: FileCode },
   { name: "Glossary", slug: "glossary", desc: "PDF terminology explained", icon: FileText },
-  { name: "Use Cases", slug: "use-cases", desc: "Solutions for every industry", icon: Users },
-  { name: "Blog", slug: "blog", desc: "Latest updates and deep dives", icon: BookOpen },
+  { name: "Blog", slug: "blog", desc: "Insights and updates", icon: FileText },
+  { name: "Guides", slug: "guides", desc: "Step‑by‑step PDF tutorials", icon: FileText },
+  { name: "Use Cases", slug: "use-cases", desc: "Real‑world applications", icon: FileText },
 ];
 
 export default function ResourceIndex() {
@@ -17,7 +17,6 @@ export default function ResourceIndex() {
     <div className="bg-[#f5f7fb] min-h-screen">
       <div className="mx-auto max-w-7xl px-4 md:px-6 py-12 md:py-16">
         <Breadcrumbs current="Resources" />
-
         <header className="mt-6 mb-12">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
             Resource Center
@@ -26,7 +25,6 @@ export default function ResourceIndex() {
             The most comprehensive PDF knowledge base on the internet. Master your documents with guides, comparisons, and industry resources.
           </p>
         </header>
-
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {CATEGORIES.map((c) => (
             <Link

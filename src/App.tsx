@@ -32,6 +32,7 @@ import ProgrammaticPage from "./pages/ProgrammaticPage";
 import ResourceIndex from "./pages/resources/ResourceIndex";
 import ResourceCategoryIndex from "./pages/resources/ResourceCategoryIndex";
 import ResourceAssetPage from "./pages/resources/ResourceAssetPage";
+import Templates from "./pages/Templates";
 import Workflows from "./pages/workflows/Workflows";
 import CustomWorkflowBuilder from "./pages/workflows/CustomWorkflowBuilder";
 import WorkflowRunner from "./pages/workflows/WorkflowRunner";
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/resources" element={<ResourceIndex />} />
               <Route path="/resources/:category" element={<ResourceCategoryIndex />} />
               <Route path="/resources/:category/:slug" element={<ResourceAssetPage />} />
+          <Route path="/templates" element={<Templates />} />
 
               {/* Workflows (must be registered BEFORE the /:slug catch-all) */}
               <Route path="/workflows" element={<Workflows />} />

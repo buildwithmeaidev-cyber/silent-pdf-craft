@@ -55,6 +55,10 @@ const TOOL_META: Record<string, { category: Exclude<CategoryId, "all">; useCase:
 };
 
 
+const links = [
+  { to: "/resources", label: "Resources" },
+];
+
 const Home = () => {
   const [category, setCategory] = useState<CategoryId>("all");
 
@@ -136,7 +140,9 @@ const Home = () => {
       {/* Workflow explainer lives further down; the Home hero now flows straight into tools */}
 
 
-      {/* TOOLS GRID with category nav */}
+        {/* TOOLS GRID with category nav */}
+        {/* Resource Center */}
+        
       <section id="tools" className="py-24">
         <div className="container-px mx-auto max-w-7xl">
           <SectionHeading
@@ -201,6 +207,8 @@ const Home = () => {
                       Open tool <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </Link>
+
+
                 </motion.div>
               );
             })}

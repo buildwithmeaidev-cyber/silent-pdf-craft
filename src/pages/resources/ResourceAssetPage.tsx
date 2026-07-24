@@ -4,6 +4,8 @@ import { TOOLS } from "@/lib/tools";
 import Breadcrumbs from "@/core/Breadcrumbs";
 import { ArrowRight, CheckCircle2, LayoutTemplate } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Helmet } from "react-helmet-async";
+import { metaTags, jsonLdForAsset } from "@/lib/seo";
 
 export default function ResourceAssetPage() {
   const { category, slug } = useParams();
@@ -11,6 +13,8 @@ export default function ResourceAssetPage() {
   if (!slug) return typeof window !== "undefined" ? <Navigate to="/resources" replace /> : null;
   
   const asset = getResource(slug);
+  const seo = metaTags(asset);
+  const jsonLd = jsonLdForAsset(asset);
   if (!asset || asset.category !== category) {
     return typeof window !== "undefined" ? <Navigate to="/resources" replace /> : null;
   }
@@ -18,7 +22,18 @@ export default function ResourceAssetPage() {
   const parentTool = TOOLS.find(t => t.slug === asset.parentToolSlug);
   
   return (
-    <article className="bg-[#f5f7fb] min-h-screen pb-24">
+    <>
+      <Helmet>
+          <title>{seo.title}</title>
+          <meta name="description" content={seo.description} />
+          <link rel="canonical" href={seo.canonical} />
+          <meta property="og:title" content={seo.openGraph.title} />
+          <meta property="og:description" content={seo.openGraph.description} />
+          <meta property="og:url" content={seo.openGraph.url} />
+          <meta property="og:type" content={seo.openGraph.type} />
+          <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+        </Helmet>
+        <article className="bg-[#f5f7fb] min-h-screen pb-24">
       <div className="mx-auto max-w-4xl px-4 md:px-6 py-12 md:py-16">
         <Breadcrumbs current={asset.title} />
 
@@ -169,6 +184,6 @@ export default function ResourceAssetPage() {
           </section>
         )}
       </div>
-    </article>
+    </article></>
   );
 }
