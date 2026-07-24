@@ -27,3 +27,5 @@ export function render(url: string, helmetContext?: Record<string, unknown>) {
 }
 
 export { RESOURCES } from './content/resources';
+export { PROGRAMMATIC } from './lib/programmatic';
+export { POSTS } from './content/blog/posts';

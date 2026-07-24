@@ -33,7 +33,7 @@ const toAbsolute = (p) => path.resolve(__dirname, p);
 const template = fs.readFileSync(toAbsolute('dist/index.html'), 'utf-8');
 
 
-// Determine routes to pre-render
+// Determine routes to pre-render – static pages & tool pages
 const routesToPrerender = [
   '/',
   '/tools',
@@ -55,24 +55,22 @@ const routesToPrerender = [
   '/rotatepages-pdf',
   '/privacy-policy',
   '/about',
-  '/compress-pdf-for-email',
-  '/compress-pdf-to-1mb',
-  '/compress-pdf-to-500kb',
-  '/compress-pdf-for-resume',
-  '/merge-2-pdfs',
-  '/merge-3-pdfs',
-  '/merge-multiple-pdfs',
-  '/pdf-to-word-online',
-  '/pdf-to-word-for-resume',
-  '/pdf-to-word-with-formatting',
-  '/convert-scanned-pdf-to-word',
-  '/sign-pdf-online',
-  '/sign-contract-pdf',
-  '/watermark-pdf-online',
-  '/add-logo-watermark-pdf'
+  '/blog',
+  '/guides',
+  '/use-cases',
+  '/terms',
+  '/security',
+  '/contact',
+  '/cookies',
 ];
 
-const { render, RESOURCES } = await import('./dist/server/entry-server.js');
+const { render, RESOURCES, PROGRAMMATIC, POSTS } = await import('./dist/server/entry-server.js');
+
+// Add all 50 programmatic SEO landing pages dynamically
+PROGRAMMATIC.forEach(p => routesToPrerender.push('/' + p.slug));
+
+// Add all blog post pages dynamically
+POSTS.forEach(p => routesToPrerender.push('/blog/' + p.slug));
 
 // Add the dynamic resource routes
 routesToPrerender.push('/resources');
@@ -86,58 +84,73 @@ RESOURCES.forEach(r => routesToPrerender.push(`/resources/${r.category}/${r.slug
 
 (async () => {
   for (const url of routesToPrerender) {
-    const helmetContext = {};
-    const { html } = render(url, helmetContext);
-    
-    const helmet = helmetContext.helmet;
-    let headTags = '';
-    if (helmet) {
-      headTags = `
-        ${helmet.title.toString()}
-        ${helmet.priority.toString()}
-        ${helmet.meta.toString()}
-        ${helmet.link.toString()}
-        ${helmet.script.toString()}
-      `;
-    }
+    try {
+      const helmetContext = {};
+      const { html } = render(url, helmetContext);
+      
+      const helmet = helmetContext.helmet;
+      let headTags = '';
+      if (helmet) {
+        headTags = `
+          ${helmet.title.toString()}
+          ${helmet.priority.toString()}
+          ${helmet.meta.toString()}
+          ${helmet.link.toString()}
+          ${helmet.script.toString()}
+        `;
+      }
 
-    const htmlWithApp = template
-      .replace('<!--app-head-->', headTags)
-      .replace('<!--app-html-->', html);
+      const htmlWithApp = template
+        .replace('<!--app-head-->', headTags)
+        .replace('<!--app-html-->', html);
 
-    const filePath = `dist${url === '/' ? '/index' : url}.html`;
-    const dir = path.dirname(toAbsolute(filePath));
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+      const filePath = `dist${url === '/' ? '/index' : url}.html`;
+      const dir = path.dirname(toAbsolute(filePath));
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(toAbsolute(filePath), htmlWithApp);
+      console.log('pre-rendered:', filePath);
+    } catch (err) {
+      console.error(`Error pre-rendering ${url}:`, err.message);
     }
-    fs.writeFileSync(toAbsolute(filePath), htmlWithApp);
-    console.log('pre-rendered:', filePath);
   }
 
   // Cleanup
   fs.rmSync(toAbsolute('dist/server'), { recursive: true, force: true });
   
-  // Generate sitemap.xml
+  // Generate sitemap.xml with intelligent priority
   const siteUrl = process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev';
+  const now = new Date().toISOString().split('T')[0];
+
+  function getPriority(route) {
+    if (route === '/') return '1.0';
+    if (route === '/tools') return '0.9';
+    if (['/merge-pdf','/split-pdf','/compress-pdf','/edit-pdf','/pdf-to-word','/word-to-pdf','/protect-pdf','/esign-pdf'].includes(route)) return '0.9';
+    if (route.startsWith('/blog')) return '0.7';
+    if (route.startsWith('/resources')) return '0.6';
+    return '0.8';
+  }
+
+  function getChangefreq(route) {
+    if (route === '/' || route === '/tools') return 'daily';
+    if (route.startsWith('/blog')) return 'weekly';
+    return 'weekly';
+  }
+
   const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${routesToPrerender.map(route => `  <url>
     <loc>${siteUrl}${route === '/' ? '' : route}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>${route === '/' ? '1.0' : '0.8'}</priority>
+    <lastmod>${now}</lastmod>
+    <changefreq>${getChangefreq(route)}</changefreq>
+    <priority>${getPriority(route)}</priority>
   </url>`).join('\n')}
 </urlset>`;
   fs.writeFileSync(toAbsolute('dist/sitemap.xml'), sitemapContent);
   console.log('pre-rendered: dist/sitemap.xml');
-
-  // Generate robots.txt
-  const robotsTxtContent = `User-agent: *
-Allow: /
-
-Sitemap: ${siteUrl}/sitemap.xml
-`;
-  fs.writeFileSync(toAbsolute('dist/robots.txt'), robotsTxtContent);
-  console.log('pre-rendered: dist/robots.txt');
+  console.log(`Total pages pre-rendered: ${routesToPrerender.length}`);
 
   console.log('Prerender complete.');
 })();
+

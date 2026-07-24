@@ -8,6 +8,9 @@ const CLUSTER_LABEL: Record<string, string> = {
   merge: "Merge",
   convert: "Convert",
   security: "Security",
+  edit: "Edit",
+  tools: "Tools",
+  compare: "Compare",
 };
 
 export default function Blog() {

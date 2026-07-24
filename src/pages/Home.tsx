@@ -338,10 +338,10 @@ export const GUIDES = [
   { title: "The best PDF workflow for students", excerpt: "Lecture notes to final submissions — one clean pipeline that won't fail you at 2am.", category: "Guide", bg: "bg-gradient-to-br from-ink to-slate-700" },
 ];
 
-const SectionHeading = ({ eyebrow, title, subtitle, className }: { eyebrow: string; title: string; subtitle?: string; className?: string }) => (
+const SectionHeading = ({ eyebrow, title, subtitle, className, id }: { eyebrow: string; title: string; subtitle?: string; className?: string; id?: string }) => (
   <div className={cn("max-w-2xl mx-auto text-center", className)}>
     <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{eyebrow}</span>
-    <h2 className="mt-3 font-serif text-4xl md:text-5xl text-balance">{title}</h2>
+    <h2 id={id} className="mt-3 font-serif text-4xl md:text-5xl text-balance">{title}</h2>
     {subtitle && <p className="mt-4 text-muted-foreground text-lg">{subtitle}</p>}
   </div>
 );
@@ -354,6 +354,7 @@ const FloatingPdf = ({ className, tag, pages, accent, delay = 0 }: { className?:
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay }}
       className={cn("rounded-2xl bg-card border shadow-lift p-4 aspect-[3/4]", className)}
+      aria-hidden="true"
     >
       <div className="flex items-center justify-between">
         <div className={cn("grid place-items-center size-7 rounded-md text-white", accentClasses)}>

@@ -16,16 +16,25 @@ const THEME_KEY = "silentpdf.theme";
 
 function useTheme() {
   const [isDark, setIsDark] = useState(() => {
-    if (typeof document === "undefined") return false;
-    const stored = localStorage.getItem(THEME_KEY);
-    if (stored) return stored === "dark";
-    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+    if (typeof window === "undefined" || typeof document === "undefined") return false;
+    try {
+      const stored = localStorage.getItem(THEME_KEY);
+      if (stored) return stored === "dark";
+      return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+    } catch {
+      return false;
+    }
   });
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", isDark);
-    localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+    try {
+      const root = document.documentElement;
+      root.classList.toggle("dark", isDark);
+      localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
+    } catch {
+      // ignore storage errors
+    }
   }, [isDark]);
 
   return { isDark, toggle: () => setIsDark((v) => !v) };

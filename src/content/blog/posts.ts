@@ -6,7 +6,7 @@ export interface BlogPost {
   title: string;
   seoTitle: string;
   metaDescription: string;
-  cluster: "compress" | "merge" | "convert" | "security";
+  cluster: "compress" | "merge" | "convert" | "security" | "edit" | "tools" | "compare";
   publishedAt: string; // ISO date
   readMinutes: number;
   excerpt: string;
@@ -22,6 +22,7 @@ export interface BlogPost {
 import { type ToolKind } from "@/lib/tools";
 import { COMPRESSION_POSTS } from "./posts_compression";
 import { OTHER_POSTS } from "./posts_other";
+import { SEO_KEYWORD_POSTS } from "./posts_seo_keywords";
 
 export type BlogBlock =
   | { type: "h2"; text: string }
@@ -325,7 +326,8 @@ export const POSTS: BlogPost[] = [
     relatedPostSlugs: ["convert-pdf-to-word-without-breaking-formatting"],
   },
   ...COMPRESSION_POSTS,
-  ...OTHER_POSTS
+  ...OTHER_POSTS,
+  ...SEO_KEYWORD_POSTS
 ] as BlogPost[];
 
 export function getPost(slug: string): BlogPost | undefined {

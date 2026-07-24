@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { TOOLS } from "@/lib/tools";
 import { getProgrammatic } from "@/lib/programmatic";
 import { RESOURCES, getResource } from "@/content/resources";
+import { getPost } from "@/content/blog/posts";
 import { HOME_FAQ } from "@/components/home/HomeFaq";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://silentpdfai.pages.dev";
@@ -17,27 +18,57 @@ type RouteMeta = {
 
 const STATIC_META: Record<string, RouteMeta> = {
   "/": {
-    title: "silentPDF AI — Private PDF tools that actually work",
+    title: "Free PDF Tools: Merge, Split, Compress, Convert, Edit & Sign PDFs | SilentPDF AI",
     description:
-      "Merge, split, compress, convert, sign, and protect PDFs right in your browser. No uploads, no watermarks, no signup.",
+      "Free online PDF tools to merge, split, compress, convert, edit, sign, rotate and protect PDF files securely in your browser. 100% private, fast, browser-based PDF processing with no registration required.",
     jsonLd: [
       {
         "@context": "https://schema.org",
         "@type": "Organization",
         name: SITE_NAME,
         url: SITE_URL,
-        logo: `${SITE_URL}/logo-512.png`,
+        logo: {
+          "@type": "ImageObject",
+          url: `${SITE_URL}/logo-512.png`,
+        },
       },
       {
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: SITE_NAME,
         url: SITE_URL,
+        description: "Free online browser-based PDF tools with zero file uploads for maximum privacy.",
         potentialAction: {
           "@type": "SearchAction",
           target: `${SITE_URL}/tools?q={search_term_string}`,
           "query-input": "required name=search_term_string",
         },
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: "Free PDF Tools: Merge, Split, Compress, Convert, Edit & Sign PDFs | SilentPDF AI",
+        url: `${SITE_URL}/`,
+        description: "Free online PDF tools to merge, split, compress, convert, edit, sign, rotate and protect PDF files securely in your browser.",
+        isPartOf: {
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: SITE_URL,
+        },
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "SilentPDF AI Suite",
+        operatingSystem: "Web Browser",
+        applicationCategory: "BusinessApplication",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
+        description: "Comprehensive suite of privacy-first, browser-based PDF processing tools.",
+        url: SITE_URL,
       },
       {
         "@context": "https://schema.org",
@@ -51,18 +82,49 @@ const STATIC_META: Record<string, RouteMeta> = {
     ],
   },
   "/tools": {
-    title: "All PDF Tools — silentPDF AI",
+    title: "All PDF Tools — SilentPDF AI",
     description:
-      "Every silentPDF tool in one place: merge, split, compress, convert, rotate, sign, watermark, and more. All private, all in your browser.",
+      "Every SilentPDF tool in one place: merge, split, compress, convert, rotate, sign, watermark, and more. All private, all in your browser.",
+  },
+  "/blog": {
+    title: "PDF Guides & How-Tos — SilentPDF AI Blog",
+    description:
+      "Practical posts and guides about merging, splitting, compressing, converting, editing, and protecting PDFs privately in your browser.",
+  },
+  "/guides": {
+    title: "PDF Workflow Guides & Tutorials — SilentPDF AI",
+    description:
+      "Master your PDF document pipeline with practical tutorials, how-tos, and step-by-step guides from the SilentPDF team.",
+  },
+  "/use-cases": {
+    title: "PDF Use Cases for Students, Business & Legal — SilentPDF AI",
+    description:
+      "See how students, freelancers, HR teams, small businesses, and legal professionals use browser-based PDF tools safely.",
   },
   "/resources": {
-    title: "PDF Knowledge Base & Resource Center — silentPDF AI",
+    title: "PDF Knowledge Base & Resource Center — SilentPDF AI",
     description: "The most comprehensive PDF knowledge base on the internet. Master your documents with guides, comparisons, and industry resources.",
   },
+  "/templates": {
+    title: "Free Document & PDF Templates — SilentPDF AI",
+    description: "Browse free document templates, contract layouts, and fillable PDF forms ready for browser editing.",
+  },
+  "/workflows": {
+    title: "Automated Multi-Step PDF Workflows — SilentPDF AI",
+    description: "Chain multiple PDF tasks together in one pass: compress, rotate, sign, and convert without multiple file uploads.",
+  },
   "/privacy": {
-    title: "Privacy Policy — silentPDF AI",
+    title: "Privacy Policy — SilentPDF AI",
     description:
-      "How silentPDF handles your files: browser-based processing, no storage, no logging, TLS in transit, auto-deletion.",
+      "How SilentPDF handles your files: browser-based processing, no storage, no logging, TLS in transit, auto-deletion.",
+  },
+  "/terms": {
+    title: "Terms of Service — SilentPDF AI",
+    description: "Terms and conditions for using SilentPDF AI's browser-based document tools.",
+  },
+  "/security": {
+    title: "Security Architecture & Privacy Policy — SilentPDF AI",
+    description: "Detailed overview of client-side WASM sandboxing, memory auto-purge, and serverless privacy controls.",
   },
 };
 
@@ -92,11 +154,10 @@ function buildToolMeta(slug: string): RouteMeta {
       "@type": "SoftwareApplication",
       name: tool.title,
       applicationCategory: "BusinessApplication",
-      operatingSystem: "Web",
+      operatingSystem: "Web Browser",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       description: tool.description,
       url: toolUrl,
-      aggregateRating: undefined,
     },
     {
       "@context": "https://schema.org",
@@ -265,18 +326,76 @@ function buildResourceAssetMeta(category: string, slug: string): RouteMeta | nul
       })),
     });
   }
+  return { title: asset.title, description: asset.metaDescription, jsonLd };
+}
 
-  return { title: asset.seoTitle, description: asset.metaDescription, jsonLd };
+function buildBlogMeta(slug: string): RouteMeta | null {
+  const post = getPost(slug);
+  if (!post) return null;
+  const url = `${SITE_URL}/blog/${post.slug}`;
+  const jsonLd: Record<string, unknown>[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: post.title,
+      description: post.metaDescription,
+      datePublished: post.publishedAt,
+      dateModified: post.publishedAt,
+      url,
+      author: {
+        "@type": "Organization",
+        name: SITE_NAME,
+        url: SITE_URL,
+      },
+      publisher: {
+        "@type": "Organization",
+        name: SITE_NAME,
+        logo: {
+          "@type": "ImageObject",
+          url: `${SITE_URL}/logo-512.png`,
+        },
+      },
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": url,
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+        { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+        { "@type": "ListItem", position: 3, name: post.title, item: url },
+      ],
+    },
+  ];
+
+  if (post.faq?.length) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: post.faq.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    });
+  }
+
+  return { title: post.seoTitle, description: post.metaDescription, jsonLd };
 }
 
 export const Seo = () => {
   const { pathname } = useLocation();
+  const blogPostMatch = pathname.match(/^\/blog\/([^/]+)\/?$/);
   const resourceCatMatch = pathname.match(/^\/resources\/([^/]+)\/?$/);
   const resourceAssetMatch = pathname.match(/^\/resources\/([^/]+)\/([^/]+)\/?$/);
   const rootSlugMatch = pathname.match(/^\/([^/]+)\/?$/);
 
   let meta: RouteMeta | null = STATIC_META[pathname] ?? null;
   
+  if (!meta && blogPostMatch) meta = buildBlogMeta(blogPostMatch[1]);
   if (!meta && resourceAssetMatch) meta = buildResourceAssetMeta(resourceAssetMatch[1], resourceAssetMatch[2]);
   if (!meta && resourceCatMatch) meta = buildResourceCategoryMeta(resourceCatMatch[1]);
   
@@ -297,17 +416,21 @@ export const Seo = () => {
     <Helmet>
       <title>{meta.title}</title>
       <meta name="description" content={meta.description} />
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <link rel="canonical" href={canonical} />
       <meta property="og:title" content={meta.title} />
       <meta property="og:description" content={meta.description} />
       <meta property="og:url" content={canonical} />
       <meta property="og:type" content={pathname === "/" ? "website" : "article"} />
       <meta property="og:image" content={OG_IMAGE} />
+      <meta property="og:image:alt" content="SilentPDF AI - Free Online PDF Tools" />
       <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:locale" content="en_US" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={meta.title} />
       <meta name="twitter:description" content={meta.description} />
       <meta name="twitter:image" content={OG_IMAGE} />
+      <meta name="twitter:image:alt" content="SilentPDF AI PDF Tools" />
       {meta.jsonLd?.map((obj, i) => (
         <script key={i} type="application/ld+json">
           {JSON.stringify(obj)}
