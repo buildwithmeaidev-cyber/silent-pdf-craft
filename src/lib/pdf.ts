@@ -614,27 +614,88 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
 }
 
 // ---------------- word → pdf (with unicode sanitizer) ----------------
+interface WordBlock {
+  tag: string; // h1-h4, p, li, br
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+}
+
+function extractWordBlocks(html: string): WordBlock[] {
+  const parser = new DOMParser();
+  const docHtml = parser.parseFromString(`<div>${html}</div>`, "text/html");
+  const root = docHtml.body.firstElementChild;
+  const blocks: WordBlock[] = [];
+  if (!root) return blocks;
+
+  const inlineText = (el: Element): { text: string; bold: boolean; italic: boolean } => {
+    let text = "";
+    let bold = false;
+    let italic = false;
+    const walk = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        text += node.textContent ?? "";
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const elNode = node as Element;
+        const tag = elNode.tagName.toLowerCase();
+        if (tag === "br") { text += "\n"; return; }
+        if (tag === "strong" || tag === "b") bold = true;
+        if (tag === "em" || tag === "i") italic = true;
+        for (const child of Array.from(elNode.childNodes)) walk(child);
+      }
+    };
+    for (const child of Array.from(el.childNodes)) walk(child);
+    return { text: text.trim(), bold, italic };
+  };
+
+  for (const el of Array.from(root.children)) {
+    const tag = el.tagName.toLowerCase();
+    if (/^h[1-4]$/.test(tag)) {
+      const { text, bold, italic } = inlineText(el);
+      if (text) blocks.push({ tag, text, bold, italic });
+    } else if (tag === "p" || tag === "li") {
+      const { text, bold, italic } = inlineText(el);
+      if (text) blocks.push({ tag, text, bold, italic });
+    } else {
+      const { text, bold, italic } = inlineText(el);
+      if (text) blocks.push({ tag: "p", text, bold, italic });
+    }
+  }
+  return blocks;
+}
+
 export async function wordToPdf(file: File): Promise<ToolResult> {
   const mammoth = await import("mammoth");
-  const { value: rawText } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-  const text = sanitizeForWinAnsi(rawText);
+  const { value: html } = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+  const blocks = extractWordBlocks(html);
 
   const out = await PDFDocument.create();
-  const font = await out.embedFont(StandardFonts.Helvetica);
-  const size = 11;
+  const fontRegular = await out.embedFont(StandardFonts.Helvetica);
+  const fontBold = await out.embedFont(StandardFonts.HelveticaBold);
+  const fontItalic = await out.embedFont(StandardFonts.HelveticaOblique);
+
   const margin = 54;
   const pageW = 595.28;
   const pageH = 841.89;
   const maxWidth = pageW - margin * 2;
-  const lineHeight = size * 1.4;
 
-  const wrap = (line: string): string[] => {
-    const words = line.split(/\s+/);
+  const sizeFor = (tag: string): number => {
+    switch (tag) {
+      case "h1": return 20;
+      case "h2": return 16;
+      case "h3": return 14;
+      case "h4": return 12;
+      default: return 11;
+    }
+  };
+
+  const wrap = (line: string, font: Awaited<ReturnType<typeof out.embedFont>>, size: number, width: number): string[] => {
+    const words = line.split(/\s+/).filter(Boolean);
     const result: string[] = [];
     let cur = "";
     for (const w of words) {
       const test = cur ? `${cur} ${w}` : w;
-      if (font.widthOfTextAtSize(test, size) > maxWidth) {
+      if (font.widthOfTextAtSize(test, size) > width) {
         if (cur) result.push(cur);
         cur = w;
       } else cur = test;
@@ -645,13 +706,41 @@ export async function wordToPdf(file: File): Promise<ToolResult> {
 
   let page = out.addPage([pageW, pageH]);
   let y = pageH - margin;
-  for (const rawLine of text.split(/\r?\n/)) {
-    for (const line of wrap(rawLine)) {
-      if (y < margin) { page = out.addPage([pageW, pageH]); y = pageH - margin; }
-      page.drawText(line, { x: margin, y, size, font, color: rgb(0.1, 0.1, 0.15) });
-      y -= lineHeight;
+
+  const ensureSpace = (lineHeight: number) => {
+    if (y < margin + lineHeight) {
+      page = out.addPage([pageW, pageH]);
+      y = pageH - margin;
+    }
+  };
+
+  let first = true;
+  for (const block of blocks) {
+    const size = sizeFor(block.tag);
+    const isHeading = /^h[1-4]$/.test(block.tag);
+    const font = isHeading || block.bold ? fontBold : block.italic ? fontItalic : fontRegular;
+    const lineHeight = size * 1.35;
+    const indent = block.tag === "li" ? 18 : 0;
+    const prefix = block.tag === "li" ? "• " : "";
+    const availWidth = maxWidth - indent - fontRegular.widthOfTextAtSize(prefix, size);
+
+    if (!first) y -= lineHeight * 0.6; // blank-line gap between blocks
+    first = false;
+
+    const rawText = sanitizeForWinAnsi(block.text);
+    const subLines = rawText.split(/\n/);
+    let isFirstLineOfBlock = true;
+    for (const subLine of subLines) {
+      for (const line of wrap(subLine, font, size, availWidth)) {
+        ensureSpace(lineHeight);
+        const label = isFirstLineOfBlock ? `${prefix}${line}` : line;
+        page.drawText(label, { x: margin + indent, y, size, font, color: rgb(0.1, 0.1, 0.15) });
+        y -= lineHeight;
+        isFirstLineOfBlock = false;
+      }
     }
   }
+
   const bytes = await out.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: file.name.replace(/\.docx$/i, "") + ".pdf" };
 }

@@ -17,6 +17,7 @@ import { useUpload } from "@/context/UploadContext";
 import { PdfDropzone } from "@/components/PdfDropzone";
 import { UnifiedFileList } from "@/components/UnifiedFileList";
 import { SignatureEditor } from "@/components/tools/SignatureEditor";
+import { PagePicker } from "@/components/tools/PagePicker";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,8 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
   const [addCount, setAddCount] = useState(1);
   const [exportName, setExportName] = useState("");
   const [removeWatermarkText, setRemoveWatermarkText] = useState("CONFIDENTIAL, DRAFT, COPY, SAMPLE, SPECIMEN, WATERMARK");
+  const [pickerPages, setPickerPages] = useState<number[]>([]);
+  const [showAdvancedRange, setShowAdvancedRange] = useState(false);
 
   const { progress, state, result, error: jobError, run: runJob, reset: resetJob, setProgress } = usePdfJob();
 
@@ -65,6 +68,8 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
     resetJob();
     setUploadError(null);
     setRange("");
+    setPickerPages([]);
+    setShowAdvancedRange(false);
     setPassword("");
     setSignatureImg(null);
     setEditText("");

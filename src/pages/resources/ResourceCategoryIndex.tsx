@@ -22,18 +22,18 @@ export default function ResourceCategoryIndex() {
         <Breadcrumbs current={title} />
         
         <header className="mt-6 mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
             {title}
           </h1>
-          <p className="mt-4 text-xl text-slate-600 max-w-2xl">
+          <p className="mt-4 text-xl text-muted-foreground max-w-2xl">
             Explore our collection of PDF {title.toLowerCase()} to master document management.
           </p>
         </header>
 
         {categoryAssets.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-            <h2 className="text-xl font-semibold text-slate-900">Coming soon</h2>
-            <p className="mt-2 text-slate-600">We're actively publishing new {title.toLowerCase()}. Check back shortly.</p>
+          <div className="rounded-2xl border border-border bg-card p-12 text-center">
+            <h2 className="text-xl font-semibold text-foreground">Coming soon</h2>
+            <p className="mt-2 text-muted-foreground">We're actively publishing new {title.toLowerCase()}. Check back shortly.</p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -41,17 +41,17 @@ export default function ResourceCategoryIndex() {
               <Link
                 key={asset.slug}
                 to={`/resources/${category}/${asset.slug}`}
-                className="group flex flex-col justify-between rounded-2xl bg-white p-6 shadow-sm transition hover:shadow-md hover:ring-2 hover:ring-blue-600/20"
+                className="group flex flex-col justify-between rounded-2xl bg-card p-6 shadow-sm transition hover:shadow-md hover:ring-2 hover:ring-primary/20"
               >
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                     {asset.title}
                   </h3>
-                  <p className="mt-3 text-slate-600 line-clamp-3">
+                  <p className="mt-3 text-muted-foreground line-clamp-3">
                     {asset.metaDescription}
                   </p>
                 </div>
-                <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-blue-600">
+                <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-primary">
                   Read more <ArrowRight className="size-4" />
                 </div>
               </Link>

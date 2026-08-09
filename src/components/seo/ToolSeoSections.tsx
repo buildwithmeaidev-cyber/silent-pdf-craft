@@ -23,7 +23,7 @@ export default function ToolSeoSections({ slug }: Props) {
   const quickAnswer = tool.faq?.[0];
 
   return (
-    <section className="bg-white border-t border-slate-200">
+    <section className="bg-card border-t border-border">
       <div className="mx-auto max-w-4xl px-4 md:px-6 py-16 md:py-20 space-y-16">
         {/* AI-extractable Quick Answer (P5) */}
         {quickAnswer && (
@@ -31,10 +31,10 @@ export default function ToolSeoSections({ slug }: Props) {
             <p className="text-xs uppercase tracking-[0.18em] text-blue-700 font-semibold">
               Quick answer
             </p>
-            <p className="mt-3 text-lg md:text-xl font-semibold text-slate-900 leading-snug">
+            <p className="mt-3 text-lg md:text-xl font-semibold text-foreground leading-snug">
               {quickAnswer.q}
             </p>
-            <p className="mt-3 text-base text-slate-700 leading-relaxed">
+            <p className="mt-3 text-base text-muted-foreground leading-relaxed">
               {quickAnswer.a}
             </p>
           </div>
@@ -42,14 +42,14 @@ export default function ToolSeoSections({ slug }: Props) {
 
         {/* Intent + What/When */}
         <div className="space-y-6">
-          <p className="text-sm uppercase tracking-wide text-blue-600 font-semibold">
+          <p className="text-sm uppercase tracking-wide text-primary font-semibold">
             About this tool
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
             {tool.h1}
           </h2>
-          <p className="text-lg text-slate-600 leading-relaxed">{tool.intent}</p>
-          <p className="text-base text-slate-700 leading-relaxed">
+          <p className="text-lg text-muted-foreground leading-relaxed">{tool.intent}</p>
+          <p className="text-base text-muted-foreground leading-relaxed">
             {tool.whatItDoes}
           </p>
         </div>
@@ -58,11 +58,11 @@ export default function ToolSeoSections({ slug }: Props) {
         {/* When to use */}
         {tool.whenToUse?.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-slate-900">When you'd reach for this</h3>
+            <h3 className="text-2xl font-bold text-foreground">When you'd reach for this</h3>
             <ul className="space-y-3">
               {tool.whenToUse.map((u, i) => (
-                <li key={i} className="flex gap-3 text-slate-700">
-                  <Check className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                <li key={i} className="flex gap-3 text-muted-foreground">
+                  <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <span>{u}</span>
                 </li>
               ))}
@@ -73,7 +73,7 @@ export default function ToolSeoSections({ slug }: Props) {
         {/* How it works */}
         {tool.howItWorks?.length > 0 && (
           <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-slate-900">How it works</h3>
+            <h3 className="text-2xl font-bold text-foreground">How it works</h3>
             <ol className="space-y-5">
               {tool.howItWorks.map((step, i) => (
                 <li key={i} className="flex gap-4">
@@ -81,8 +81,8 @@ export default function ToolSeoSections({ slug }: Props) {
                     {i + 1}
                   </div>
                   <div className="space-y-1">
-                    <p className="font-semibold text-slate-900">{step.name}</p>
-                    <p className="text-slate-600 leading-relaxed">{step.text}</p>
+                    <p className="font-semibold text-foreground">{step.name}</p>
+                    <p className="text-muted-foreground leading-relaxed">{step.text}</p>
                   </div>
                 </li>
               ))}
@@ -93,15 +93,15 @@ export default function ToolSeoSections({ slug }: Props) {
         {/* Benefits */}
         {tool.benefits?.length > 0 && (
           <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-slate-900">Why people use it</h3>
+            <h3 className="text-2xl font-bold text-foreground">Why people use it</h3>
             <div className="grid gap-4 md:grid-cols-3">
               {tool.benefits.map((b, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+                  className="rounded-2xl border border-border bg-muted p-5"
                 >
-                  <p className="font-semibold text-slate-900">{b.title}</p>
-                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                  <p className="font-semibold text-foreground">{b.title}</p>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                     {b.body}
                   </p>
                 </div>
@@ -113,15 +113,15 @@ export default function ToolSeoSections({ slug }: Props) {
         {/* Use cases */}
         {tool.useCases?.length > 0 && (
           <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-slate-900">Real situations it fits</h3>
+            <h3 className="text-2xl font-bold text-foreground">Real situations it fits</h3>
             <div className="grid gap-4 md:grid-cols-3">
               {tool.useCases.map((c, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl border border-slate-200 p-5 bg-white"
+                  className="rounded-2xl border border-border p-5 bg-card"
                 >
-                  <p className="font-semibold text-slate-900">{c.title}</p>
-                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                  <p className="font-semibold text-foreground">{c.title}</p>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                     {c.body}
                   </p>
                 </div>
@@ -133,10 +133,10 @@ export default function ToolSeoSections({ slug }: Props) {
         {/* Best practices (P4) */}
         {tool.bestPractices && tool.bestPractices.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-slate-900">Best practices</h3>
+            <h3 className="text-2xl font-bold text-foreground">Best practices</h3>
             <ul className="space-y-3">
               {tool.bestPractices.map((b, i) => (
-                <li key={i} className="flex gap-3 text-slate-700">
+                <li key={i} className="flex gap-3 text-muted-foreground">
                   <Check className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
                   <span>{b}</span>
                 </li>
@@ -148,11 +148,11 @@ export default function ToolSeoSections({ slug }: Props) {
         {/* Common mistakes (P4) */}
         {tool.commonMistakes && tool.commonMistakes.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-slate-900">Common mistakes to avoid</h3>
+            <h3 className="text-2xl font-bold text-foreground">Common mistakes to avoid</h3>
             <ul className="space-y-3">
               {tool.commonMistakes.map((m, i) => (
-                <li key={i} className="flex gap-3 text-slate-700">
-                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600 text-xs font-bold">!</span>
+                <li key={i} className="flex gap-3 text-muted-foreground">
+                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 text-destructive text-xs font-bold">!</span>
                   <span>{m}</span>
                 </li>
               ))}
@@ -165,14 +165,14 @@ export default function ToolSeoSections({ slug }: Props) {
         {/* Keywords / topics (subtle) */}
         {tool.keywords?.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Also known as
             </h3>
             <div className="flex flex-wrap gap-2">
               {tool.keywords.map((k) => (
                 <span
                   key={k}
-                  className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600"
+                  className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
                 >
                   {k}
                 </span>
@@ -184,16 +184,16 @@ export default function ToolSeoSections({ slug }: Props) {
         {/* FAQ */}
         {tool.faq?.length > 0 && (
           <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-slate-900">
+            <h3 className="text-2xl font-bold text-foreground">
               Questions people ask
             </h3>
             <Accordion type="single" collapsible className="w-full">
               {tool.faq.map((f, i) => (
                 <AccordionItem key={i} value={`item-${i}`}>
-                  <AccordionTrigger className="text-left text-base font-semibold text-slate-900">
+                  <AccordionTrigger className="text-left text-base font-semibold text-foreground">
                     {f.q}
                   </AccordionTrigger>
-                  <AccordionContent className="text-slate-600 leading-relaxed text-base">
+                  <AccordionContent className="text-muted-foreground leading-relaxed text-base">
                     {f.a}
                   </AccordionContent>
                 </AccordionItem>
@@ -205,7 +205,7 @@ export default function ToolSeoSections({ slug }: Props) {
         {/* Related tools */}
         {related.length > 0 && (
           <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-slate-900">Related tools</h3>
+            <h3 className="text-2xl font-bold text-foreground">Related tools</h3>
             <div className="grid gap-3 md:grid-cols-3">
               {related.map((r) => {
                 const Icon = r.icon;
@@ -213,20 +213,20 @@ export default function ToolSeoSections({ slug }: Props) {
                   <Link
                     key={r.slug}
                     to={`/${r.slug}`}
-                    className="group flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-sm"
+                    className="group flex items-start gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-primary/40 hover:shadow-sm"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-primary">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-slate-900 group-hover:text-blue-700">
+                      <p className="font-semibold text-foreground group-hover:text-blue-700">
                         {r.title}
                       </p>
-                      <p className="mt-0.5 text-sm text-slate-500 line-clamp-2">
+                      <p className="mt-0.5 text-sm text-muted-foreground line-clamp-2">
                         {r.short}
                       </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 mt-1" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
                   </Link>
                 );
               })}
