@@ -137,7 +137,7 @@ export async function removeVideoWatermark(
     throw new Error("Processing failed: the output file was empty.");
   }
 
-  const blob = new Blob([data], { type: "video/mp4" });
+  const blob = new Blob([data as BlobPart], { type: "video/mp4" });
   const baseName = file.name.replace(/\.[^.]+$/, "");
   return { blob, filename: `${baseName}-no-watermark.mp4` };
 }

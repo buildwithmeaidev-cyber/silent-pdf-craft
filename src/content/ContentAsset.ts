@@ -49,8 +49,8 @@ export interface ContentAsset {
   comparisons?: { feature: string; us: string; them: string }[];
   
   // Internal linking rules
-  parentToolSlug: string; // 1 parent tool
-  relatedToolSlugs: string[]; // related tools
-  relatedAssetSlugs: string[]; // related blogs/assets
-  relatedProgrammaticSlug: string; // 1 programmatic page
+  parentToolSlug?: string; // 1 parent tool
+  relatedToolSlugs?: string[]; // related tools
+  relatedAssetSlugs?: string[]; // related blogs/assets
+  relatedProgrammaticSlug?: string; // 1 programmatic page
 }
