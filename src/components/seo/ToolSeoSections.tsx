@@ -27,8 +27,8 @@ export default function ToolSeoSections({ slug }: Props) {
       <div className="mx-auto max-w-4xl px-4 md:px-6 py-16 md:py-20 space-y-16">
         {/* AI-extractable Quick Answer (P5) */}
         {quickAnswer && (
-          <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-6 md:p-8">
-            <p className="text-xs uppercase tracking-[0.18em] text-blue-700 font-semibold">
+          <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 to-card p-6 md:p-8">
+            <p className="text-xs uppercase tracking-[0.18em] text-primary font-semibold">
               Quick answer
             </p>
             <p className="mt-3 text-lg md:text-xl font-semibold text-foreground leading-snug">
@@ -77,7 +77,7 @@ export default function ToolSeoSections({ slug }: Props) {
             <ol className="space-y-5">
               {tool.howItWorks.map((step, i) => (
                 <li key={i} className="flex gap-4">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">
                     {i + 1}
                   </div>
                   <div className="space-y-1">
@@ -215,11 +215,11 @@ export default function ToolSeoSections({ slug }: Props) {
                     to={`/${r.slug}`}
                     className="group flex items-start gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-primary/40 hover:shadow-sm"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-primary">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-foreground group-hover:text-blue-700">
+                      <p className="font-semibold text-foreground group-hover:text-primary">
                         {r.title}
                       </p>
                       <p className="mt-0.5 text-sm text-muted-foreground line-clamp-2">

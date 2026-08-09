@@ -39,7 +39,7 @@ export default function ResourceAssetPage() {
 
         {/* Hero */}
         <header className="mt-6 space-y-6">
-          <div className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
+          <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
             {asset.contentType.replace("-", " ")}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
@@ -51,8 +51,8 @@ export default function ResourceAssetPage() {
           
           {/* Quick Answer (AI Optimization) */}
           {asset.quickAnswer && (
-            <div className="mt-8 rounded-2xl bg-primary/10 border border-blue-100 p-6 md:p-8">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-blue-800 mb-3">Quick Answer</h2>
+            <div className="mt-8 rounded-2xl bg-primary/10 border border-primary/20 p-6 md:p-8">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-primary mb-3">Quick Answer</h2>
               <p className="text-lg text-foreground font-medium">{asset.quickAnswer}</p>
             </div>
           )}
@@ -82,7 +82,7 @@ export default function ResourceAssetPage() {
                 ))}
               </ul>
             );
-            if (block.type === "quote") return <blockquote key={i} className="border-l-4 border-blue-600 pl-6 italic text-muted-foreground text-xl my-8">{block.text}</blockquote>;
+            if (block.type === "quote") return <blockquote key={i} className="border-l-4 border-primary pl-6 italic text-muted-foreground text-xl my-8">{block.text}</blockquote>;
             return null;
           })}
         </div>
@@ -135,11 +135,11 @@ export default function ResourceAssetPage() {
                     <th className="p-4">Standard Tools</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                   {asset.comparisons.map((c, i) => (
                     <tr key={i}>
                       <td className="p-4 font-medium text-foreground">{c.feature}</td>
-                      <td className="p-4 bg-primary/10/20 text-blue-700 font-medium">{c.us}</td>
+                      <td className="p-4 bg-primary/10 text-primary font-medium">{c.us}</td>
                       <td className="p-4 text-muted-foreground">{c.them}</td>
                     </tr>
                   ))}
@@ -153,7 +153,7 @@ export default function ResourceAssetPage() {
         {asset.summary && (
           <section className="mt-12 rounded-2xl bg-ink p-8 text-ink-foreground">
             <h2 className="text-2xl font-bold mb-4">Summary</h2>
-            <p className="text-slate-300 leading-relaxed">{asset.summary}</p>
+            <p className="text-ink-foreground/70 leading-relaxed">{asset.summary}</p>
             {parentTool && (
               <Link
                 to={`/${parentTool.slug}`}

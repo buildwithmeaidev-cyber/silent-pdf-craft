@@ -43,7 +43,7 @@ function renderBlock(block: BlogBlock, i: number) {
       return (
         <blockquote
           key={i}
-          className="mt-6 border-l-4 border-blue-500 bg-primary/10 px-5 py-4 text-foreground italic rounded-r-xl"
+          className="mt-6 border-l-4 border-primary bg-primary/10 px-5 py-4 text-foreground italic rounded-r-xl"
         >
           {block.text}
         </blockquote>
@@ -78,7 +78,7 @@ export default function BlogPost() {
 
         <header className="mt-6 space-y-5">
           <div className="flex items-center gap-3 text-xs">
-            <span className="rounded-full bg-blue-100 px-3 py-1 font-semibold text-blue-700">
+            <span className="rounded-full bg-primary/10 px-3 py-1 font-semibold text-primary">
               {post.cluster.toUpperCase()}
             </span>
             <span className="flex items-center gap-1 text-muted-foreground">
@@ -103,7 +103,7 @@ export default function BlogPost() {
             <ul className="mt-3 space-y-1.5">
               {toc.map((item) => (
                 <li key={item.anchor}>
-                  <a href={`#${item.anchor}`} className="text-sm text-muted-foreground hover:text-blue-700">
+                  <a href={`#${item.anchor}`} className="text-sm text-muted-foreground hover:text-primary">
                     {item.text}
                   </a>
                 </li>

@@ -38,7 +38,7 @@ export default function Blog() {
               className="group flex flex-col rounded-3xl border border-border bg-card p-6 md:p-7 transition hover:border-primary/40 hover:shadow-md"
             >
               <div className="flex items-center gap-3 text-xs">
-                <span className="rounded-full bg-blue-100 px-3 py-1 font-semibold text-blue-700">
+                <span className="rounded-full bg-primary/10 px-3 py-1 font-semibold text-primary">
                   {CLUSTER_LABEL[post.cluster]}
                 </span>
                 <span className="flex items-center gap-1 text-muted-foreground">
@@ -46,7 +46,7 @@ export default function Blog() {
                 </span>
               </div>
 
-              <h2 className="mt-4 text-xl md:text-2xl font-bold text-foreground group-hover:text-blue-700 leading-snug">
+              <h2 className="mt-4 text-xl md:text-2xl font-bold text-foreground group-hover:text-primary leading-snug">
                 {post.title}
               </h2>
               <p className="mt-3 text-muted-foreground leading-relaxed flex-1">

@@ -65,7 +65,7 @@ export default function ProgrammaticPage() {
           <ol className="space-y-5">
             {variant.howItWorks.map((s, i) => (
               <li key={i} className="flex gap-4">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">
                   {i + 1}
                 </div>
                 <div className="space-y-1">
@@ -108,7 +108,7 @@ export default function ProgrammaticPage() {
                   className="group flex items-start gap-3 rounded-2xl border border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-sm"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground group-hover:text-blue-700">
+                    <p className="font-semibold text-foreground group-hover:text-primary">
                       {s.title}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">{s.intent}</p>
