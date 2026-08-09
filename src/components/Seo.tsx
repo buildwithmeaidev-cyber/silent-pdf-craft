@@ -142,6 +142,33 @@ const STATIC_META: Record<string, RouteMeta> = {
     title: "Build a Custom PDF Workflow — SilentPDF",
     description: "Chain any PDF tools in any order and run them on one file, in your browser. Compress, sign, watermark and protect in one pass.",
   },
+  "/remove-video-watermark": {
+    title: "Remove Watermark from Video Online Free — SilentPDF",
+    description:
+      "Remove watermarks from videos directly in your browser. Draw a box over the watermark and export a clean MP4 — private, free, no upload required.",
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Remove Video Watermark",
+        applicationCategory: "MultimediaApplication",
+        operatingSystem: "Web Browser",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        description:
+          "Remove watermarks from videos entirely in your browser using WebAssembly-based FFmpeg processing.",
+        url: `${SITE_URL}/remove-video-watermark`,
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
+          { "@type": "ListItem", position: 3, name: "Remove Video Watermark", item: `${SITE_URL}/remove-video-watermark` },
+        ],
+      },
+    ],
+  },
   "/security": {
     title: "Security Architecture & Privacy Policy — SilentPDF",
     description: "Detailed overview of client-side WASM sandboxing, memory auto-purge, and serverless privacy controls.",
