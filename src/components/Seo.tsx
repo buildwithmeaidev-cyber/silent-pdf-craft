@@ -7,7 +7,7 @@ import { getPost } from "@/content/blog/posts";
 import { HOME_FAQ } from "@/components/home/HomeFaq";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://silentpdfai.pages.dev";
-const SITE_NAME = "silentPDF AI";
+const SITE_NAME = "SilentPDF";
 const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 type RouteMeta = {
@@ -122,6 +122,26 @@ const STATIC_META: Record<string, RouteMeta> = {
     title: "Terms of Service — SilentPDF",
     description: "Terms and conditions for using SilentPDF's browser-based document tools.",
   },
+  "/about": {
+    title: "About SilentPDF — Private, Browser-Based PDF Tools",
+    description: "Who builds SilentPDF and why every tool runs on your device instead of a server. No accounts, no uploads, no tracking.",
+  },
+  "/contact": {
+    title: "Contact SilentPDF — Support & Feedback",
+    description: "Report a bug, request a tool, or ask a privacy question. We answer support and data requests directly.",
+  },
+  "/dpa": {
+    title: "Data Processing Agreement — SilentPDF",
+    description: "SilentPDF's DPA for teams: what we process (nothing), sub-processors, and how browser-only processing changes your obligations.",
+  },
+  "/cookies": {
+    title: "Cookie Policy — SilentPDF",
+    description: "The short list of cookies and local storage keys SilentPDF uses, what each one does, and how to clear them.",
+  },
+  "/workflows/custom": {
+    title: "Build a Custom PDF Workflow — SilentPDF",
+    description: "Chain any PDF tools in any order and run them on one file, in your browser. Compress, sign, watermark and protect in one pass.",
+  },
   "/security": {
     title: "Security Architecture & Privacy Policy — SilentPDF",
     description: "Detailed overview of client-side WASM sandboxing, memory auto-purge, and serverless privacy controls.",
@@ -140,10 +160,10 @@ function buildToolMeta(slug: string): RouteMeta {
   if (!tool) {
     return {
       title: `PDF Tool — ${SITE_NAME}`,
-      description: "A focused PDF tool from silentPDF.",
+      description: "A focused PDF tool from SilentPDF.",
     };
   }
-  const title = tool.seoTitle ?? `${tool.title} — Free Online PDF Tool | silentPDF`;
+  const title = tool.seoTitle ?? `${tool.title} — Free Online PDF Tool | SilentPDF`;
   const rawDesc = tool.metaDescription ?? tool.short;
   const description = rawDesc.length > 160 ? rawDesc.slice(0, 157) + "…" : rawDesc;
   const toolUrl = `${SITE_URL}/${tool.slug}`;
@@ -251,13 +271,13 @@ function buildResourceCategoryMeta(category: string): RouteMeta | null {
   const title = category.charAt(0).toUpperCase() + category.slice(1).replace("-", " ");
   
   return {
-    title: `PDF ${title} — silentPDF AI Resource Center`,
+    title: `PDF ${title} — SilentPDF Resource Center`,
     description: `Explore our collection of PDF ${title.toLowerCase()} to master document management.`,
     jsonLd: [
       {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        name: `silentPDF ${title}`,
+        name: `SilentPDF ${title}`,
         url: `${SITE_URL}/resources/${category}`,
         hasPart: RESOURCES.filter(r => r.category === category).map((r) => ({
           "@type": "Article",
