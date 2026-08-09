@@ -97,7 +97,7 @@ export const SEO_KEYWORD_POSTS: BlogPost[] = [
       { q: "Will rotating a page change its dimensions?", a: "Rotating swaps width and height (portrait becomes landscape and vice versa), but the content itself is unchanged." },
       { q: "Can I rotate pages on my phone?", a: "Yes. The thumbnail grid works on mobile browsers with touch support." }
     ],
-    relatedToolSlugs: ["rotatepages-pdf"],
+    relatedToolSlugs: ["rotate-pdf"],
     relatedProgrammaticSlugs: [],
     relatedPostSlugs: ["how-to-reorder-pdf-pages"]
   },

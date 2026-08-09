@@ -23,9 +23,9 @@ export const ADDPAGES_CLUSTER: ContentAsset[] = [
     ],
     body: [],
     faq: [],
-    parentToolSlug: "add-pages-pdf",
+    parentToolSlug: "addpages-pdf",
     relatedToolSlugs: ["merge-pdf", "split-pdf", "compress-pdf"],
     relatedAssetSlugs: [],
-    relatedProgrammaticSlug: "add-pages-pdf"
+    relatedProgrammaticSlug: "addpages-pdf"
   }
 ];

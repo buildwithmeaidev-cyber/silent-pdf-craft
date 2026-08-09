@@ -911,7 +911,7 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
   },
   {
     slug: "rotate-pdf-pages-online",
-    parentSlug: "rotatepages-pdf",
+    parentSlug: "rotate-pdf",
     title: "Rotate PDF Pages Online",
     seoTitle: "Rotate PDF Pages Online — Turn Sideways Scans | silentPDF",
     metaDescription: "Rotate individual PDF pages or entire documents by 90, 180, or 270 degrees.",
@@ -935,7 +935,7 @@ export const PROGRAMMATIC: ProgrammaticVariant[] = [
   },
   {
     slug: "rotate-sideways-scanned-pdf",
-    parentSlug: "rotatepages-pdf",
+    parentSlug: "rotate-pdf",
     title: "Fix & Rotate Sideways Scanned PDFs",
     seoTitle: "Fix & Rotate Sideways Scanned PDFs | silentPDF",
     metaDescription: "Fix sideways and upside-down scanned document pages. Orient pages correctly for reading and printing.",
