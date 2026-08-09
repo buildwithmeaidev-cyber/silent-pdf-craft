@@ -97,7 +97,7 @@ export const SEO_KEYWORD_POSTS: BlogPost[] = [
       { q: "Will rotating a page change its dimensions?", a: "Rotating swaps width and height (portrait becomes landscape and vice versa), but the content itself is unchanged." },
       { q: "Can I rotate pages on my phone?", a: "Yes. The thumbnail grid works on mobile browsers with touch support." }
     ],
-    relatedToolSlugs: ["rotatepages-pdf"],
+    relatedToolSlugs: ["rotate-pdf"],
     relatedProgrammaticSlugs: [],
     relatedPostSlugs: ["how-to-reorder-pdf-pages"]
   },
@@ -819,15 +819,15 @@ export const SEO_KEYWORD_POSTS: BlogPost[] = [
   },
   {
     slug: "silentpdf-ai-features-overview",
-    title: "SilentPDF AI: Complete Feature Overview and Guide",
-    seoTitle: "SilentPDF AI Features — Free Browser-Based PDF Tools | SilentPDF",
-    metaDescription: "A comprehensive guide to every SilentPDF AI tool — merge, split, compress, convert, edit, sign, protect, and more. All free, all local.",
+    title: "SilentPDF: Complete Feature Overview and Guide",
+    seoTitle: "SilentPDF Features — Free Browser-Based PDF Tools | SilentPDF",
+    metaDescription: "A comprehensive guide to every SilentPDF tool — merge, split, compress, convert, edit, sign, protect, and more. All free, all local.",
     cluster: "tools",
     publishedAt: "2026-07-24",
     readMinutes: 7,
-    excerpt: "Everything SilentPDF AI can do, explained in one place. From basic compression to electronic signatures — here's the complete guide.",
+    excerpt: "Everything SilentPDF can do, explained in one place. From basic compression to electronic signatures — here's the complete guide.",
     body: [
-      { type: "p", text: "SilentPDF AI is a comprehensive suite of PDF tools that runs entirely in your browser. No uploads, no accounts, no watermarks, no limits. Here's what every tool does and when to use it." },
+      { type: "p", text: "SilentPDF is a comprehensive suite of PDF tools that runs entirely in your browser. No uploads, no accounts, no watermarks, no limits. Here's what every tool does and when to use it." },
       { type: "h2", text: "Core tools" },
       { type: "ul", items: [
         "Merge PDF: combine multiple PDFs into one. Drag to reorder.",

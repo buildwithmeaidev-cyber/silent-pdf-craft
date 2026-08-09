@@ -1,4 +1,4 @@
-import { ProblemGuide } from "../types";
+import { ContentAsset as ProblemGuide } from "../../ContentAsset";
 
 export const COMPRESS_PDF_BELOW_1MB_CLUSTER: ProblemGuide[] = [
   {

@@ -28,6 +28,7 @@ import Contact from "./pages/legal/Contact";
 import Cookies from "./pages/legal/Cookies";
 
 import ToolPage from "./pages/tools/ToolPage";
+import RemoveVideoWatermark from "./pages/tools/RemoveVideoWatermark";
 import NotFound from "./pages/NotFound";
 import ProgrammaticPage from "./pages/ProgrammaticPage";
 
@@ -94,6 +95,9 @@ const App = () => (
               <Route path="/workflows" element={<Workflows />} />
               <Route path="/workflows/custom" element={<CustomWorkflowBuilder />} />
               <Route path="/workflows/run/:id" element={<WorkflowRunner />} />
+
+              {/* Video tools (must be registered BEFORE the /:slug catch-all) */}
+              <Route path="/remove-video-watermark" element={<RemoveVideoWatermark />} />
 
               {/* Dynamic root-level slug handler for programmatic SEO pages & tools */}
               <Route path="/:slug" element={<RootSlugHandler />} />

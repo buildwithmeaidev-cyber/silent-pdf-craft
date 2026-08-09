@@ -1,4 +1,4 @@
-import { ContentAsset } from "../ContentAsset";
+import { ContentAsset } from "../../ContentAsset";
 
 export const TEMPLATES_CLUSTER: ContentAsset[] = [
   {

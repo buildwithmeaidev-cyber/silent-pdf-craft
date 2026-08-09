@@ -1,4 +1,4 @@
-export function metaTags(asset) {
+export function metaTags(asset: any) {
   return {
     title: asset.seoTitle,
     description: asset.metaDescription,
@@ -18,8 +18,8 @@ export function metaTags(asset) {
   };
 }
 
-export function jsonLdForAsset(asset) {
-  const base = {
+export function jsonLdForAsset(asset: any) {
+  const base: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': asset.contentType === 'problem-solving' ? 'HowTo' : 'Article',
     name: asset.title,
@@ -33,7 +33,7 @@ export function jsonLdForAsset(asset) {
     }
   };
   if (asset.stepByStep && asset.stepByStep.length) {
-    base.step = asset.stepByStep.map((s, i) => ({
+    base.step = asset.stepByStep.map((s: { name: string; text: string }, i: number) => ({
       '@type': 'HowToStep',
       url: `https://silentpdf.com/resources/${asset.slug}#step-${i+1}`,
       name: s.name,
@@ -41,7 +41,7 @@ export function jsonLdForAsset(asset) {
     }));
   }
   if (asset.faq && asset.faq.length) {
-    base.mainEntity = asset.faq.map(f => ({
+    base.mainEntity = asset.faq.map((f: { q: string; a: string }) => ({
       '@type': 'Question',
       name: f.q,
       acceptedAnswer: {

@@ -27,7 +27,7 @@ const CASES: Case[] = [
     problem: "You need to send a signed proposal or invoice fast, and half the online tools want a login.",
     workflowId: "resume-submission",
     outcome: "Signed, compressed, client-ready PDF without opening an account anywhere.",
-    extraToolSlugs: ["word-to-pdf", "sign-pdf"],
+    extraToolSlugs: ["word-to-pdf", "esign-pdf"],
   },
   {
     id: "hr", persona: "HR teams", icon: Users, accent: "primary",
@@ -48,7 +48,7 @@ const CASES: Case[] = [
     problem: "Contracts get signed on paper, scanned crookedly, and need to be merged with the master MSA.",
     workflowId: "contract-prep",
     outcome: "A straight, ordered contract ready for the final signature.",
-    extraToolSlugs: ["rotate-pdf", "sign-pdf"],
+    extraToolSlugs: ["rotate-pdf", "esign-pdf"],
   },
   {
     id: "legal", persona: "Legal", icon: Scale, accent: "accent",

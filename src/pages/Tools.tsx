@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Film } from "lucide-react";
 import { TOOLS } from "@/lib/tools";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +34,22 @@ const Tools = () => (
           </Link>
         );
       })}
+
+      <Link
+        to="/remove-video-watermark"
+        className="group rounded-2xl border bg-card p-6 hover:shadow-lift hover:-translate-y-0.5 hover:border-primary/40 transition-all"
+      >
+        <div className="grid place-items-center size-11 rounded-xl mb-5 transition-colors bg-accent-soft text-accent">
+          <Film className="size-5" strokeWidth={1.8} />
+        </div>
+        <h2 className="font-medium">Remove Video Watermark</h2>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Draw a box over a watermark and export a clean video — 100% in your browser.
+        </p>
+        <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary">
+          Open <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+        </span>
+      </Link>
     </div>
   </div>
 );

@@ -1,4 +1,4 @@
-# Finish deferred tools, fix links, speed up processing
+- Finish deferred tools, fix links, speed up processing
 
 ## 0. Unblock the build first
 
@@ -7,8 +7,6 @@ The typecheck currently fails with 18 errors that are unrelated to this request 
 - Content cluster files declare `relatedToolSlugs` / `relatedAssetSlugs` as fixed-length tuples (`[string, string, string]`, `[string, string]`) but supply fewer entries. Fix: relax those fields to `string[]` in the shared `ContentAsset` type.
 - `compress/compress-pdf-below-1mb-cluster.ts` and `templates/templates-cluster.ts` import from the wrong relative path. Fix: point both at `src/content/ContentAsset`.
 - `src/lib/seo.ts` builds a JSON-LD object then assigns `step` / `mainEntity` onto its inferred literal type. Fix: type the builder's return as a record.
-
-
 
 ## 1. Broken tool links (verified)
 
@@ -53,6 +51,26 @@ The PDF Blender project link cannot be read from here, so the editor will follow
 - Consistent tool page layout: upload → configure → run → preview → download, with a result preview (first-page thumbnail plus page count and size delta) on every tool, not just some.
 - Disabled run buttons explain what is missing; errors render in one shared banner style.
 - Reduce layout shift while processing and keep the progress bar responsive now that work is off the main thread.
+
+7. fix all the bug and improve the ui and dark mode working in some and not working in some and make sure that the all pages are inter linked and acessible and fix the sitemap as not able to submit in the google search counsle and rename the website to silentpdf only from silentpdf ai and make sure that everywere the site mame is writen to silentpdf and i want an seo strong to get real user so i want you to make it an strong seo for it that can get to search of merge pdf and like this for all the 16 tools that it get on the search result when user search merge pdf free and other every thing to be for all 16 tools merge,split,compress,pdf to word word to pdf ,rotate pdf rempve pages protect pages edit pdf e sign pdf watermark pdf phato to pdf reorder pdf add pages remove watermark make sure that all these pdf tools has an strong search result in the google for seo and aeo 
+
+8. improve the tools quality 
+  1. merge pdf not able to reorder pdf files in the mobile fix it .
+  2. in split pdf not able to split as i want cant understand how it split so give some feature like i love pdf which has preview of all pages and can delete or can keep as we want. 
+  3. compress pdf improve the custom compress and give no input in it and fix the ui for it in mobile the fornt are inter merge.
+  4. pdf to word fix the spacing all the spacing are gone and not is good make the pdf as it is in the word form in it 
+  5. word to pdf when convert the spacing is gone and no spacing and all the word are inter merge so fix it and the word all spacing and text is same in the pdf 
+  6. in rotate pdf improve the mobile spacing in it 
+  7. in delete pages the give the preview of each page and option to rotate and delete or make one in the like edit pdf which can rotate and delete pages and other pdf file
+  8. protect pdf is not working fix it as the it is fake processing and give the same file with edited name
+  9. give preview in the edit pdf all the feature in it with option to edit in the preview 
+  10. improve the e sign pdf as and add preview as cant resize and replace the sign where we want 
+  11. watermark its not working as the pdf the watermark is too big give the customisation of it
+  12. reorder pages not working as the preview is not supported by defalt the preview of all pages should be 
+  13. removewatermark  is not working and there is the text of CONFIDENTIAL, DRAFT, COPY, SAMPLE, SPECIMEN, WATERMARK remove all these option and just remove watermark option and it should remove all the watermark type and it shoud be real and watermark should be removed 
+  14. in all the tools there is an partially dark make it full as it is not good 
+  &nbsp;
+9. add new tools of pdf and one is removewatermark from video make sure that it is working in real as peole are asking for it and i think its good to make it so add this and real processing and it should be capable of removing the watermark from video 
 
 ## Technical notes
 

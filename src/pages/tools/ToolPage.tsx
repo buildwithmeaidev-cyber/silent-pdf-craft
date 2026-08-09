@@ -17,6 +17,7 @@ import { useUpload } from "@/context/UploadContext";
 import { PdfDropzone } from "@/components/PdfDropzone";
 import { UnifiedFileList } from "@/components/UnifiedFileList";
 import { SignatureEditor } from "@/components/tools/SignatureEditor";
+import { PagePicker } from "@/components/tools/PagePicker";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,8 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
   const [addCount, setAddCount] = useState(1);
   const [exportName, setExportName] = useState("");
   const [removeWatermarkText, setRemoveWatermarkText] = useState("CONFIDENTIAL, DRAFT, COPY, SAMPLE, SPECIMEN, WATERMARK");
+  const [pickerPages, setPickerPages] = useState<number[]>([]);
+  const [showAdvancedRange, setShowAdvancedRange] = useState(false);
 
   const { progress, state, result, error: jobError, run: runJob, reset: resetJob, setProgress } = usePdfJob();
 
@@ -65,6 +68,8 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
     resetJob();
     setUploadError(null);
     setRange("");
+    setPickerPages([]);
+    setShowAdvancedRange(false);
     setPassword("");
     setSignatureImg(null);
     setEditText("");
@@ -78,6 +83,7 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
   const needsAddCount = tool?.kind === "addpages";
   const needsExportName = tool?.kind === "export";
   const needsReorderInput = tool?.kind === "reorder";
+  const usesPagePicker = tool?.kind === "split" || tool?.kind === "remove" || tool?.kind === "reorder";
   const needsEditText = tool?.kind === "edit";
   const isMergeTool = tool?.kind === "merge";
   const isPhotoTool = tool?.kind === "photo-to-pdf";
@@ -86,15 +92,23 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
   const canRun = useMemo(() => {
     if (!tool || files.length === 0) return false;
     if (isMergeTool && files.length < 2) return false;
-    if (tool.needsRange && !range.trim()) return false;
-    if (needsReorderInput && !range.trim()) return false;
+    if (usesPagePicker) {
+      if (showAdvancedRange) {
+        if (!range.trim()) return false;
+      } else if (pickerPages.length === 0) {
+        return false;
+      }
+    } else {
+      if (tool.needsRange && !range.trim()) return false;
+      if (needsReorderInput && !range.trim()) return false;
+    }
     if (tool.needsPassword && password.length < 4) return false;
     if (needsWatermarkText && !watermarkText.trim()) return false;
     if (needsSignature && !signatureImg) return false;
     if (needsAddCount && (!addCount || addCount < 1)) return false;
     if (needsEditText && !editText.trim()) return false;
     return true;
-  }, [tool, files, range, password, isMergeTool, needsReorderInput, needsWatermarkText, watermarkText, needsSignature, signatureImg, needsAddCount, addCount, needsEditText, editText]);
+  }, [tool, files, range, password, isMergeTool, needsReorderInput, needsWatermarkText, watermarkText, needsSignature, signatureImg, needsAddCount, addCount, needsEditText, editText, usesPagePicker, showAdvancedRange, pickerPages]);
 
   const reset = () => {
     clearFiles();
@@ -111,14 +125,49 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
     return { r: parseInt(m[1], 16) / 255, g: parseInt(m[2], 16) / 255, b: parseInt(m[3], 16) / 255 };
   };
 
+
+  const pagesToRangeString = (pages: number[]) => {
+    if (pages.length === 0) return "";
+    if (tool?.kind === "reorder") return pages.join(",");
+    const sorted = [...pages].sort((a, b) => a - b);
+    const parts: string[] = [];
+    let start = sorted[0];
+    let prev = sorted[0];
+    for (let i = 1; i <= sorted.length; i++) {
+      const cur = sorted[i];
+      if (cur === prev + 1) {
+        prev = cur;
+        continue;
+      }
+      parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+      start = cur;
+      prev = cur;
+    }
+    return parts.join(",");
+  };
+
+  const effectiveRange = useMemo(() => {
+    if (usesPagePicker && !showAdvancedRange) {
+      if (tool?.kind === "remove") {
+        // pickerPages = pages to KEEP; convert to the removed-pages range string.
+        const total = pickerPages.length > 0 ? Math.max(...pickerPages) : 0;
+        const removed = Array.from({ length: total }, (_, i) => i + 1).filter((p) => !pickerPages.includes(p));
+        return pagesToRangeString(removed);
+      }
+      return pagesToRangeString(pickerPages);
+    }
+    return range;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usesPagePicker, showAdvancedRange, pickerPages, range, tool?.kind]);
+
   const runTool = async () => {
     await runJob(async () => {
       const f = rawFiles[0];
       switch (tool?.kind) {
         case "merge": return await mergePdfs(rawFiles);
-        case "split": return await splitPdf(f, range);
+        case "split": return await splitPdf(f, effectiveRange);
         case "rotate": return await rotatePdf(f, rotation);
-        case "remove": return await removePages(f, range);
+        case "remove": return await removePages(f, effectiveRange);
         case "compress":
           return await compressPdf(f, {
             level: compressionLevel,
@@ -137,7 +186,7 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
           const phrases = removeWatermarkText.split(/[,\n;]+/).map((s) => s.trim()).filter(Boolean);
           return await removeWatermarkPdf(f, phrases.length > 0 ? phrases : undefined);
         }
-        case "reorder": return await reorderPdf(f, range);
+        case "reorder": return await reorderPdf(f, effectiveRange);
         case "addpages": return await addBlankPages(f, addCount);
         case "export": return await exportPdf(f, exportName);
         case "sign":
@@ -290,21 +339,44 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
 
                   {(tool.needsRange || needsReorderInput) && (
                     <div>
-                      <label className="text-sm font-medium block mb-1.5">
-                        {needsReorderInput ? "New page order" : "Page range"}
-                      </label>
-                      <input
-                        type="text"
-                        value={range}
-                        onChange={(e) => setRange(e.target.value)}
-                        placeholder={needsReorderInput ? "e.g. 3,1,2,4" : "e.g. 1-3, 5, 7-9"}
-                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
-                      />
-                      <p className="mt-1.5 text-xs text-muted-foreground">
-                        {needsReorderInput
-                          ? "List page numbers in the order you want them."
-                          : "Use commas to separate, dashes for ranges."}
-                      </p>
+                      <div className="flex items-baseline justify-between mb-1.5">
+                        <label className="text-sm font-medium">
+                          {needsReorderInput ? "Reorder pages" : tool.kind === "remove" ? "Choose pages to keep" : "Choose pages to include"}
+                        </label>
+                        {usesPagePicker && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAdvancedRange((v) => !v)}
+                            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+                          >
+                            {showAdvancedRange ? "Use page picker" : "Advanced: type a range"}
+                          </button>
+                        )}
+                      </div>
+
+                      {usesPagePicker && !showAdvancedRange ? (
+                        <PagePicker
+                          file={rawFiles[0]}
+                          mode={needsReorderInput ? "reorder" : "select"}
+                          value={pickerPages}
+                          onChange={setPickerPages}
+                        />
+                      ) : (
+                        <>
+                          <input
+                            type="text"
+                            value={range}
+                            onChange={(e) => setRange(e.target.value)}
+                            placeholder={needsReorderInput ? "e.g. 3,1,2,4" : "e.g. 1-3, 5, 7-9"}
+                            className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                          />
+                          <p className="mt-1.5 text-xs text-muted-foreground">
+                            {needsReorderInput
+                              ? "List page numbers in the order you want them."
+                              : "Use commas to separate, dashes for ranges."}
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
 

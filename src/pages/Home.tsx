@@ -50,8 +50,7 @@ const TOOL_META: Record<string, { category: Exclude<CategoryId, "all">; useCase:
 
   "protect-pdf":       { category: "security",     useCase: "Password-lock sensitive files" },
 
-  "sign-pdf":          { category: "signing",      useCase: "Add a handwritten signature" },
-  "e-sign-pdf":        { category: "signing",      useCase: "Send contracts for e-signature" },
+  "esign-pdf":         { category: "signing",      useCase: "Add a handwritten signature" },
 };
 
 

@@ -7,7 +7,7 @@ import { getPost } from "@/content/blog/posts";
 import { HOME_FAQ } from "@/components/home/HomeFaq";
 
 const SITE_URL = import.meta.env.VITE_SITE_URL || "https://silentpdfai.pages.dev";
-const SITE_NAME = "silentPDF AI";
+const SITE_NAME = "SilentPDF";
 const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 type RouteMeta = {
@@ -18,7 +18,7 @@ type RouteMeta = {
 
 const STATIC_META: Record<string, RouteMeta> = {
   "/": {
-    title: "Free PDF Tools: Merge, Split, Compress, Convert, Edit & Sign PDFs | SilentPDF AI",
+    title: "Free PDF Tools: Merge, Split, Compress, Convert, Edit & Sign PDFs | SilentPDF",
     description:
       "Free online PDF tools to merge, split, compress, convert, edit, sign, rotate and protect PDF files securely in your browser. 100% private, fast, browser-based PDF processing with no registration required.",
     jsonLd: [
@@ -47,7 +47,7 @@ const STATIC_META: Record<string, RouteMeta> = {
       {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        name: "Free PDF Tools: Merge, Split, Compress, Convert, Edit & Sign PDFs | SilentPDF AI",
+        name: "Free PDF Tools: Merge, Split, Compress, Convert, Edit & Sign PDFs | SilentPDF",
         url: `${SITE_URL}/`,
         description: "Free online PDF tools to merge, split, compress, convert, edit, sign, rotate and protect PDF files securely in your browser.",
         isPartOf: {
@@ -59,7 +59,7 @@ const STATIC_META: Record<string, RouteMeta> = {
       {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        name: "SilentPDF AI Suite",
+        name: "SilentPDF Suite",
         operatingSystem: "Web Browser",
         applicationCategory: "BusinessApplication",
         offers: {
@@ -82,48 +82,95 @@ const STATIC_META: Record<string, RouteMeta> = {
     ],
   },
   "/tools": {
-    title: "All PDF Tools — SilentPDF AI",
+    title: "All PDF Tools — SilentPDF",
     description:
       "Every SilentPDF tool in one place: merge, split, compress, convert, rotate, sign, watermark, and more. All private, all in your browser.",
   },
   "/blog": {
-    title: "PDF Guides & How-Tos — SilentPDF AI Blog",
+    title: "PDF Guides & How-Tos — SilentPDF Blog",
     description:
       "Practical posts and guides about merging, splitting, compressing, converting, editing, and protecting PDFs privately in your browser.",
   },
   "/guides": {
-    title: "PDF Workflow Guides & Tutorials — SilentPDF AI",
+    title: "PDF Workflow Guides & Tutorials — SilentPDF",
     description:
       "Master your PDF document pipeline with practical tutorials, how-tos, and step-by-step guides from the SilentPDF team.",
   },
   "/use-cases": {
-    title: "PDF Use Cases for Students, Business & Legal — SilentPDF AI",
+    title: "PDF Use Cases for Students, Business & Legal — SilentPDF",
     description:
       "See how students, freelancers, HR teams, small businesses, and legal professionals use browser-based PDF tools safely.",
   },
   "/resources": {
-    title: "PDF Knowledge Base & Resource Center — SilentPDF AI",
+    title: "PDF Knowledge Base & Resource Center — SilentPDF",
     description: "The most comprehensive PDF knowledge base on the internet. Master your documents with guides, comparisons, and industry resources.",
   },
   "/templates": {
-    title: "Free Document & PDF Templates — SilentPDF AI",
+    title: "Free Document & PDF Templates — SilentPDF",
     description: "Browse free document templates, contract layouts, and fillable PDF forms ready for browser editing.",
   },
   "/workflows": {
-    title: "Automated Multi-Step PDF Workflows — SilentPDF AI",
+    title: "Automated Multi-Step PDF Workflows — SilentPDF",
     description: "Chain multiple PDF tasks together in one pass: compress, rotate, sign, and convert without multiple file uploads.",
   },
   "/privacy": {
-    title: "Privacy Policy — SilentPDF AI",
+    title: "Privacy Policy — SilentPDF",
     description:
       "How SilentPDF handles your files: browser-based processing, no storage, no logging, TLS in transit, auto-deletion.",
   },
   "/terms": {
-    title: "Terms of Service — SilentPDF AI",
-    description: "Terms and conditions for using SilentPDF AI's browser-based document tools.",
+    title: "Terms of Service — SilentPDF",
+    description: "Terms and conditions for using SilentPDF's browser-based document tools.",
+  },
+  "/about": {
+    title: "About SilentPDF — Private, Browser-Based PDF Tools",
+    description: "Who builds SilentPDF and why every tool runs on your device instead of a server. No accounts, no uploads, no tracking.",
+  },
+  "/contact": {
+    title: "Contact SilentPDF — Support & Feedback",
+    description: "Report a bug, request a tool, or ask a privacy question. We answer support and data requests directly.",
+  },
+  "/dpa": {
+    title: "Data Processing Agreement — SilentPDF",
+    description: "SilentPDF's DPA for teams: what we process (nothing), sub-processors, and how browser-only processing changes your obligations.",
+  },
+  "/cookies": {
+    title: "Cookie Policy — SilentPDF",
+    description: "The short list of cookies and local storage keys SilentPDF uses, what each one does, and how to clear them.",
+  },
+  "/workflows/custom": {
+    title: "Build a Custom PDF Workflow — SilentPDF",
+    description: "Chain any PDF tools in any order and run them on one file, in your browser. Compress, sign, watermark and protect in one pass.",
+  },
+  "/remove-video-watermark": {
+    title: "Remove Watermark from Video Online Free — SilentPDF",
+    description:
+      "Remove watermarks from videos directly in your browser. Draw a box over the watermark and export a clean MP4 — private, free, no upload required.",
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Remove Video Watermark",
+        applicationCategory: "MultimediaApplication",
+        operatingSystem: "Web Browser",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        description:
+          "Remove watermarks from videos entirely in your browser using WebAssembly-based FFmpeg processing.",
+        url: `${SITE_URL}/remove-video-watermark`,
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
+          { "@type": "ListItem", position: 3, name: "Remove Video Watermark", item: `${SITE_URL}/remove-video-watermark` },
+        ],
+      },
+    ],
   },
   "/security": {
-    title: "Security Architecture & Privacy Policy — SilentPDF AI",
+    title: "Security Architecture & Privacy Policy — SilentPDF",
     description: "Detailed overview of client-side WASM sandboxing, memory auto-purge, and serverless privacy controls.",
   },
 };
@@ -140,10 +187,10 @@ function buildToolMeta(slug: string): RouteMeta {
   if (!tool) {
     return {
       title: `PDF Tool — ${SITE_NAME}`,
-      description: "A focused PDF tool from silentPDF.",
+      description: "A focused PDF tool from SilentPDF.",
     };
   }
-  const title = tool.seoTitle ?? `${tool.title} — Free Online PDF Tool | silentPDF`;
+  const title = tool.seoTitle ?? `${tool.title} — Free Online PDF Tool | SilentPDF`;
   const rawDesc = tool.metaDescription ?? tool.short;
   const description = rawDesc.length > 160 ? rawDesc.slice(0, 157) + "…" : rawDesc;
   const toolUrl = `${SITE_URL}/${tool.slug}`;
@@ -251,13 +298,13 @@ function buildResourceCategoryMeta(category: string): RouteMeta | null {
   const title = category.charAt(0).toUpperCase() + category.slice(1).replace("-", " ");
   
   return {
-    title: `PDF ${title} — silentPDF AI Resource Center`,
+    title: `PDF ${title} — SilentPDF Resource Center`,
     description: `Explore our collection of PDF ${title.toLowerCase()} to master document management.`,
     jsonLd: [
       {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        name: `silentPDF ${title}`,
+        name: `SilentPDF ${title}`,
         url: `${SITE_URL}/resources/${category}`,
         hasPart: RESOURCES.filter(r => r.category === category).map((r) => ({
           "@type": "Article",
@@ -423,14 +470,14 @@ export const Seo = () => {
       <meta property="og:url" content={canonical} />
       <meta property="og:type" content={pathname === "/" ? "website" : "article"} />
       <meta property="og:image" content={OG_IMAGE} />
-      <meta property="og:image:alt" content="SilentPDF AI - Free Online PDF Tools" />
+      <meta property="og:image:alt" content="SilentPDF - Free Online PDF Tools" />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="en_US" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={meta.title} />
       <meta name="twitter:description" content={meta.description} />
       <meta name="twitter:image" content={OG_IMAGE} />
-      <meta name="twitter:image:alt" content="SilentPDF AI PDF Tools" />
+      <meta name="twitter:image:alt" content="SilentPDF PDF Tools" />
       {meta.jsonLd?.map((obj, i) => (
         <script key={i} type="application/ld+json">
           {JSON.stringify(obj)}

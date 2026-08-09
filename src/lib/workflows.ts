@@ -22,7 +22,7 @@ export const KIND_META: Record<ToolKind, KindMeta> = {
   remove:          { input: "pdf",       output: "pdf",  label: "Remove Pages",   slug: "remove-pages" },
   protect:         { input: "pdf",       output: "pdf",  label: "Protect",        slug: "protect-pdf" },
   edit:            { input: "pdf",       output: "pdf",  label: "Edit",           slug: "edit-pdf" },
-  sign:            { input: "pdf",       output: "pdf",  label: "Sign",           slug: "sign-pdf" },
+  sign:            { input: "pdf",       output: "pdf",  label: "Sign",           slug: "esign-pdf" },
   "e-sign":        { input: "pdf",       output: "pdf",  label: "E-Sign",         slug: "esign-pdf" },
   watermark:       { input: "pdf",       output: "pdf",  label: "Watermark",      slug: "watermark-pdf" },
   "photo-to-pdf":  { input: "images",    output: "pdf",  label: "Photo to PDF",   slug: "photo-to-pdf" },

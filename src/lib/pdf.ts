@@ -50,7 +50,7 @@ export interface EditAnnotation {
 
 // ---------------- pdf.js loader ----------------
 let _pdfjs: typeof import("pdfjs-dist") | null = null;
-async function getPdfJs() {
+export async function getPdfJs() {
   if (_pdfjs) return _pdfjs;
   const pdfjs = await import("pdfjs-dist");
   (pdfjs as unknown as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
@@ -190,6 +190,17 @@ export async function protectPdf(file: File, password: string): Promise<ToolResu
       permissions: { printing: true, modifying: false, copying: false, annotating: false },
     },
   });
+
+  // Verify the output is genuinely encrypted: loading without ignoreEncryption
+  // must fail. If it succeeds, encryption silently didn't apply.
+  try {
+    await PDFDocument.load(bytes);
+    throw new Error("Encryption isn't supported for this file in your browser. Try a different PDF.");
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith("Encryption isn't supported")) throw err;
+    // Any other error means the load failed as expected (i.e. it's encrypted). Good.
+  }
+
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-protected.pdf" };
 }
 
@@ -504,57 +515,187 @@ export async function editPdfPassthrough(file: File): Promise<ToolResult> {
 }
 
 // ---------------- pdf → word ----------------
+interface PdfTextItem { str: string; transform: number[]; width: number }
+interface PdfLine { y: number; height: number; minX: number; maxX: number; items: PdfTextItem[] }
+
 export async function pdfToWord(file: File): Promise<ToolResult> {
-  const { Document, Packer, Paragraph, TextRun } = await import("docx");
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, PageBreak } = await import("docx");
   const pdfjs = await getPdfJs();
   const buf = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: buf }).promise;
 
   const paragraphs: InstanceType<typeof Paragraph>[] = [];
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
     const content = await page.getTextContent();
-    const lines = new Map<number, string[]>();
-    for (const item of content.items as Array<{ str: string; transform: number[] }>) {
-      const y = Math.round(item.transform[5]);
-      const arr = lines.get(y) ?? [];
-      arr.push(item.str);
-      lines.set(y, arr);
+    const items = (content.items as Array<{ str: string; transform: number[]; width: number }>)
+      .filter((it) => it.str !== undefined);
+
+    // Group into lines using a y tolerance.
+    const rawLines: PdfLine[] = [];
+    const Y_TOL = 2.5;
+    for (const item of items) {
+      const y = item.transform[5];
+      const height = Math.abs(item.transform[3]) || 10;
+      let line = rawLines.find((l) => Math.abs(l.y - y) <= Y_TOL);
+      if (!line) {
+        line = { y, height, minX: item.transform[4], maxX: item.transform[4] + item.width, items: [] };
+        rawLines.push(line);
+      }
+      line.items.push(item);
+      line.minX = Math.min(line.minX, item.transform[4]);
+      line.maxX = Math.max(line.maxX, item.transform[4] + item.width);
+      line.height = Math.max(line.height, height);
     }
-    const sortedY = Array.from(lines.keys()).sort((a, b) => b - a);
-    for (const y of sortedY) {
-      const text = (lines.get(y) ?? []).join(" ").trim();
-      if (text) paragraphs.push(new Paragraph({ children: [new TextRun(text)] }));
+    // Sort lines top-to-bottom (pdf coords: higher y = higher on page).
+    rawLines.sort((a, b) => b.y - a.y);
+    // Sort items within each line left-to-right.
+    for (const line of rawLines) line.items.sort((a, b) => a.transform[4] - b.transform[4]);
+
+    if (rawLines.length === 0) continue;
+
+    const pageMinX = Math.min(...rawLines.map((l) => l.minX));
+    const heights = rawLines.map((l) => l.height).sort((a, b) => a - b);
+    const medianHeight = heights[Math.floor(heights.length / 2)] || 10;
+    const avgLineGap = (() => {
+      const gaps: number[] = [];
+      for (let i = 1; i < rawLines.length; i++) gaps.push(rawLines[i - 1].y - rawLines[i].y);
+      if (!gaps.length) return medianHeight * 1.2;
+      return gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    })();
+
+    let prevY: number | null = null;
+    for (const line of rawLines) {
+      // Build line text, inserting spaces based on horizontal gaps.
+      let text = "";
+      let prevEndX: number | null = null;
+      for (const item of line.items) {
+        const startX = item.transform[4];
+        const fontSize = Math.abs(item.transform[3]) || 10;
+        if (prevEndX !== null) {
+          const gap = startX - prevEndX;
+          if (gap > fontSize * 0.25) text += " ";
+        }
+        text += item.str;
+        prevEndX = startX + item.width;
+      }
+      text = text.trim();
+      if (!text) { prevY = line.y; continue; }
+
+      // Paragraph break detection from vertical gaps.
+      if (prevY !== null) {
+        const gap = prevY - line.y;
+        if (gap > avgLineGap * 1.5) {
+          paragraphs.push(new Paragraph({ children: [] }));
+        }
+      }
+      prevY = line.y;
+
+      const isHeading = line.height > medianHeight * 1.25;
+      const indentLeft = Math.max(0, Math.round((line.minX - pageMinX) * 20)); // pt -> twips
+
+      paragraphs.push(new Paragraph({
+        heading: isHeading ? HeadingLevel.HEADING_2 : undefined,
+        indent: indentLeft > 0 ? { left: indentLeft } : undefined,
+        children: [new TextRun(sanitizeForWinAnsi(text))],
+      }));
     }
-    paragraphs.push(new Paragraph({ children: [new TextRun("")] }));
+
+    // Page break between pages (not after the last one).
+    if (pageNum < pdf.numPages) {
+      paragraphs.push(new Paragraph({ children: [new PageBreak()] }));
+    }
   }
+
   const doc = new Document({ sections: [{ children: paragraphs }] });
   const blob = await Packer.toBlob(doc);
   return { blob, filename: file.name.replace(/\.pdf$/i, "") + ".docx" };
 }
 
 // ---------------- word → pdf (with unicode sanitizer) ----------------
+interface WordBlock {
+  tag: string; // h1-h4, p, li, br
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+}
+
+function extractWordBlocks(html: string): WordBlock[] {
+  const parser = new DOMParser();
+  const docHtml = parser.parseFromString(`<div>${html}</div>`, "text/html");
+  const root = docHtml.body.firstElementChild;
+  const blocks: WordBlock[] = [];
+  if (!root) return blocks;
+
+  const inlineText = (el: Element): { text: string; bold: boolean; italic: boolean } => {
+    let text = "";
+    let bold = false;
+    let italic = false;
+    const walk = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        text += node.textContent ?? "";
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const elNode = node as Element;
+        const tag = elNode.tagName.toLowerCase();
+        if (tag === "br") { text += "\n"; return; }
+        if (tag === "strong" || tag === "b") bold = true;
+        if (tag === "em" || tag === "i") italic = true;
+        for (const child of Array.from(elNode.childNodes)) walk(child);
+      }
+    };
+    for (const child of Array.from(el.childNodes)) walk(child);
+    return { text: text.trim(), bold, italic };
+  };
+
+  for (const el of Array.from(root.children)) {
+    const tag = el.tagName.toLowerCase();
+    if (/^h[1-4]$/.test(tag)) {
+      const { text, bold, italic } = inlineText(el);
+      if (text) blocks.push({ tag, text, bold, italic });
+    } else if (tag === "p" || tag === "li") {
+      const { text, bold, italic } = inlineText(el);
+      if (text) blocks.push({ tag, text, bold, italic });
+    } else {
+      const { text, bold, italic } = inlineText(el);
+      if (text) blocks.push({ tag: "p", text, bold, italic });
+    }
+  }
+  return blocks;
+}
+
 export async function wordToPdf(file: File): Promise<ToolResult> {
   const mammoth = await import("mammoth");
-  const { value: rawText } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-  const text = sanitizeForWinAnsi(rawText);
+  const { value: html } = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+  const blocks = extractWordBlocks(html);
 
   const out = await PDFDocument.create();
-  const font = await out.embedFont(StandardFonts.Helvetica);
-  const size = 11;
+  const fontRegular = await out.embedFont(StandardFonts.Helvetica);
+  const fontBold = await out.embedFont(StandardFonts.HelveticaBold);
+  const fontItalic = await out.embedFont(StandardFonts.HelveticaOblique);
+
   const margin = 54;
   const pageW = 595.28;
   const pageH = 841.89;
   const maxWidth = pageW - margin * 2;
-  const lineHeight = size * 1.4;
 
-  const wrap = (line: string): string[] => {
-    const words = line.split(/\s+/);
+  const sizeFor = (tag: string): number => {
+    switch (tag) {
+      case "h1": return 20;
+      case "h2": return 16;
+      case "h3": return 14;
+      case "h4": return 12;
+      default: return 11;
+    }
+  };
+
+  const wrap = (line: string, font: Awaited<ReturnType<typeof out.embedFont>>, size: number, width: number): string[] => {
+    const words = line.split(/\s+/).filter(Boolean);
     const result: string[] = [];
     let cur = "";
     for (const w of words) {
       const test = cur ? `${cur} ${w}` : w;
-      if (font.widthOfTextAtSize(test, size) > maxWidth) {
+      if (font.widthOfTextAtSize(test, size) > width) {
         if (cur) result.push(cur);
         cur = w;
       } else cur = test;
@@ -565,13 +706,41 @@ export async function wordToPdf(file: File): Promise<ToolResult> {
 
   let page = out.addPage([pageW, pageH]);
   let y = pageH - margin;
-  for (const rawLine of text.split(/\r?\n/)) {
-    for (const line of wrap(rawLine)) {
-      if (y < margin) { page = out.addPage([pageW, pageH]); y = pageH - margin; }
-      page.drawText(line, { x: margin, y, size, font, color: rgb(0.1, 0.1, 0.15) });
-      y -= lineHeight;
+
+  const ensureSpace = (lineHeight: number) => {
+    if (y < margin + lineHeight) {
+      page = out.addPage([pageW, pageH]);
+      y = pageH - margin;
+    }
+  };
+
+  let first = true;
+  for (const block of blocks) {
+    const size = sizeFor(block.tag);
+    const isHeading = /^h[1-4]$/.test(block.tag);
+    const font = isHeading || block.bold ? fontBold : block.italic ? fontItalic : fontRegular;
+    const lineHeight = size * 1.35;
+    const indent = block.tag === "li" ? 18 : 0;
+    const prefix = block.tag === "li" ? "• " : "";
+    const availWidth = maxWidth - indent - fontRegular.widthOfTextAtSize(prefix, size);
+
+    if (!first) y -= lineHeight * 0.6; // blank-line gap between blocks
+    first = false;
+
+    const rawText = sanitizeForWinAnsi(block.text);
+    const subLines = rawText.split(/\n/);
+    let isFirstLineOfBlock = true;
+    for (const subLine of subLines) {
+      for (const line of wrap(subLine, font, size, availWidth)) {
+        ensureSpace(lineHeight);
+        const label = isFirstLineOfBlock ? `${prefix}${line}` : line;
+        page.drawText(label, { x: margin + indent, y, size, font, color: rgb(0.1, 0.1, 0.15) });
+        y -= lineHeight;
+        isFirstLineOfBlock = false;
+      }
     }
   }
+
   const bytes = await out.save({ useObjectStreams: true });
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: file.name.replace(/\.docx$/i, "") + ".pdf" };
 }
