@@ -3,7 +3,8 @@ export type ContentType =
   | "complete-guide"
   | "comparison"
   | "industry-resource"
-  | "use-case";
+  | "use-case"
+  | "template";
 
 export type ResourceCategory = 
   | "blog"
