@@ -1,5 +1,15 @@
 # Finish deferred tools, fix links, speed up processing
 
+## 0. Unblock the build first
+
+The typecheck currently fails with 18 errors that are unrelated to this request but block shipping anything:
+
+- Content cluster files declare `relatedToolSlugs` / `relatedAssetSlugs` as fixed-length tuples (`[string, string, string]`, `[string, string]`) but supply fewer entries. Fix: relax those fields to `string[]` in the shared `ContentAsset` type.
+- `compress/compress-pdf-below-1mb-cluster.ts` and `templates/templates-cluster.ts` import from the wrong relative path. Fix: point both at `src/content/ContentAsset`.
+- `src/lib/seo.ts` builds a JSON-LD object then assigns `step` / `mainEntity` onto its inferred literal type. Fix: type the builder's return as a record.
+
+
+
 ## 1. Broken tool links (verified)
 
 - `src/lib/tools.ts` registers the remove-watermark tool with the slug `Removewatermark-pdf` (capital R), while every link in the app points to `removewatermark-pdf` (workflows registry, programmatic pages, blog posts). Those links currently land on Not Found. Fix: rename the slug to lowercase.
