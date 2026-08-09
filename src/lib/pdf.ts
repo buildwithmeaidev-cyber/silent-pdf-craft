@@ -190,6 +190,17 @@ export async function protectPdf(file: File, password: string): Promise<ToolResu
       permissions: { printing: true, modifying: false, copying: false, annotating: false },
     },
   });
+
+  // Verify the output is genuinely encrypted: loading without ignoreEncryption
+  // must fail. If it succeeds, encryption silently didn't apply.
+  try {
+    await PDFDocument.load(bytes);
+    throw new Error("Encryption isn't supported for this file in your browser. Try a different PDF.");
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith("Encryption isn't supported")) throw err;
+    // Any other error means the load failed as expected (i.e. it's encrypted). Good.
+  }
+
   return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-protected.pdf" };
 }
 
