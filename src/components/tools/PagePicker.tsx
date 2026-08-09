@@ -58,7 +58,7 @@ export function PagePicker({ file, mode, value, onChange, rotations, onRotate }:
     })();
     return () => {
       cancelled = true;
-      docRef.current?.destroy?.();
+      (docRef.current as unknown as { destroy?: () => void } | null)?.destroy?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
