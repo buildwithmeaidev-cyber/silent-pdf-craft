@@ -83,6 +83,7 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
   const needsAddCount = tool?.kind === "addpages";
   const needsExportName = tool?.kind === "export";
   const needsReorderInput = tool?.kind === "reorder";
+  const usesPagePicker = tool?.kind === "split" || tool?.kind === "remove" || tool?.kind === "reorder";
   const needsEditText = tool?.kind === "edit";
   const isMergeTool = tool?.kind === "merge";
   const isPhotoTool = tool?.kind === "photo-to-pdf";
@@ -91,15 +92,23 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
   const canRun = useMemo(() => {
     if (!tool || files.length === 0) return false;
     if (isMergeTool && files.length < 2) return false;
-    if (tool.needsRange && !range.trim()) return false;
-    if (needsReorderInput && !range.trim()) return false;
+    if (usesPagePicker) {
+      if (showAdvancedRange) {
+        if (!range.trim()) return false;
+      } else if (pickerPages.length === 0) {
+        return false;
+      }
+    } else {
+      if (tool.needsRange && !range.trim()) return false;
+      if (needsReorderInput && !range.trim()) return false;
+    }
     if (tool.needsPassword && password.length < 4) return false;
     if (needsWatermarkText && !watermarkText.trim()) return false;
     if (needsSignature && !signatureImg) return false;
     if (needsAddCount && (!addCount || addCount < 1)) return false;
     if (needsEditText && !editText.trim()) return false;
     return true;
-  }, [tool, files, range, password, isMergeTool, needsReorderInput, needsWatermarkText, watermarkText, needsSignature, signatureImg, needsAddCount, addCount, needsEditText, editText]);
+  }, [tool, files, range, password, isMergeTool, needsReorderInput, needsWatermarkText, watermarkText, needsSignature, signatureImg, needsAddCount, addCount, needsEditText, editText, usesPagePicker, showAdvancedRange, pickerPages]);
 
   const reset = () => {
     clearFiles();
@@ -116,14 +125,49 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
     return { r: parseInt(m[1], 16) / 255, g: parseInt(m[2], 16) / 255, b: parseInt(m[3], 16) / 255 };
   };
 
+
+  const pagesToRangeString = (pages: number[]) => {
+    if (pages.length === 0) return "";
+    if (tool?.kind === "reorder") return pages.join(",");
+    const sorted = [...pages].sort((a, b) => a - b);
+    const parts: string[] = [];
+    let start = sorted[0];
+    let prev = sorted[0];
+    for (let i = 1; i <= sorted.length; i++) {
+      const cur = sorted[i];
+      if (cur === prev + 1) {
+        prev = cur;
+        continue;
+      }
+      parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+      start = cur;
+      prev = cur;
+    }
+    return parts.join(",");
+  };
+
+  const effectiveRange = useMemo(() => {
+    if (usesPagePicker && !showAdvancedRange) {
+      if (tool?.kind === "remove") {
+        // pickerPages = pages to KEEP; convert to the removed-pages range string.
+        const total = pickerPages.length > 0 ? Math.max(...pickerPages) : 0;
+        const removed = Array.from({ length: total }, (_, i) => i + 1).filter((p) => !pickerPages.includes(p));
+        return pagesToRangeString(removed);
+      }
+      return pagesToRangeString(pickerPages);
+    }
+    return range;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usesPagePicker, showAdvancedRange, pickerPages, range, tool?.kind]);
+
   const runTool = async () => {
     await runJob(async () => {
       const f = rawFiles[0];
       switch (tool?.kind) {
         case "merge": return await mergePdfs(rawFiles);
-        case "split": return await splitPdf(f, range);
+        case "split": return await splitPdf(f, effectiveRange);
         case "rotate": return await rotatePdf(f, rotation);
-        case "remove": return await removePages(f, range);
+        case "remove": return await removePages(f, effectiveRange);
         case "compress":
           return await compressPdf(f, {
             level: compressionLevel,
@@ -142,7 +186,7 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
           const phrases = removeWatermarkText.split(/[,\n;]+/).map((s) => s.trim()).filter(Boolean);
           return await removeWatermarkPdf(f, phrases.length > 0 ? phrases : undefined);
         }
-        case "reorder": return await reorderPdf(f, range);
+        case "reorder": return await reorderPdf(f, effectiveRange);
         case "addpages": return await addBlankPages(f, addCount);
         case "export": return await exportPdf(f, exportName);
         case "sign":
