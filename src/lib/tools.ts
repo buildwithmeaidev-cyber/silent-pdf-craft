@@ -737,7 +737,7 @@ export const TOOLS: ToolDef[] = [
     relatedSlugs: ["merge-pdf", "reorder-pdf", "remove-pages"],
   },
   {
-    slug: "Removewatermark-pdf", kind: "removewatermark", title: "Remove Watermark",
+    slug: "removewatermark-pdf", kind: "removewatermark", title: "Remove Watermark",
     short: "Remove text watermarks from a PDF.",
     description: "Strip text watermarks like 'CONFIDENTIAL' or 'DRAFT' from PDFs you have the right to clean up.",
     icon: Eraser, accent: "red",
