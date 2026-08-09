@@ -49,7 +49,7 @@ export interface ContentAsset {
   
   // Internal linking rules
   parentToolSlug: string; // 1 parent tool
-  relatedToolSlugs: [string, string, string]; // exactly 3 related tools
-  relatedAssetSlugs: [string, string]; // exactly 2 related blogs/assets
+  relatedToolSlugs: string[]; // related tools
+  relatedAssetSlugs: string[]; // related blogs/assets
   relatedProgrammaticSlug: string; // 1 programmatic page
 }
