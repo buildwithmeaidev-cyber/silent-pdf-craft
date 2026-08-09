@@ -339,21 +339,44 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
 
                   {(tool.needsRange || needsReorderInput) && (
                     <div>
-                      <label className="text-sm font-medium block mb-1.5">
-                        {needsReorderInput ? "New page order" : "Page range"}
-                      </label>
-                      <input
-                        type="text"
-                        value={range}
-                        onChange={(e) => setRange(e.target.value)}
-                        placeholder={needsReorderInput ? "e.g. 3,1,2,4" : "e.g. 1-3, 5, 7-9"}
-                        className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
-                      />
-                      <p className="mt-1.5 text-xs text-muted-foreground">
-                        {needsReorderInput
-                          ? "List page numbers in the order you want them."
-                          : "Use commas to separate, dashes for ranges."}
-                      </p>
+                      <div className="flex items-baseline justify-between mb-1.5">
+                        <label className="text-sm font-medium">
+                          {needsReorderInput ? "Reorder pages" : tool.kind === "remove" ? "Choose pages to keep" : "Choose pages to include"}
+                        </label>
+                        {usesPagePicker && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAdvancedRange((v) => !v)}
+                            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+                          >
+                            {showAdvancedRange ? "Use page picker" : "Advanced: type a range"}
+                          </button>
+                        )}
+                      </div>
+
+                      {usesPagePicker && !showAdvancedRange ? (
+                        <PagePicker
+                          file={rawFiles[0]}
+                          mode={needsReorderInput ? "reorder" : "select"}
+                          value={pickerPages}
+                          onChange={setPickerPages}
+                        />
+                      ) : (
+                        <>
+                          <input
+                            type="text"
+                            value={range}
+                            onChange={(e) => setRange(e.target.value)}
+                            placeholder={needsReorderInput ? "e.g. 3,1,2,4" : "e.g. 1-3, 5, 7-9"}
+                            className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
+                          />
+                          <p className="mt-1.5 text-xs text-muted-foreground">
+                            {needsReorderInput
+                              ? "List page numbers in the order you want them."
+                              : "Use commas to separate, dashes for ranges."}
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
 
