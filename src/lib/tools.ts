@@ -54,7 +54,7 @@ export const TOOLS: ToolDef[] = [
     icon: Combine, accent: "blue",
     accept: { "application/pdf": [".pdf"] }, multiple: true,
 
-    seoTitle: "Merge PDF Online Free — Combine Multiple PDF Files | silentPDF",
+    seoTitle: "Merge PDF Online Free — Combine PDF Files | silentPDF",
     metaDescription: "Merge PDFs in your browser. Combine 2, 3, or dozens of files into one, reorder pages, no signup, no watermark.",
     h1: "Merge PDF Online",
     keywords: ["merge pdf", "combine pdf", "join pdf files", "merge pdf online", "merge 2 pdfs", "merge multiple pdfs", "pdf joiner"],
@@ -109,7 +109,7 @@ export const TOOLS: ToolDef[] = [
     icon: Scissors, accent: "blue",
     accept: { "application/pdf": [".pdf"] }, multiple: false, needsRange: true,
 
-    seoTitle: "Split PDF Online — Extract Pages from a PDF Free | silentPDF",
+    seoTitle: "Split PDF Online — Extract PDF Pages | silentPDF",
     metaDescription: "Split a PDF into separate files or pull out specific pages. Works in your browser, no upload, no watermark.",
     h1: "Split PDF Online",
     keywords: ["split pdf", "extract pdf pages", "split pdf online", "separate pdf pages", "pdf splitter", "extract pages from pdf"],
@@ -152,7 +152,7 @@ export const TOOLS: ToolDef[] = [
     icon: Minimize2, accent: "blue",
     accept: { "application/pdf": [".pdf"] }, multiple: false,
 
-    seoTitle: "Compress PDF Online Free — Reduce PDF Size Without Quality Loss | silentPDF",
+    seoTitle: "Compress PDF Online Free — Reduce PDF Size | silentPDF",
     metaDescription: "Compress PDF files online to fit email attachments and upload limits. Three quality levels, no signup, no watermark.",
     h1: "Compress PDF Online",
     keywords: ["compress pdf", "reduce pdf size", "shrink pdf", "pdf compressor", "compress pdf for email", "compress pdf to 1mb", "compress pdf to 500kb", "optimize pdf"],
@@ -207,7 +207,7 @@ export const TOOLS: ToolDef[] = [
     icon: FileText, accent: "red",
     accept: { "application/pdf": [".pdf"] }, multiple: false,
 
-    seoTitle: "PDF to Word Converter — Free, Keeps Formatting | silentPDF",
+    seoTitle: "PDF to Word — Free Converter | silentPDF",
     metaDescription: "Convert PDF to editable Word (.docx). Keeps text formatting, tables, and layout intact. Free, no signup.",
     h1: "Convert PDF to Word",
     keywords: ["pdf to word", "pdf to docx", "convert pdf to word", "pdf to word free", "pdf to word with formatting", "pdf to word converter", "pdf to word for resume"],
@@ -306,7 +306,7 @@ export const TOOLS: ToolDef[] = [
     icon: RotateCw, accent: "blue",
     accept: { "application/pdf": [".pdf"] }, multiple: false, needsRotation: true,
 
-    seoTitle: "Rotate PDF Online — Fix Sideways or Upside-Down Pages | silentPDF",
+    seoTitle: "Rotate PDF Online — Fix Sideways Pages | silentPDF",
     metaDescription: "Rotate PDF pages 90°, 180°, or 270° in your browser. Permanent rotation, no watermark, no signup.",
     h1: "Rotate PDF Pages",
     keywords: ["rotate pdf", "rotate pdf pages", "rotate pdf online", "fix sideways pdf", "turn pdf page"],
@@ -346,7 +346,7 @@ export const TOOLS: ToolDef[] = [
     icon: Trash2, accent: "red",
     accept: { "application/pdf": [".pdf"] }, multiple: false, needsRange: true,
 
-    seoTitle: "Remove Pages from PDF — Delete PDF Pages Online | silentPDF",
+    seoTitle: "Remove Pages from PDF — Delete PDF Pages | silentPDF",
     metaDescription: "Delete specific pages from a PDF. Works in your browser, no signup, no watermark, original file stays safe.",
     h1: "Remove Pages from a PDF",
     keywords: ["remove pages from pdf", "delete pdf pages", "remove pdf pages online", "delete pages from pdf", "pdf page remover"],
@@ -388,7 +388,7 @@ export const TOOLS: ToolDef[] = [
     icon: Lock, accent: "blue",
     accept: { "application/pdf": [".pdf"] }, multiple: false, needsPassword: true,
 
-    seoTitle: "Protect PDF with Password — Secure PDF Files Online | silentPDF",
+    seoTitle: "Password Protect PDF — Secure PDFs Online | silentPDF",
     metaDescription: "Protect a PDF before sharing. Add a privacy marker locally or request AES password encryption from our Pro tier.",
     h1: "Protect a PDF",
     keywords: ["protect pdf", "password protect pdf", "lock pdf", "secure pdf", "encrypt pdf", "pdf password"],
@@ -441,7 +441,7 @@ export const TOOLS: ToolDef[] = [
     icon: Pencil, accent: "blue",
     accept: { "application/pdf": [".pdf"] }, multiple: false,
 
-    seoTitle: "Edit PDF Online — Draw, Write, Annotate PDFs Free | silentPDF",
+    seoTitle: "Edit PDF Online — Draw, Write, Annotate | silentPDF",
     metaDescription: "Edit a PDF in your browser. Draw, add text, highlight, and annotate without installing Acrobat. No signup.",
     h1: "Edit a PDF Online",
     keywords: ["edit pdf", "edit pdf online", "annotate pdf", "draw on pdf", "pdf editor free", "online pdf editor"],
@@ -537,7 +537,7 @@ export const TOOLS: ToolDef[] = [
     icon: Stamp, accent: "blue",
     accept: { "application/pdf": [".pdf"] }, multiple: false,
 
-    seoTitle: "Watermark PDF Online — Add Text Watermark to PDF Free | silentPDF",
+    seoTitle: "Watermark PDF Online — Add Text Watermark | silentPDF",
     metaDescription: "Add a text watermark to every page of a PDF. Control opacity, size, color, and rotation. Free, no signup.",
     h1: "Add a Watermark to a PDF",
     keywords: ["watermark pdf", "add watermark to pdf", "pdf watermark online", "confidential watermark pdf", "draft watermark pdf"],
@@ -579,7 +579,7 @@ export const TOOLS: ToolDef[] = [
     icon: Image, accent: "red",
     accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp", ".gif"] }, multiple: true,
 
-    seoTitle: "Photo to PDF Converter — Convert JPG, PNG to PDF Free | silentPDF",
+    seoTitle: "Photo to PDF — Convert JPG & PNG to PDF | silentPDF",
     metaDescription: "Convert photos to PDF online. Drop JPGs or PNGs, reorder, pick a page size, download. Free, no signup.",
     h1: "Convert Photos to PDF",
     keywords: ["photo to pdf", "jpg to pdf", "png to pdf", "image to pdf", "photo to pdf converter", "convert images to pdf"],
@@ -702,7 +702,7 @@ export const TOOLS: ToolDef[] = [
     icon: FilePlus, accent: "blue",
     accept: { "application/pdf": [".pdf"] }, multiple: false,
 
-    seoTitle: "Add Pages to PDF — Insert Blank or PDF Pages Free | silentPDF",
+    seoTitle: "Add Pages to PDF — Insert Blank or PDF Pages | silentPDF",
     metaDescription: "Insert pages into a PDF. Add blank pages or pages from another PDF, reorder, download. No signup.",
     h1: "Add Pages to a PDF",
     keywords: ["add pages to pdf", "insert pdf pages", "add blank page to pdf", "insert pages into pdf"],
