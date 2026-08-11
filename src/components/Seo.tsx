@@ -18,9 +18,9 @@ type RouteMeta = {
 
 const STATIC_META: Record<string, RouteMeta> = {
   "/": {
-    title: "Free PDF Tools: Merge, Split, Compress, Convert, Edit & Sign PDFs | SilentPDF",
+    title: "Free PDF Tools — Merge, Split, Compress, Sign | SilentPDF",
     description:
-      "Free online PDF tools to merge, split, compress, convert, edit, sign, rotate and protect PDF files securely in your browser. 100% private, fast, browser-based PDF processing with no registration required.",
+      "Merge, split, compress, convert, edit and sign PDFs right in your browser. Private, fast, free — no uploads and no signup.",
     jsonLd: [
       {
         "@context": "https://schema.org",
@@ -47,7 +47,7 @@ const STATIC_META: Record<string, RouteMeta> = {
       {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        name: "Free PDF Tools: Merge, Split, Compress, Convert, Edit & Sign PDFs | SilentPDF",
+        name: "Free PDF Tools — Merge, Split, Compress, Sign | SilentPDF",
         url: `${SITE_URL}/`,
         description: "Free online PDF tools to merge, split, compress, convert, edit, sign, rotate and protect PDF files securely in your browser.",
         isPartOf: {
@@ -457,6 +457,8 @@ export const Seo = () => {
     };
   }
 
+  const isArticle = Boolean(blogPostMatch || resourceAssetMatch);
+
   const canonical = `${SITE_URL}${pathname === "/" ? "/" : pathname.replace(/\/$/, "")}`;
 
   return (
@@ -468,7 +470,7 @@ export const Seo = () => {
       <meta property="og:title" content={meta.title} />
       <meta property="og:description" content={meta.description} />
       <meta property="og:url" content={canonical} />
-      <meta property="og:type" content={pathname === "/" ? "website" : "article"} />
+      <meta property="og:type" content={isArticle ? "article" : "website"} />
       <meta property="og:image" content={OG_IMAGE} />
       <meta property="og:image:alt" content="SilentPDF - Free Online PDF Tools" />
       <meta property="og:site_name" content={SITE_NAME} />
