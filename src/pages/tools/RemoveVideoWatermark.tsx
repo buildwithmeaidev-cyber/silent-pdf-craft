@@ -148,6 +148,7 @@ export default function RemoveVideoWatermark() {
               <Button
                 variant="ghost"
                 size="sm"
+                aria-label="Remove selected video"
                 onClick={() => {
                   setFile(null);
                   setVideoUrl(null);
