@@ -193,7 +193,7 @@ export async function protectPdf(file: File, password: string): Promise<ToolResu
   }).save({
     encrypt: {
       userPassword: password,
-      ownerPassword: password,
+      ownerPassword: randomOwnerPassword(),
       permissions: { printing: true, modifying: false, copying: false, annotating: false },
     },
   });
