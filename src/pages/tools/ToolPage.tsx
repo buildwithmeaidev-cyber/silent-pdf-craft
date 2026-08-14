@@ -333,7 +333,7 @@ const ToolPage = ({ toolSlug, hideHeader, overrideTitle, overrideDescription }: 
                         placeholder="Choose a strong password"
                         className="w-full rounded-lg border bg-card px-3 py-2.5 text-sm outline-none focus:border-primary"
                       />
-                      <p className="mt-1.5 text-xs text-muted-foreground">Recipients will need this password to open the PDF.</p>
+                      <PasswordStrength password={password} onUseSuggestion={setPassword} />
                     </div>
                   )}
 
