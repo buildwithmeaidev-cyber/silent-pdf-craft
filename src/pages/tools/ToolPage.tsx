@@ -23,6 +23,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { usePdfJob } from "@/hooks/usePdfJob";
 import { capMbFor, capBytesFor } from "@/lib/uploadLimits";
+import { PasswordStrength } from "@/components/tools/PasswordStrength";
 import {
   mergePdfs,
   splitPdf, rotatePdf, removePages, compressPdf, protectPdf,
