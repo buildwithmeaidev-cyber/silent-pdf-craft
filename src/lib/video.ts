@@ -32,8 +32,8 @@ export async function loadFfmpeg(onProgress?: (pct: number) => void): Promise<FF
     }
     try {
       const [coreURL, wasmURL] = await Promise.all([
-        toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-        toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
+        toBlobURL(CORE_JS_URL, "text/javascript"),
+        toBlobURL(CORE_WASM_URL, "application/wasm"),
       ]);
       await ffmpeg.load({ coreURL, wasmURL });
     } catch (err) {
