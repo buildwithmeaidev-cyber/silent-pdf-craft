@@ -26,8 +26,7 @@
   <!-- =========================================================
        Primary SEO
        Title / description / canonical / og:* / twitter:* are emitted
-       per route by src/components/Seo.tsx and injected at <!--app-head-->
-       during prerender. Do not duplicate them here — a static <title>
+       per route by src/components/Seo.tsx and injected at the app-head placeholder during prerender. Do not duplicate them here — a static <title>
        would win over the per-route one for crawlers.
        ========================================================= -->
 
@@ -152,7 +151,7 @@
 
   <!-- =========================================================
        Open Graph / Twitter are emitted per route by Seo.tsx
-       (injected at <!--app-head--> during prerender)
+       (injected at the app-head placeholder during prerender)
        ========================================================= -->
 
   <!-- =========================================================
@@ -187,12 +186,12 @@
     gtag("config", "G-FRMJ9C08B5");
   </script>
 
-  <!-- app-head -->
+  <!--app-head-->
 </head>
 
 <body>
 
-  <div id="root"><!-- app-html --></div>
+  <div id="root"><!--app-html--></div>
 
   <script
     type="module"
