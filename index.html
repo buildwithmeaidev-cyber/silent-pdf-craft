@@ -25,16 +25,11 @@
 
   <!-- =========================================================
        Primary SEO
+       Title / description / canonical / og:* / twitter:* are emitted
+       per route by src/components/Seo.tsx and injected at <!--app-head-->
+       during prerender. Do not duplicate them here — a static <title>
+       would win over the per-route one for crawlers.
        ========================================================= -->
-
-  <title>
-    Free PDF Tools — Merge, Split, Compress, Sign | SilentPDF
-  </title>
-
-  <meta
-    name="description"
-    content="Merge, split, compress, convert, edit and sign PDFs right in your browser. Private, fast, free — no uploads and no signup."
-  />
 
   <meta
     name="keywords"
