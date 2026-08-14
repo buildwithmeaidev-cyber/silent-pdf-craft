@@ -1,7 +1,16 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
-const CORE_BASE = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+// Bundled with the app (served from our own origin) — never fetched from a
+// third-party CDN, so a compromised CDN can't inject code into the browser.
+const CORE_JS_URL = new URL(
+  "../../node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.js",
+  import.meta.url
+).href;
+const CORE_WASM_URL = new URL(
+  "../../node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
+  import.meta.url
+).href;
 const MAX_FILE_BYTES = 200 * 1024 * 1024;
 
 let ffmpegInstance: FFmpeg | null = null;
@@ -23,8 +32,8 @@ export async function loadFfmpeg(onProgress?: (pct: number) => void): Promise<FF
     }
     try {
       const [coreURL, wasmURL] = await Promise.all([
-        toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-        toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
+        toBlobURL(CORE_JS_URL, "text/javascript"),
+        toBlobURL(CORE_WASM_URL, "application/wasm"),
       ]);
       await ffmpeg.load({ coreURL, wasmURL });
     } catch (err) {

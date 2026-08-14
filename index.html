@@ -25,16 +25,10 @@
 
   <!-- =========================================================
        Primary SEO
+       Title / description / canonical / og:* / twitter:* are emitted
+       per route by src/components/Seo.tsx and injected at the app-head placeholder during prerender. Do not duplicate them here — a static <title>
+       would win over the per-route one for crawlers.
        ========================================================= -->
-
-  <title>
-    Free PDF Tools — Merge, Split, Compress, Sign | SilentPDF
-  </title>
-
-  <meta
-    name="description"
-    content="Merge, split, compress, convert, edit and sign PDFs right in your browser. Private, fast, free — no uploads and no signup."
-  />
 
   <meta
     name="keywords"
@@ -125,15 +119,14 @@
     href="https://fonts.gstatic.com"
     crossorigin
   />
-  <head> 
   <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "xqitc705ml");
-</script>
-  </head>
+  </script>
+
 
   <!-- =========================================================
        Icons
@@ -157,77 +150,9 @@
   />
 
   <!-- =========================================================
-       Open Graph
+       Open Graph / Twitter are emitted per route by Seo.tsx
+       (injected at the app-head placeholder during prerender)
        ========================================================= -->
-
-  <meta
-    property="og:type"
-    content="website"
-  />
-
-  <meta
-    property="og:site_name"
-    content="SilentPDF"
-  />
-
-  <meta
-    property="og:title"
-    content="Free PDF Tools — Merge, Split, Compress, Sign | SilentPDF"
-  />
-
-  <meta
-    property="og:description"
-    content="Free online PDF tools to merge, split, compress, convert, edit, sign and protect PDF files securely in your browser. Fast, private and browser-based."
-  />
-
-  <meta
-    property="og:url"
-    content="https://silentpdfai.pages.dev/"
-  />
-
-  <meta
-    property="og:image"
-    content="https://silentpdfai.pages.dev/og-image.png"
-  />
-
-  <meta
-    property="og:image:alt"
-    content="SilentPDF - Free Online PDF Tools"
-  />
-
-  <meta
-    property="og:locale"
-    content="en_US"
-  />
-
-  <!-- =========================================================
-       Twitter
-       ========================================================= -->
-
-  <meta
-    name="twitter:card"
-    content="summary_large_image"
-  />
-
-  <meta
-    name="twitter:title"
-    content="Free PDF Tools — Merge, Split, Compress, Sign | SilentPDF"
-  />
-
-  <meta
-    name="twitter:description"
-    content="Merge, split, compress, convert, edit, rotate, protect and sign PDF files securely in your browser with complete privacy."
-  />
-
-  <meta
-    name="twitter:image"
-    content="https://silentpdfai.pages.dev/og-image.png"
-  />
-
-  <meta
-    name="twitter:image:alt"
-    content="SilentPDF PDF Tools"
-  />
 
   <!-- =========================================================
        JSON-LD injected using react-helmet-async
@@ -261,12 +186,12 @@
     gtag("config", "G-FRMJ9C08B5");
   </script>
 
-  <!-- app-head -->
+  <!--app-head-->
 </head>
 
 <body>
 
-  <div id="root"><!-- app-html --></div>
+  <div id="root"><!--app-html--></div>
 
   <script
     type="module"
