@@ -177,6 +177,13 @@ export async function compressPdf(
 }
 
 // ---------------- protect (real AES via @cantoo/pdf-lib) ----------------
+/** Random, never-disclosed owner password so permissions can't be stripped. */
+function randomOwnerPassword(): string {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(36).padStart(2, "0")).join("").slice(0, 32);
+}
+
 export async function protectPdf(file: File, password: string): Promise<ToolResult> {
   if (!password || password.length < 4) throw new Error("Password must be at least 4 characters.");
   const src = await PDFDocumentEnc.load(await file.arrayBuffer(), { ignoreEncryption: true });
