@@ -154,7 +154,6 @@ let failures = 0;
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${routesToPrerender.map(route => `  <url>
     <loc>${siteUrl}${route === '/' ? '' : route}</loc>
-    <lastmod>${now}</lastmod>
     <changefreq>${getChangefreq(route)}</changefreq>
     <priority>${getPriority(route)}</priority>
   </url>`).join('\n')}
