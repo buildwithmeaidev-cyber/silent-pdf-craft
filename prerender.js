@@ -123,6 +123,7 @@ let failures = 0;
       console.log('pre-rendered:', filePath);
     } catch (err) {
       console.error(`Error pre-rendering ${url}:`, err.message);
+      failures++;
     }
   }
 
