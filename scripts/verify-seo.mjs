@@ -14,7 +14,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.resolve(__dirname, '../dist');
 const SITE_URL = (process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev').replace(/\/$/, '');
 
-const { TOOLS } = await import('../dist-seo-check/tools.mjs').catch(() => ({ TOOLS: null }));
+const MANIFEST = path.join(DIST, 'seo-manifest.json');
+const manifest = fs.existsSync(MANIFEST)
+  ? JSON.parse(fs.readFileSync(MANIFEST, 'utf-8'))
+  : { toolSlugs: [] };
 
 function walk(dir) {
   const out = [];
