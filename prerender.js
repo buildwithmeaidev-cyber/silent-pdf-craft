@@ -82,22 +82,32 @@ categories.forEach(cat => routesToPrerender.push(`/resources/${cat}`));
 // Add individual assets
 RESOURCES.forEach(r => routesToPrerender.push(`/resources/${r.category}/${r.slug}`));
 
+let failures = 0;
+
 (async () => {
   for (const url of routesToPrerender) {
     try {
       const helmetContext = {};
       const { html } = render(url, helmetContext);
-      
+
       const helmet = helmetContext.helmet;
-      let headTags = '';
-      if (helmet) {
-        headTags = `
-          ${helmet.title.toString()}
-          ${helmet.priority.toString()}
-          ${helmet.meta.toString()}
-          ${helmet.link.toString()}
-          ${helmet.script.toString()}
-        `;
+      if (!helmet) {
+        console.error(`FATAL: no helmet server state for ${url}`);
+        failures++;
+        continue;
+      }
+      const headTags = [
+        helmet.title.toString(),
+        helmet.priority.toString(),
+        helmet.meta.toString(),
+        helmet.link.toString(),
+        helmet.script.toString(),
+      ].join('\n    ');
+
+      if (!/<title[^>]*>[^<]+<\/title>/.test(headTags)) {
+        console.error(`FATAL: empty <title> for ${url}`);
+        failures++;
+        continue;
       }
 
       const htmlWithApp = template
