@@ -31,6 +31,7 @@ export function render(url: string, helmetContext?: Record<string, unknown>) {
   return { html, helmetContext: context };
 }
 
+export { TOOLS } from './lib/tools';
 export { RESOURCES } from './content/resources';
 export { PROGRAMMATIC } from './lib/programmatic';
 export { POSTS } from './content/blog/posts';
