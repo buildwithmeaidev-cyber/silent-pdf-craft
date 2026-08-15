@@ -64,7 +64,7 @@ const routesToPrerender = [
   '/cookies',
 ];
 
-const { render, RESOURCES, PROGRAMMATIC, POSTS } = await import('./dist/server/entry-server.js');
+const { render, RESOURCES, PROGRAMMATIC, POSTS, TOOLS } = await import('./dist/server/entry-server.js');
 
 // Add all 50 programmatic SEO landing pages dynamically
 PROGRAMMATIC.forEach(p => routesToPrerender.push('/' + p.slug));
@@ -159,6 +159,12 @@ ${routesToPrerender.map(route => `  <url>
   </url>`).join('\n')}
 </urlset>`;
   fs.writeFileSync(toAbsolute('dist/sitemap.xml'), sitemapContent);
+
+  // Manifest consumed by scripts/verify-seo.mjs
+  fs.writeFileSync(
+    toAbsolute('dist/seo-manifest.json'),
+    JSON.stringify({ toolSlugs: TOOLS.map((t) => t.slug), routes: routesToPrerender }, null, 2)
+  );
   console.log('pre-rendered: dist/sitemap.xml');
   console.log(`Total pages pre-rendered: ${routesToPrerender.length}`);
 
