@@ -2,6 +2,11 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
 import { HelmetProvider } from 'react-helmet-async';
+
+// The prerenderer installs a JSDOM window/document (pdfjs-dist needs it), which
+// makes react-helmet-async take its client path and never populate
+// helmetContext.helmet. Force server mode so head tags land in the static HTML.
+(HelmetProvider as unknown as { canUseDOM: boolean }).canUseDOM = false;
 import App from './App';
 import { UploadProvider } from './context/UploadContext';
 
@@ -26,6 +31,7 @@ export function render(url: string, helmetContext?: Record<string, unknown>) {
   return { html, helmetContext: context };
 }
 
+export { TOOLS } from './lib/tools';
 export { RESOURCES } from './content/resources';
 export { PROGRAMMATIC } from './lib/programmatic';
 export { POSTS } from './content/blog/posts';

@@ -64,7 +64,7 @@ const routesToPrerender = [
   '/cookies',
 ];
 
-const { render, RESOURCES, PROGRAMMATIC, POSTS } = await import('./dist/server/entry-server.js');
+const { render, RESOURCES, PROGRAMMATIC, POSTS, TOOLS } = await import('./dist/server/entry-server.js');
 
 // Add all 50 programmatic SEO landing pages dynamically
 PROGRAMMATIC.forEach(p => routesToPrerender.push('/' + p.slug));
@@ -82,22 +82,32 @@ categories.forEach(cat => routesToPrerender.push(`/resources/${cat}`));
 // Add individual assets
 RESOURCES.forEach(r => routesToPrerender.push(`/resources/${r.category}/${r.slug}`));
 
+let failures = 0;
+
 (async () => {
   for (const url of routesToPrerender) {
     try {
       const helmetContext = {};
       const { html } = render(url, helmetContext);
-      
+
       const helmet = helmetContext.helmet;
-      let headTags = '';
-      if (helmet) {
-        headTags = `
-          ${helmet.title.toString()}
-          ${helmet.priority.toString()}
-          ${helmet.meta.toString()}
-          ${helmet.link.toString()}
-          ${helmet.script.toString()}
-        `;
+      if (!helmet) {
+        console.error(`FATAL: no helmet server state for ${url}`);
+        failures++;
+        continue;
+      }
+      const headTags = [
+        helmet.title.toString(),
+        helmet.priority.toString(),
+        helmet.meta.toString(),
+        helmet.link.toString(),
+        helmet.script.toString(),
+      ].join('\n    ');
+
+      if (!/<title[^>]*>[^<]+<\/title>/.test(headTags)) {
+        console.error(`FATAL: empty <title> for ${url}`);
+        failures++;
+        continue;
       }
 
       const htmlWithApp = template
@@ -113,6 +123,7 @@ RESOURCES.forEach(r => routesToPrerender.push(`/resources/${r.category}/${r.slug
       console.log('pre-rendered:', filePath);
     } catch (err) {
       console.error(`Error pre-rendering ${url}:`, err.message);
+      failures++;
     }
   }
 
@@ -121,7 +132,8 @@ RESOURCES.forEach(r => routesToPrerender.push(`/resources/${r.category}/${r.slug
   
   // Generate sitemap.xml with intelligent priority
   const siteUrl = process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev';
-  const now = new Date().toISOString().split('T')[0];
+  // No <lastmod>: the content model has no page-specific modification timestamps,
+  // and stamping every URL with the build date is an invalid non-page-specific value.
 
   function getPriority(route) {
     if (route === '/') return '1.0';
@@ -142,14 +154,24 @@ RESOURCES.forEach(r => routesToPrerender.push(`/resources/${r.category}/${r.slug
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${routesToPrerender.map(route => `  <url>
     <loc>${siteUrl}${route === '/' ? '' : route}</loc>
-    <lastmod>${now}</lastmod>
     <changefreq>${getChangefreq(route)}</changefreq>
     <priority>${getPriority(route)}</priority>
   </url>`).join('\n')}
 </urlset>`;
   fs.writeFileSync(toAbsolute('dist/sitemap.xml'), sitemapContent);
+
+  // Manifest consumed by scripts/verify-seo.mjs
+  fs.writeFileSync(
+    toAbsolute('dist/seo-manifest.json'),
+    JSON.stringify({ toolSlugs: TOOLS.map((t) => t.slug), routes: routesToPrerender }, null, 2)
+  );
   console.log('pre-rendered: dist/sitemap.xml');
   console.log(`Total pages pre-rendered: ${routesToPrerender.length}`);
+
+  if (failures > 0) {
+    console.error(`Prerender failed for ${failures} route(s).`);
+    process.exit(1);
+  }
 
   console.log('Prerender complete.');
 })();
