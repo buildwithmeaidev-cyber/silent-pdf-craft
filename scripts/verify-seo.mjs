@@ -76,9 +76,7 @@ if (!fs.existsSync(DIST)) {
   process.exit(1);
 }
 
-const toolSlugs = new Set(
-  (TOOLS ?? []).map((t) => t.slug)
-);
+const toolSlugs = new Set(manifest.toolSlugs ?? []);
 
 const files = walk(DIST);
 const failures = [];
