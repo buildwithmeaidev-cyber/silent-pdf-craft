@@ -132,7 +132,8 @@ let failures = 0;
   
   // Generate sitemap.xml with intelligent priority
   const siteUrl = process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev';
-  const now = new Date().toISOString().split('T')[0];
+  // No <lastmod>: the content model has no page-specific modification timestamps,
+  // and stamping every URL with the build date is an invalid non-page-specific value.
 
   function getPriority(route) {
     if (route === '/') return '1.0';
