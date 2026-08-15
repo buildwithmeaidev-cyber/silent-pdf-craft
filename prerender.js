@@ -162,6 +162,11 @@ ${routesToPrerender.map(route => `  <url>
   console.log('pre-rendered: dist/sitemap.xml');
   console.log(`Total pages pre-rendered: ${routesToPrerender.length}`);
 
+  if (failures > 0) {
+    console.error(`Prerender failed for ${failures} route(s).`);
+    process.exit(1);
+  }
+
   console.log('Prerender complete.');
 })();
 
