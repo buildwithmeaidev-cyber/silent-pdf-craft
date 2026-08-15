@@ -34,6 +34,8 @@ function routeFor(file) {
   return rel === 'index' ? '/' : `/${rel}`;
 }
 
+const stripComments = (html) => html.replace(/<!--[\s\S]*?-->/g, '');
+
 const pick = (html, re) => {
   const m = html.match(re);
   return m ? m[1].trim() : '';
