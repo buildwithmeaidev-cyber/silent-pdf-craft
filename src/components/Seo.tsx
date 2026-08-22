@@ -5,10 +5,7 @@ import { getProgrammatic } from "@/lib/programmatic";
 import { RESOURCES, getResource } from "@/content/resources";
 import { getPost } from "@/content/blog/posts";
 import { HOME_FAQ } from "@/components/home/HomeFaq";
-
-const SITE_URL = import.meta.env.VITE_SITE_URL || "https://silentpdfai.pages.dev";
-const SITE_NAME = "SilentPDF";
-const OG_IMAGE = `${SITE_URL}/og-image.png`;
+import { SITE_URL, SITE_NAME, OG_IMAGE } from "@/lib/site";
 
 type RouteMeta = {
   title: string;
