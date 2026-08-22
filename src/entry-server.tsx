@@ -35,3 +35,4 @@ export { TOOLS } from './lib/tools';
 export { RESOURCES } from './content/resources';
 export { PROGRAMMATIC } from './lib/programmatic';
 export { POSTS } from './content/blog/posts';
+export { ROUTES, ROUTE_PATHS } from './lib/routes';
