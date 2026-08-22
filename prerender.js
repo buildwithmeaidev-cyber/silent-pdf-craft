@@ -32,60 +32,17 @@ const toAbsolute = (p) => path.resolve(__dirname, p);
 
 const template = fs.readFileSync(toAbsolute('dist/index.html'), 'utf-8');
 
+// Routes come from src/lib/routes.ts — the single source of truth shared with
+// the sitemap, so tools/posts/landing pages can never be prerendered without
+// also being listed in sitemap.xml (and vice versa).
+const { render, ROUTES, TOOLS } = await import('./dist/server/entry-server.js');
 
-// Determine routes to pre-render – static pages & tool pages
-const routesToPrerender = [
-  '/',
-  '/tools',
-  '/merge-pdf',
-  '/split-pdf',
-  '/remove-pages',
-  '/edit-pdf',
-  '/compress-pdf',
-  '/protect-pdf',
-  '/reorder-pdf',
-  '/esign-pdf',
-  '/watermark-pdf',
-  '/photo-to-pdf',
-  '/export-pdf',
-  '/pdf-to-word',
-  '/word-to-pdf',
-  '/addpages-pdf',
-  '/removewatermark-pdf',
-  '/rotatepages-pdf',
-  '/privacy-policy',
-  '/about',
-  '/blog',
-  '/guides',
-  '/use-cases',
-  '/terms',
-  '/security',
-  '/contact',
-  '/cookies',
-];
-
-const { render, RESOURCES, PROGRAMMATIC, POSTS, TOOLS } = await import('./dist/server/entry-server.js');
-
-// Add all 50 programmatic SEO landing pages dynamically
-PROGRAMMATIC.forEach(p => routesToPrerender.push('/' + p.slug));
-
-// Add all blog post pages dynamically
-POSTS.forEach(p => routesToPrerender.push('/blog/' + p.slug));
-
-// Add the dynamic resource routes
-routesToPrerender.push('/resources');
-
-// Get unique categories
-const categories = Array.from(new Set(RESOURCES.map(r => r.category)));
-categories.forEach(cat => routesToPrerender.push(`/resources/${cat}`));
-
-// Add individual assets
-RESOURCES.forEach(r => routesToPrerender.push(`/resources/${r.category}/${r.slug}`));
+const siteUrl = (process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev').replace(/\/$/, '');
 
 let failures = 0;
 
 (async () => {
-  for (const url of routesToPrerender) {
+  for (const { path: url } of ROUTES) {
     try {
       const helmetContext = {};
       const { html } = render(url, helmetContext);
@@ -129,44 +86,28 @@ let failures = 0;
 
   // Cleanup
   fs.rmSync(toAbsolute('dist/server'), { recursive: true, force: true });
-  
-  // Generate sitemap.xml with intelligent priority
-  const siteUrl = process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev';
-  // No <lastmod>: the content model has no page-specific modification timestamps,
-  // and stamping every URL with the build date is an invalid non-page-specific value.
 
-  function getPriority(route) {
-    if (route === '/') return '1.0';
-    if (route === '/tools') return '0.9';
-    if (['/merge-pdf','/split-pdf','/compress-pdf','/edit-pdf','/pdf-to-word','/word-to-pdf','/protect-pdf','/esign-pdf'].includes(route)) return '0.9';
-    if (route.startsWith('/blog')) return '0.7';
-    if (route.startsWith('/resources')) return '0.6';
-    return '0.8';
-  }
-
-  function getChangefreq(route) {
-    if (route === '/' || route === '/tools') return 'daily';
-    if (route.startsWith('/blog')) return 'weekly';
-    return 'weekly';
-  }
-
+  // Sitemap. No <lastmod>: the content model has no page-specific modification
+  // timestamps, and stamping every URL with the build date is invalid.
   const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${routesToPrerender.map(route => `  <url>
-    <loc>${siteUrl}${route === '/' ? '' : route}</loc>
-    <changefreq>${getChangefreq(route)}</changefreq>
-    <priority>${getPriority(route)}</priority>
+${ROUTES.map((r) => `  <url>
+    <loc>${siteUrl}${r.path === '/' ? '/' : r.path}</loc>
+    <changefreq>${r.changefreq}</changefreq>
+    <priority>${r.priority}</priority>
   </url>`).join('\n')}
 </urlset>`;
   fs.writeFileSync(toAbsolute('dist/sitemap.xml'), sitemapContent);
+  // Keep the checked-in copy in sync so the dev preview serves the same file.
+  fs.writeFileSync(toAbsolute('public/sitemap.xml'), sitemapContent);
 
   // Manifest consumed by scripts/verify-seo.mjs
   fs.writeFileSync(
     toAbsolute('dist/seo-manifest.json'),
-    JSON.stringify({ toolSlugs: TOOLS.map((t) => t.slug), routes: routesToPrerender }, null, 2)
+    JSON.stringify({ toolSlugs: TOOLS.map((t) => t.slug), routes: ROUTES.map((r) => r.path) }, null, 2)
   );
   console.log('pre-rendered: dist/sitemap.xml');
-  console.log(`Total pages pre-rendered: ${routesToPrerender.length}`);
+  console.log(`Total pages pre-rendered: ${ROUTES.length}`);
 
   if (failures > 0) {
     console.error(`Prerender failed for ${failures} route(s).`);
@@ -175,4 +116,3 @@ ${routesToPrerender.map(route => `  <url>
 
   console.log('Prerender complete.');
 })();
-
