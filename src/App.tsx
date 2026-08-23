@@ -97,7 +97,9 @@ const App = () => (
               <Route path="/workflows/run/:id" element={<WorkflowRunner />} />
 
               {/* Video tools (must be registered BEFORE the /:slug catch-all) */}
+              <Route path="/video-tools" element={<VideoTools />} />
               <Route path="/remove-video-watermark" element={<RemoveVideoWatermark />} />
+
 
               {/* Dynamic root-level slug handler for programmatic SEO pages & tools */}
               <Route path="/:slug" element={<RootSlugHandler />} />
