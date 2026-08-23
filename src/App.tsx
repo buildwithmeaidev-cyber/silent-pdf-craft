@@ -29,6 +29,7 @@ import Cookies from "./pages/legal/Cookies";
 
 import ToolPage from "./pages/tools/ToolPage";
 import RemoveVideoWatermark from "./pages/tools/RemoveVideoWatermark";
+import VideoTools from "./pages/VideoTools";
 import NotFound from "./pages/NotFound";
 import ProgrammaticPage from "./pages/ProgrammaticPage";
 
