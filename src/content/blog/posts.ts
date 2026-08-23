@@ -23,6 +23,8 @@ import { type ToolKind } from "@/lib/tools";
 import { COMPRESSION_POSTS } from "./posts_compression";
 import { OTHER_POSTS } from "./posts_other";
 import { SEO_KEYWORD_POSTS } from "./posts_seo_keywords";
+import { WORKFLOW_POSTS } from "./posts_workflows";
+import { ADVANCED_POSTS } from "./posts_advanced";
 
 export type BlogBlock =
   | { type: "h2"; text: string }
@@ -327,7 +329,9 @@ export const POSTS: BlogPost[] = [
   },
   ...COMPRESSION_POSTS,
   ...OTHER_POSTS,
-  ...SEO_KEYWORD_POSTS
+  ...SEO_KEYWORD_POSTS,
+  ...WORKFLOW_POSTS,
+  ...ADVANCED_POSTS
 ] as BlogPost[];
 
 export function getPost(slug: string): BlogPost | undefined {
