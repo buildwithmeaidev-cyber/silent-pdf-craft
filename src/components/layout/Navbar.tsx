@@ -4,14 +4,15 @@ import { ArrowUpRight, FileText, Menu, X, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 const links = [
   { to: "/", label: "Home" },
-  { to: "/tools", label: "Tools" },
+  { to: "/tools", label: "PDF Tools" },
+  { to: "/video-tools", label: "Video Tools" },
   { to: "/workflows", label: "Workflows" },
+  { to: "/templates", label: "Templates" },
   { to: "/blog", label: "Blog" },
   { to: "/guides", label: "Guides" },
-  { to: "/use-cases", label: "Use Cases" },
   { to: "/resources", label: "Resources" },
-  { to: "/resources/templates", label: "Templates" },
 ];
+
 const THEME_KEY = "silentpdf.theme";
 
 function useTheme() {

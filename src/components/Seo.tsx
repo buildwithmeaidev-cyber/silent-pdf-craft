@@ -103,9 +103,23 @@ const STATIC_META: Record<string, RouteMeta> = {
     description: "The most comprehensive PDF knowledge base on the internet. Master your documents with guides, comparisons, and industry resources.",
   },
   "/templates": {
-    title: "Free Document & PDF Templates — SilentPDF",
-    description: "Browse free document templates, contract layouts, and fillable PDF forms ready for browser editing.",
+    title: "Free PDF Templates — Resume, Invoice, NDA | SilentPDF",
+    description: "Download free resume, cover letter, invoice, NDA, proposal and meeting-notes PDF templates. Generated in your browser, no signup.",
   },
+  "/video-tools": {
+    title: "Private Browser Video Tools — SilentPDF",
+    description: "Remove watermarks and edit video entirely in your browser. Nothing is uploaded — every file stays on your device.",
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Video Tools",
+        url: `${SITE_URL}/video-tools`,
+        description: "Browser-based video tools that process files locally with WebAssembly.",
+      },
+    ],
+  },
+
   "/workflows": {
     title: "Automated Multi-Step PDF Workflows — SilentPDF",
     description: "Chain multiple PDF tasks together in one pass: compress, rotate, sign, and convert without multiple file uploads.",
