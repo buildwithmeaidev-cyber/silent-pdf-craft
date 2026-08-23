@@ -17,7 +17,7 @@ export default function ResourceCategoryIndex() {
   const title = category.charAt(0).toUpperCase() + category.slice(1).replace("-", " ");
 
   return (
-    <div className="bg-[#f5f7fb] min-h-screen">
+    <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-7xl px-4 md:px-6 py-12 md:py-16">
         <Breadcrumbs current={title} />
         

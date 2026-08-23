@@ -19,7 +19,7 @@ export default function ResourceAssetPage() {
   
   return (
     <>
-        <article className="bg-[#f5f7fb] min-h-screen pb-24">
+        <article className="bg-background min-h-screen pb-24">
       <div className="mx-auto max-w-4xl px-4 md:px-6 py-12 md:py-16">
         <Breadcrumbs current={asset.title} />
 
