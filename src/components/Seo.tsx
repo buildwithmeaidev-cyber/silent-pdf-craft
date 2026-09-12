@@ -6,7 +6,7 @@ import { RESOURCES, getResource } from "@/content/resources";
 import { getPost } from "@/content/blog/posts";
 import { HOME_FAQ } from "@/components/home/HomeFaq";
 import { SITE_URL, SITE_NAME, OG_IMAGE } from "@/lib/site";
-import { getPreset, KIND_META } from "@/lib/workflows";
+import { getPreset, KIND_META, PRESET_WORKFLOWS } from "@/lib/workflows";
 
 type RouteMeta = {
   title: string;
@@ -136,7 +136,12 @@ const STATIC_META: Record<string, RouteMeta> = {
         "@context": "https://schema.org",
         "@type": "ItemList",
         name: "Ready-made PDF workflows",
-        itemListElement: [],
+        itemListElement: PRESET_WORKFLOWS.map((workflow, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: workflow.name,
+          url: `${SITE_URL}/workflows/run/${workflow.id}`,
+        })),
       },
     ],
   },
@@ -569,6 +574,10 @@ export const Seo = () => {
   }
 
   const isArticle = Boolean(blogPostMatch || resourceAssetMatch);
+  const title = meta.title.length > 60 ? `${meta.title.slice(0, 57).trimEnd()}…` : meta.title;
+  const description = resourceAssetMatch
+    ? `${meta.description.replace(/\s+/g, " ").trim()} Read this practical SilentPDF reference for the topic.`
+    : meta.description;
   const jsonLd = meta.jsonLd?.length
     ? meta.jsonLd
     : [{
@@ -583,12 +592,12 @@ export const Seo = () => {
 
   return (
     <Helmet>
-      <title>{meta.title}</title>
-      <meta name="description" content={meta.description} />
+      <title>{title}</title>
+      <meta name="description" content={description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description} />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <link rel="canonical" href={canonical} />
-      <meta property="og:title" content={meta.title} />
-      <meta property="og:description" content={meta.description} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description} />
       <meta property="og:url" content={canonical} />
       <meta property="og:type" content={isArticle ? "article" : "website"} />
       <meta property="og:image" content={OG_IMAGE} />
@@ -596,8 +605,8 @@ export const Seo = () => {
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="en_US" />
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={meta.title} />
-      <meta name="twitter:description" content={meta.description} />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description} />
       <meta name="twitter:image" content={OG_IMAGE} />
       <meta name="twitter:image:alt" content="SilentPDF PDF Tools" />
       {jsonLd.map((obj, i) => (
