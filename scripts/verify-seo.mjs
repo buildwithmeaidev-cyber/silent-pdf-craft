@@ -88,7 +88,9 @@ const rows = [];
 
 for (const file of files) {
   const route = routeFor(file);
-  const html = fs.readFileSync(file, 'utf-8');
+  // Ignore explanatory HTML comments in index.html. They mention tag names and
+  // must never be mistaken for the rendered Helmet output.
+  const html = stripComments(fs.readFileSync(file, 'utf-8'));
   const fail = (msg) => failures.push(`${route}: ${msg}`);
 
   const title = getTitle(html);
