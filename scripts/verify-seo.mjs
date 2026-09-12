@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.resolve(__dirname, '../dist');
-const SITE_URL = (process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev').replace(/\/$/, '');
+const SITE_URL = (process.env.VITE_SITE_URL || 'https://silent-pdf-craft.lovable.app').replace(/\/$/, '');
 
 const MANIFEST = path.join(DIST, 'seo-manifest.json');
 const manifest = fs.existsSync(MANIFEST)
@@ -88,7 +88,9 @@ const rows = [];
 
 for (const file of files) {
   const route = routeFor(file);
-  const html = fs.readFileSync(file, 'utf-8');
+  // Ignore explanatory HTML comments in index.html. They mention tag names and
+  // must never be mistaken for the rendered Helmet output.
+  const html = stripComments(fs.readFileSync(file, 'utf-8'));
   const fail = (msg) => failures.push(`${route}: ${msg}`);
 
   const title = getTitle(html);

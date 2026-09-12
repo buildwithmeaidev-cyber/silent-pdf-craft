@@ -83,8 +83,8 @@ const Home = () => {
               transition={{ ...fadeUp.transition, delay: 0.05 }}
               className="mt-7 font-serif text-6xl sm:text-7xl lg:text-[5.5rem] leading-[0.95] tracking-tight text-balance"
             >
-              The quiet PDF workspace
-              <span className="block italic text-primary mt-2">that respects your files.</span>
+              PDF tools that stay on your device.
+              <span className="block italic text-primary mt-2">Merge, compress, sign, and convert.</span>
             </motion.h1>
 
             <motion.p
@@ -92,8 +92,8 @@ const Home = () => {
               transition={{ ...fadeUp.transition, delay: 0.1 }}
               className="mt-7 text-xl text-muted-foreground max-w-xl leading-relaxed"
             >
-              Merge, compress, sign and convert PDFs in seconds — directly in your browser.
-              No uploads to our servers for core tools.
+              Finish the document job in front of you without creating an account or sending your file
+              to a server. Pick a tool, drop in a PDF, and download the result when it is ready.
             </motion.p>
 
             <motion.div

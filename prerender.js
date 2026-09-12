@@ -37,7 +37,7 @@ const template = fs.readFileSync(toAbsolute('dist/index.html'), 'utf-8');
 // also being listed in sitemap.xml (and vice versa).
 const { render, ROUTES, TOOLS } = await import('./dist/server/entry-server.js');
 
-const siteUrl = (process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev').replace(/\/$/, '');
+const siteUrl = (process.env.VITE_SITE_URL || 'https://silent-pdf-craft.lovable.app').replace(/\/$/, '');
 
 let failures = 0;
 

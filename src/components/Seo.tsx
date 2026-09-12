@@ -6,6 +6,7 @@ import { RESOURCES, getResource } from "@/content/resources";
 import { getPost } from "@/content/blog/posts";
 import { HOME_FAQ } from "@/components/home/HomeFaq";
 import { SITE_URL, SITE_NAME, OG_IMAGE } from "@/lib/site";
+import { getPreset, KIND_META, PRESET_WORKFLOWS } from "@/lib/workflows";
 
 type RouteMeta = {
   title: string;
@@ -123,6 +124,26 @@ const STATIC_META: Record<string, RouteMeta> = {
   "/workflows": {
     title: "Automated Multi-Step PDF Workflows — SilentPDF",
     description: "Chain multiple PDF tasks together in one pass: compress, rotate, sign, and convert without multiple file uploads.",
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "SilentPDF workflows",
+        url: `${SITE_URL}/workflows`,
+        description: "Ready-made browser-based PDF workflows for common document jobs.",
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name: "Ready-made PDF workflows",
+        itemListElement: PRESET_WORKFLOWS.map((workflow, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: workflow.name,
+          url: `${SITE_URL}/workflows/run/${workflow.id}`,
+        })),
+      },
+    ],
   },
   "/privacy": {
     title: "Privacy Policy — SilentPDF",
@@ -152,6 +173,24 @@ const STATIC_META: Record<string, RouteMeta> = {
   "/workflows/custom": {
     title: "Build a Custom PDF Workflow — SilentPDF",
     description: "Chain any PDF tools in any order and run them on one file, in your browser. Compress, sign, watermark and protect in one pass.",
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: "Build a Custom PDF Workflow",
+        url: `${SITE_URL}/workflows/custom`,
+        description: "Build a personal PDF workflow by chaining browser-based tools in the order you need.",
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: "Workflows", item: `${SITE_URL}/workflows` },
+          { "@type": "ListItem", position: 3, name: "Custom workflow", item: `${SITE_URL}/workflows/custom` },
+        ],
+      },
+    ],
   },
   "/remove-video-watermark": {
     title: "Remove Watermark from Video Online Free — SilentPDF",
@@ -256,6 +295,70 @@ function buildToolMeta(slug: string): RouteMeta {
     });
   }
   return { title, description, jsonLd };
+}
+
+function buildWorkflowMeta(id: string): RouteMeta {
+  const workflow = getPreset(id);
+  if (!workflow) {
+    const url = `${SITE_URL}/workflows/run/${id}`;
+    return {
+      title: "Run a Custom PDF Workflow — SilentPDF",
+      description: "Run your custom chain of browser-based PDF tools on one file without uploading it.",
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "HowTo",
+          name: "Run a custom PDF workflow",
+          description: "Process a document through a custom chain of PDF tools in your browser.",
+          step: [
+            { "@type": "HowToStep", position: 1, name: "Upload a file", text: "Choose the file your workflow should process." },
+            { "@type": "HowToStep", position: 2, name: "Run the workflow", text: "Let each selected tool pass its result to the next step." },
+            { "@type": "HowToStep", position: 3, name: "Download the result", text: "Download the finished file when processing completes." },
+          ],
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+            { "@type": "ListItem", position: 2, name: "Workflows", item: `${SITE_URL}/workflows` },
+            { "@type": "ListItem", position: 3, name: "Custom workflow", item: url },
+          ],
+        },
+      ],
+    };
+  }
+
+  const url = `${SITE_URL}/workflows/run/${workflow.id}`;
+  const stepLabels = workflow.steps.map((step) => KIND_META[step.kind].label);
+  return {
+    title: `${workflow.name} Workflow — SilentPDF`,
+    description: `${workflow.description} Run the complete process privately in your browser.`,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        name: `${workflow.name} workflow`,
+        description: workflow.description,
+        totalTime: "PT2M",
+        step: workflow.steps.map((step, i) => ({
+          "@type": "HowToStep",
+          position: i + 1,
+          name: stepLabels[i],
+          text: `Run the ${stepLabels[i].toLowerCase()} step on the file produced by the previous step.`,
+        })),
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: "Workflows", item: `${SITE_URL}/workflows` },
+          { "@type": "ListItem", position: 3, name: workflow.name, item: url },
+        ],
+      },
+    ],
+  };
 }
 
 function buildProgrammaticMeta(slug: string): RouteMeta | null {
@@ -449,6 +552,7 @@ export const Seo = () => {
   const blogPostMatch = pathname.match(/^\/blog\/([^/]+)\/?$/);
   const resourceCatMatch = pathname.match(/^\/resources\/([^/]+)\/?$/);
   const resourceAssetMatch = pathname.match(/^\/resources\/([^/]+)\/([^/]+)\/?$/);
+  const workflowRunMatch = pathname.match(/^\/workflows\/run\/([^/]+)\/?$/);
   const rootSlugMatch = pathname.match(/^\/([^/]+)\/?$/);
 
   let meta: RouteMeta | null = STATIC_META[pathname] ?? null;
@@ -456,6 +560,7 @@ export const Seo = () => {
   if (!meta && blogPostMatch) meta = buildBlogMeta(blogPostMatch[1]);
   if (!meta && resourceAssetMatch) meta = buildResourceAssetMeta(resourceAssetMatch[1], resourceAssetMatch[2]);
   if (!meta && resourceCatMatch) meta = buildResourceCategoryMeta(resourceCatMatch[1]);
+  if (!meta && workflowRunMatch) meta = buildWorkflowMeta(workflowRunMatch[1]);
   
   if (!meta && rootSlugMatch) {
     const slug = rootSlugMatch[1];
@@ -469,17 +574,30 @@ export const Seo = () => {
   }
 
   const isArticle = Boolean(blogPostMatch || resourceAssetMatch);
+  const title = meta.title.length > 60 ? `${meta.title.slice(0, 57).trimEnd()}…` : meta.title;
+  const description = resourceAssetMatch
+    ? `${meta.description.replace(/\s+/g, " ").trim()} Read this practical SilentPDF reference for the topic.`
+    : meta.description;
+  const jsonLd = meta.jsonLd?.length
+    ? meta.jsonLd
+    : [{
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: meta.title,
+        description: meta.description,
+        url: `${SITE_URL}${pathname === "/" ? "/" : pathname.replace(/\/$/, "")}`,
+      }];
 
   const canonical = `${SITE_URL}${pathname === "/" ? "/" : pathname.replace(/\/$/, "")}`;
 
   return (
     <Helmet>
-      <title>{meta.title}</title>
-      <meta name="description" content={meta.description} />
+      <title>{title}</title>
+      <meta name="description" content={description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description} />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <link rel="canonical" href={canonical} />
-      <meta property="og:title" content={meta.title} />
-      <meta property="og:description" content={meta.description} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description} />
       <meta property="og:url" content={canonical} />
       <meta property="og:type" content={isArticle ? "article" : "website"} />
       <meta property="og:image" content={OG_IMAGE} />
@@ -487,11 +605,11 @@ export const Seo = () => {
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="en_US" />
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={meta.title} />
-      <meta name="twitter:description" content={meta.description} />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description} />
       <meta name="twitter:image" content={OG_IMAGE} />
       <meta name="twitter:image:alt" content="SilentPDF PDF Tools" />
-      {meta.jsonLd?.map((obj, i) => (
+      {jsonLd.map((obj, i) => (
         <script key={i} type="application/ld+json">
           {JSON.stringify(obj)}
         </script>
