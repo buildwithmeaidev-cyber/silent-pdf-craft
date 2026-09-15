@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.resolve(__dirname, '../dist');
-const SITE_URL = (process.env.VITE_SITE_URL || 'https://silent-pdf-craft.lovable.app').replace(/\/$/, '');
+const SITE_URL = (process.env.VITE_SITE_URL || 'https://silentpdfai.pages.dev').replace(/\/$/, '');
 
 const MANIFEST = path.join(DIST, 'seo-manifest.json');
 const manifest = fs.existsSync(MANIFEST)
