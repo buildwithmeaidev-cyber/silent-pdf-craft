@@ -4,11 +4,11 @@
  * Every canonical URL, og:url, JSON-LD `url`, and sitemap <loc> is derived from
  * this constant, so the site can never again ship a mix of domains.
  * Override at build time with VITE_SITE_URL (no trailing slash). The default is
- * the project's public Lovable domain so sitemap and canonical URLs stay aligned.
+ * the requested public domain so sitemap and canonical URLs stay aligned.
  */
 const RAW =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_SITE_URL) ||
-  "https://silent-pdf-craft.lovable.app";
+  "https://silentpdfai.pages.dev";
 
 export const SITE_URL = String(RAW).replace(/\/$/, "");
 export const SITE_NAME = "SilentPDF";

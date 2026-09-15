@@ -38,6 +38,9 @@ import ResourceIndex from "./pages/resources/ResourceIndex";
 import ResourceCategoryIndex from "./pages/resources/ResourceCategoryIndex";
 import ResourceAssetPage from "./pages/resources/ResourceAssetPage";
 import Templates from "./pages/Templates";
+import TemplatesCategory from "./pages/TemplatesCategory";
+import PdfEditor from "./pages/PdfEditor";
+import MergePdfOnline from "./pages/MergePdfOnline";
 import Workflows from "./pages/workflows/Workflows";
 import CustomWorkflowBuilder from "./pages/workflows/CustomWorkflowBuilder";
 import WorkflowRunner from "./pages/workflows/WorkflowRunner";
@@ -91,6 +94,9 @@ const App = () => (
               <Route path="/resources/:category" element={<ResourceCategoryIndex />} />
               <Route path="/resources/:category/:slug" element={<ResourceAssetPage />} />
               <Route path="/templates" element={<Templates />} />
+              <Route path="/templates/:category" element={<TemplatesCategory />} />
+              <Route path="/pdf-editor" element={<PdfEditor />} />
+              <Route path="/merge-pdf-online" element={<MergePdfOnline />} />
 
               {/* Workflows (must be registered BEFORE the /:slug catch-all) */}
               <Route path="/workflows" element={<Workflows />} />
