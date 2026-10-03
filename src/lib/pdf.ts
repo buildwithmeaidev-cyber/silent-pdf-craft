@@ -522,7 +522,7 @@ export async function editPdfPassthrough(file: File): Promise<ToolResult> {
 }
 
 // ---------------- pdf → word ----------------
-interface PdfTextItem { str: string; transform: number[]; width: number }
+interface PdfTextItem { str: string; transform: number[]; width: number; fontName?: string }
 interface PdfLine { y: number; height: number; minX: number; maxX: number; items: PdfTextItem[] }
 
 export async function pdfToWord(file: File): Promise<ToolResult> {
@@ -536,7 +536,7 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const content = await page.getTextContent();
-    const items = (content.items as Array<{ str: string; transform: number[]; width: number }>)
+    const items = (content.items as Array<{ str: string; transform: number[]; width: number; fontName?: string }>)
       .filter((it) => it.str !== undefined);
 
     // Group into lines using a y tolerance.
@@ -576,6 +576,7 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
     for (const line of rawLines) {
       // Build line text, inserting spaces based on horizontal gaps.
       let text = "";
+      const runs: { text: string; bold?: boolean; italics?: boolean }[] = [];
       let prevEndX: number | null = null;
       for (const item of line.items) {
         const startX = item.transform[4];
@@ -585,6 +586,8 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
           if (gap > fontSize * 0.25) text += " ";
         }
         text += item.str;
+        const fontName = (item.fontName ?? "").toLowerCase();
+        runs.push({ text: item.str, bold: /bold|black|heavy|semibold/.test(fontName), italics: /italic|oblique/.test(fontName) });
         prevEndX = startX + item.width;
       }
       text = text.trim();
@@ -601,11 +604,19 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
 
       const isHeading = line.height > medianHeight * 1.25;
       const indentLeft = Math.max(0, Math.round((line.minX - pageMinX) * 20)); // pt -> twips
+      const bulletMatch = text.match(/^\s*([•●▪◦‣]|[-*])\s+(.*)$/);
+      const numberedMatch = text.match(/^\s*(\d+[.)])\s+(.*)$/);
+      const bodyText = bulletMatch?.[2] ?? numberedMatch?.[2] ?? text;
+      const children = runs.length
+        ? runs.map((run) => new TextRun({ text: sanitizeForWinAnsi(run.text), bold: run.bold, italics: run.italics }))
+        : [new TextRun(sanitizeForWinAnsi(bodyText))];
 
       paragraphs.push(new Paragraph({
         heading: isHeading ? HeadingLevel.HEADING_2 : undefined,
+        bullet: bulletMatch ? { level: 0 } : undefined,
+        numbering: numberedMatch ? { reference: "pdf-numbered", level: 0 } : undefined,
         indent: indentLeft > 0 ? { left: indentLeft } : undefined,
-        children: [new TextRun(sanitizeForWinAnsi(text))],
+        children,
       }));
     }
 
@@ -615,17 +626,18 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
     }
   }
 
-  const doc = new Document({ sections: [{ children: paragraphs }] });
+  const doc = new Document({ numbering: { config: [{ reference: "pdf-numbered", levels: [{ level: 0, format: "decimal", text: "%1.", alignment: "left" }] }] }, sections: [{ children: paragraphs }] });
   const blob = await Packer.toBlob(doc);
   return { blob, filename: file.name.replace(/\.pdf$/i, "") + ".docx" };
 }
 
 // ---------------- word → pdf (with unicode sanitizer) ----------------
 interface WordBlock {
-  tag: string; // h1-h4, p, li, br
+  tag: string; // h1-h4, p, li, table-row, hr
   text: string;
   bold?: boolean;
   italic?: boolean;
+  listKind?: "bullet" | "number";
 }
 
 function extractWordBlocks(html: string): WordBlock[] {
@@ -662,7 +674,22 @@ function extractWordBlocks(html: string): WordBlock[] {
       if (text) blocks.push({ tag, text, bold, italic });
     } else if (tag === "p" || tag === "li") {
       const { text, bold, italic } = inlineText(el);
-      if (text) blocks.push({ tag, text, bold, italic });
+      if (text) blocks.push({ tag, text, bold, italic, listKind: tag === "li" ? "bullet" : undefined });
+    } else if (tag === "ol" || tag === "ul") {
+      for (const item of Array.from(el.querySelectorAll(":scope > li"))) {
+        const { text, bold, italic } = inlineText(item);
+        if (text) blocks.push({ tag: "li", text, bold, italic, listKind: tag === "ol" ? "number" : "bullet" });
+      }
+    } else if (tag === "table") {
+      for (const row of Array.from(el.querySelectorAll("tr"))) {
+        const cells = Array.from(row.querySelectorAll("th,td")).map((cell) => inlineText(cell).text).filter(Boolean);
+        if (cells.length) blocks.push({ tag: "p", text: cells.join("    |    "), bold: row.querySelector("th") !== null });
+      }
+    } else if (tag === "hr") {
+      blocks.push({ tag: "hr", text: "────────────────────────────────" });
+    } else if (tag === "blockquote") {
+      const { text, bold, italic } = inlineText(el);
+      if (text) blocks.push({ tag: "p", text: `“${text}”`, bold, italic });
     } else {
       const { text, bold, italic } = inlineText(el);
       if (text) blocks.push({ tag: "p", text, bold, italic });
@@ -728,7 +755,7 @@ export async function wordToPdf(file: File): Promise<ToolResult> {
     const font = isHeading || block.bold ? fontBold : block.italic ? fontItalic : fontRegular;
     const lineHeight = size * 1.35;
     const indent = block.tag === "li" ? 18 : 0;
-    const prefix = block.tag === "li" ? "• " : "";
+    const prefix = block.tag === "li" ? (block.listKind === "number" ? "" : "• ") : "";
     const availWidth = maxWidth - indent - fontRegular.widthOfTextAtSize(prefix, size);
 
     if (!first) y -= lineHeight * 0.6; // blank-line gap between blocks
