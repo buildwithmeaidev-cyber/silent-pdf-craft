@@ -107,6 +107,25 @@ const STATIC_META: Record<string, RouteMeta> = {
     title: "Free PDF Templates — Resume, Invoice, NDA | SilentPDF",
     description: "Download free resume, cover letter, invoice, NDA, proposal and meeting-notes PDF templates. Generated in your browser, no signup.",
   },
+  "/pdf-editor": {
+    title: "PDF Editor Online — Edit PDFs Privately | SilentPDF",
+    description: "Edit a PDF online by adding text and annotations in your browser. Your file stays on your device with no signup or upload.",
+    jsonLd: [
+      { "@context": "https://schema.org", "@type": "SoftwareApplication", name: "SilentPDF PDF Editor", applicationCategory: "BusinessApplication", operatingSystem: "Web Browser", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" }, url: `${SITE_URL}/pdf-editor` },
+      { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` }, { "@type": "ListItem", position: 2, name: "PDF Editor", item: `${SITE_URL}/pdf-editor` }] },
+    ],
+  },
+  "/merge-pdf-online": {
+    title: "Merge PDF Online Free — Combine Files Privately | SilentPDF",
+    description: "Merge PDF files online in the order you choose. Combine documents in your browser without uploads, watermarks, accounts, or signup.",
+    jsonLd: [
+      { "@context": "https://schema.org", "@type": "SoftwareApplication", name: "SilentPDF Merge PDF", applicationCategory: "BusinessApplication", operatingSystem: "Web Browser", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" }, url: `${SITE_URL}/merge-pdf-online` },
+      { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` }, { "@type": "ListItem", position: 2, name: "Merge PDF Online", item: `${SITE_URL}/merge-pdf-online` }] },
+    ],
+  },
+  "/templates/career": { title: "Career PDF Templates — Free Resume & Cover Letter PDFs | SilentPDF", description: "Download free career PDF templates including resumes and cover letters, generated privately in your browser." },
+  "/templates/business": { title: "Business PDF Templates — Free Invoices & Proposals | SilentPDF", description: "Download free business PDF templates for invoices, proposals, and meeting notes. No signup required." },
+  "/templates/legal": { title: "Legal PDF Templates — Free NDA & Agreement PDFs | SilentPDF", description: "Download free legal PDF templates for NDAs and simple agreements, created in your browser without uploads." },
   "/video-tools": {
     title: "Private Browser Video Tools — SilentPDF",
     description: "Remove watermarks and edit video entirely in your browser. Nothing is uploaded — every file stays on your device.",

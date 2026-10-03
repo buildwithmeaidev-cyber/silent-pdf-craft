@@ -1,16 +1,35 @@
 import { Link, NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, FileText, Menu, X, Moon, Sun } from "lucide-react";
+import { ArrowUpRight, ChevronDown, FileText, Menu, X, Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-const links = [
-  { to: "/", label: "Home" },
-  { to: "/tools", label: "PDF Tools" },
-  { to: "/video-tools", label: "Video Tools" },
-  { to: "/workflows", label: "Workflows" },
-  { to: "/templates", label: "Templates" },
-  { to: "/blog", label: "Blog" },
-  { to: "/guides", label: "Guides" },
-  { to: "/resources", label: "Resources" },
+
+const navGroups = [
+  {
+    label: "Tools",
+    links: [
+      { to: "/tools", label: "All PDF tools" },
+      { to: "/pdf-editor", label: "PDF editor" },
+      { to: "/merge-pdf-online", label: "Merge PDF online" },
+      { to: "/video-tools", label: "Video tools" },
+    ],
+  },
+  {
+    label: "Workflows",
+    links: [
+      { to: "/workflows", label: "Ready-made workflows" },
+      { to: "/workflows/custom", label: "Build your own" },
+    ],
+  },
+  {
+    label: "Resources",
+    links: [
+      { to: "/templates", label: "Free templates" },
+      { to: "/guides", label: "Guides" },
+      { to: "/blog", label: "Blog" },
+      { to: "/security", label: "Security & privacy" },
+    ],
+  },
 ];
 
 const THEME_KEY = "silentpdf.theme";
@@ -44,6 +63,7 @@ function useTheme() {
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const { isDark, toggle } = useTheme();
 
   useEffect(() => {
@@ -78,103 +98,92 @@ export const Navbar = () => {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex lg:gap-2">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === "/"}
-              className={({ isActive }) =>
-                cn(
-                  "relative rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {link.label}
-                  <span
-                    className={cn(
-                      "absolute left-3.5 right-3.5 -bottom-0.5 h-[2px] rounded-full bg-primary transition-all",
-                      isActive ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
-                    )}
-                  />
-                </>
+        <nav className="hidden items-center gap-1 md:flex lg:gap-2" aria-label="Primary navigation">
+          {navGroups.map((group) => (
+            <div key={group.label} className="relative">
+              <Button
+                type="button"
+                variant="ghost"
+                className="gap-1.5 px-3 text-sm text-muted-foreground hover:text-foreground"
+                aria-expanded={openGroup === group.label}
+                onClick={() => setOpenGroup((current) => current === group.label ? null : group.label)}
+              >
+                {group.label}<ChevronDown className={cn("size-3.5 transition-transform", openGroup === group.label && "rotate-180")} />
+              </Button>
+              {openGroup === group.label && (
+                <div className="absolute left-0 top-full z-50 mt-2 w-56 border border-border bg-popover p-2 shadow-lift">
+                  {group.links.map((link) => (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setOpenGroup(null)}
+                      className={({ isActive }) => cn(
+                        "block px-3 py-2.5 text-sm transition-colors",
+                        isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
+                    >
+                      {link.label}
+                    </NavLink>
+                  ))}
+                </div>
               )}
-            </NavLink>
+            </div>
           ))}
+          <NavLink to="/" end className={({ isActive }) => cn("px-3 py-2 text-sm font-medium", isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
+            Home
+          </NavLink>
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             onClick={toggle}
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
-          <Link
-            to="/tools"
-            className="group inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30"
-          >
-            Open a tool
-            <ArrowUpRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </Link>
+          </Button>
+          <Button asChild className="group">
+            <Link to="/tools">Open a tool<ArrowUpRight className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /></Link>
+          </Button>
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             onClick={toggle}
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card/60 text-muted-foreground"
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-background/80"
             aria-label="Toggle menu"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          </Button>
         </div>
       </div>
 
       {mobileOpen && (
         <div className="border-t border-border bg-background/95 backdrop-blur-2xl md:hidden">
           <div className="container-px mx-auto flex flex-col gap-2 py-5">
-            {links.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.to === "/"}
-                onClick={() => setMobileOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-xl px-4 py-3 text-sm font-medium transition-all",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )
-                }
-              >
-                {link.label}
-              </NavLink>
+            <NavLink to="/" end onClick={() => setMobileOpen(false)} className={({ isActive }) => cn("px-4 py-3 text-sm font-medium", isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>Home</NavLink>
+            {navGroups.map((group) => (
+              <div key={group.label} className="border-t border-border pt-3">
+                <p className="px-4 pb-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{group.label}</p>
+                {group.links.map((link) => (
+                  <NavLink key={link.to} to={link.to} onClick={() => setMobileOpen(false)} className={({ isActive }) => cn("block px-4 py-2.5 text-sm", isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>{link.label}</NavLink>
+                ))}
+              </div>
             ))}
-
-            <Link
-              to="/tools"
-              onClick={() => setMobileOpen(false)}
-              className="mt-3 inline-flex h-12 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20"
-            >
-              Open a tool
-              <ArrowUpRight className="ml-2 h-4 w-4" />
-            </Link>
+            <Button asChild className="mt-3"><Link to="/tools" onClick={() => setMobileOpen(false)}>Open a tool<ArrowUpRight /></Link></Button>
           </div>
         </div>
       )}

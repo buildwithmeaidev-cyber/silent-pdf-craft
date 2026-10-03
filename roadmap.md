@@ -1,0 +1,4 @@
+- [ ] Redesign navbar
+- [ ] Improve PDF↔Word conversions
+- [ ] Add route metadata and validate SEO
+- [ ] Run production build and tests
