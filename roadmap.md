@@ -1,4 +1,3 @@
-- [ ] Redesign navbar
-- [ ] Improve PDF↔Word conversions
-- [ ] Add route metadata and validate SEO
-- [ ] Run production build and tests
+- [ ] Add PDF-to-Word coverage for lists, table rows, Unicode text, and page breaks
+- [ ] Add Word-to-PDF coverage for lists, tables, Unicode normalization, and pagination
+- [ ] Run the conversion tests and resolve any failures

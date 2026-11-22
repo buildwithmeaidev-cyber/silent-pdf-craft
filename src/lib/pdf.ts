@@ -529,7 +529,7 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, PageBreak } = await import("docx");
   const pdfjs = await getPdfJs();
   const buf = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: buf }).promise;
+  const pdf = await pdfjs.getDocument({ data: new Uint8Array(buf) }).promise;
 
   const paragraphs: InstanceType<typeof Paragraph>[] = [];
 
@@ -700,7 +700,8 @@ function extractWordBlocks(html: string): WordBlock[] {
 
 export async function wordToPdf(file: File): Promise<ToolResult> {
   const mammoth = await import("mammoth");
-  const { value: html } = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+  const wordBytes = new Uint8Array(await file.arrayBuffer());
+  const { value: html } = await mammoth.convertToHtml({ arrayBuffer: wordBytes });
   const blocks = extractWordBlocks(html);
 
   const out = await PDFDocument.create();
