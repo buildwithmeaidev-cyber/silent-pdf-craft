@@ -1,0 +1,6 @@
+[site]
+bucket = "dist"
+
+[build]
+command = "npm install && npm run build"
+watch_dir = ""
