@@ -1,5 +1,5 @@
 import { inflateRawSync } from "node:zlib";
-import { Blob as NodeBlob, File as NodeFile } from "node:buffer";
+import { Blob as NodeBlobRuntime, File as NodeFileRuntime } from "node:buffer";
 import { Document, HeadingLevel, Packer, Paragraph, Table, TableCell, TableRow, TextRun } from "docx";
 import DOMMatrixShim from "dommatrix";
 import { resolve } from "node:path";
@@ -8,8 +8,15 @@ import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import { getPdfJs, pdfToWord, wordToPdf } from "./pdf";
 
-Object.defineProperty(globalThis, "Blob", { configurable: true, value: NodeBlob });
-Object.defineProperty(globalThis, "File", { configurable: true, value: NodeFile });
+const NodeBlob = NodeBlobRuntime as unknown as {
+  new (...args: ConstructorParameters<typeof NodeBlobRuntime>): Blob;
+};
+const NodeFile = NodeFileRuntime as unknown as {
+  new (...args: ConstructorParameters<typeof NodeFileRuntime>): File;
+};
+
+Object.defineProperty(globalThis, "Blob", { configurable: true, value: NodeBlobRuntime });
+Object.defineProperty(globalThis, "File", { configurable: true, value: NodeFileRuntime });
 Object.defineProperty(globalThis, "DOMMatrix", { configurable: true, value: DOMMatrixShim });
 
 async function preparePdfJs() {
@@ -147,7 +154,7 @@ describe("PDF to Word conversion", () => {
     const result = await pdfToWord(await makePdfFixture());
     const mammoth = await import("mammoth");
     const { value: html } = await mammoth.convertToHtml({
-      arrayBuffer: new Uint8Array(await result.blob.arrayBuffer()),
+      arrayBuffer: await result.blob.arrayBuffer(),
     });
 
     expect(result.filename).toBe("conversion-fixture.docx");

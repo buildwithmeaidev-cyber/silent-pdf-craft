@@ -1,4 +1,4 @@
-import { Blob as NodeBlob, File as NodeFile } from "node:buffer";
+import { File as NodeFileRuntime } from "node:buffer";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import DOMMatrixShim from "dommatrix";
@@ -20,8 +20,11 @@ import {
 } from "@/lib/pdf";
 import { destroyPdfProxy, isJobCancelledError } from "@/lib/pdfGuards";
 
-Object.defineProperty(globalThis, "Blob", { configurable: true, value: NodeBlob });
-Object.defineProperty(globalThis, "File", { configurable: true, value: NodeFile });
+const NodeFile = NodeFileRuntime as unknown as {
+  new (...args: ConstructorParameters<typeof NodeFileRuntime>): File;
+};
+
+Object.defineProperty(globalThis, "File", { configurable: true, value: NodeFileRuntime });
 Object.defineProperty(globalThis, "DOMMatrix", { configurable: true, value: DOMMatrixShim });
 
 async function buildTextPdf(
@@ -53,7 +56,6 @@ async function buildEncryptedBytes(password: string, pages = 2): Promise<Uint8Ar
   doc.encrypt({
     userPassword: password,
     ownerPassword: `${password}-owner`,
-    algorithm: "AES-256",
     permissions: {
       printing: "highResolution",
       modifying: false,

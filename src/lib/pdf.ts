@@ -2,6 +2,7 @@ import { ensureRuntimePolyfills } from "./polyfills";
 import {
   destroyPdfProxy,
   inspectPdfInput,
+  isJobCancelledError,
   throwIfAborted,
   verifyPdfOutput,
   yieldToMain,
@@ -350,7 +351,6 @@ export async function protectPdf(
   src.encrypt({
     userPassword: password,
     ownerPassword: randomOwnerPassword(),
-    algorithm: "AES-256",
     permissions: {
       printing: "highResolution",
       modifying: false,
@@ -963,7 +963,7 @@ function extractWordBlocks(html: string): WordBlock[] {
 
 export async function wordToPdf(file: File): Promise<ToolResult> {
   const mammoth = await import("mammoth");
-  const wordBytes = new Uint8Array(await file.arrayBuffer());
+  const wordBytes = await file.arrayBuffer();
   const { value: html } = await mammoth.convertToHtml({ arrayBuffer: wordBytes });
   const blocks = extractWordBlocks(html);
 

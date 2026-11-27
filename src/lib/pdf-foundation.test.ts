@@ -1,4 +1,4 @@
-import { Blob as NodeBlob, File as NodeFile } from "node:buffer";
+import { Blob as NodeBlobRuntime, File as NodeFileRuntime } from "node:buffer";
 import { act, renderHook } from "@testing-library/react";
 import { Document, Packer, Paragraph } from "docx";
 import { PDFDocument, StandardFonts, degrees } from "pdf-lib";
@@ -16,8 +16,15 @@ import {
   yieldToMain,
 } from "@/lib/pdfGuards";
 
-Object.defineProperty(globalThis, "Blob", { configurable: true, value: NodeBlob });
-Object.defineProperty(globalThis, "File", { configurable: true, value: NodeFile });
+const NodeBlob = NodeBlobRuntime as unknown as {
+  new (...args: ConstructorParameters<typeof NodeBlobRuntime>): Blob;
+};
+const NodeFile = NodeFileRuntime as unknown as {
+  new (...args: ConstructorParameters<typeof NodeFileRuntime>): File;
+};
+
+Object.defineProperty(globalThis, "Blob", { configurable: true, value: NodeBlobRuntime });
+Object.defineProperty(globalThis, "File", { configurable: true, value: NodeFileRuntime });
 
 async function buildSamplePdf(pages = 2, rotateFirstDeg = 0): Promise<Uint8Array> {
   const doc = await PDFDocument.create();

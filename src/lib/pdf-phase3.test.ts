@@ -1,12 +1,15 @@
-import { Blob as NodeBlob, File as NodeFile } from "node:buffer";
+import { File as NodeFileRuntime } from "node:buffer";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { compressPdf, getPdfJs, imageToPdf } from "@/lib/pdf";
 
-Object.defineProperty(globalThis, "Blob", { configurable: true, value: NodeBlob });
-Object.defineProperty(globalThis, "File", { configurable: true, value: NodeFile });
+const NodeFile = NodeFileRuntime as unknown as {
+  new (...args: ConstructorParameters<typeof NodeFileRuntime>): File;
+};
+
+Object.defineProperty(globalThis, "File", { configurable: true, value: NodeFileRuntime });
 
 async function buildTextPdf(lines = 10): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
