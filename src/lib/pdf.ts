@@ -1,8 +1,18 @@
+import { ensureRuntimePolyfills } from "./polyfills";
+import {
+  destroyPdfProxy,
+  inspectPdfInput,
+  throwIfAborted,
+  verifyPdfOutput,
+  yieldToMain,
+} from "./pdfGuards";
 import { PDFDocument, degrees, StandardFonts, rgb } from "pdf-lib";
 // Encrypted save via drop-in fork
 import { PDFDocument as PDFDocumentEnc } from "@cantoo/pdf-lib";
 // Static worker URL — resolved by Vite in both dev and prod builds.
 import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
+ensureRuntimePolyfills();
 
 export type ToolResult = { blob: Blob; filename: string };
 export type CompressionLevel = "light" | "medium" | "strong" | "custom";
@@ -50,58 +60,162 @@ export interface EditAnnotation {
 
 // ---------------- pdf.js loader ----------------
 let _pdfjs: typeof import("pdfjs-dist") | null = null;
+function hasNativeEs2025WorkerSupport(): boolean {
+  const p = Promise as unknown as { try?: unknown; withResolvers?: unknown };
+  const u8 = Uint8Array.prototype as unknown as { toHex?: unknown; toBase64?: unknown };
+  const map = Map.prototype as unknown as { getOrInsert?: unknown; getOrInsertComputed?: unknown };
+  return (
+    typeof p.try === "function" &&
+    typeof p.withResolvers === "function" &&
+    typeof u8.toHex === "function" &&
+    typeof u8.toBase64 === "function" &&
+    typeof map.getOrInsert === "function" &&
+    typeof map.getOrInsertComputed === "function"
+  );
+}
+
 export async function getPdfJs() {
   if (_pdfjs) return _pdfjs;
+  ensureRuntimePolyfills();
   const pdfjs = await import("pdfjs-dist");
-  (pdfjs as unknown as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
+  let workerSrc = pdfjsWorkerUrl;
+  if (typeof window !== "undefined" && typeof Blob !== "undefined" && !hasNativeEs2025WorkerSupport()) {
+    const absUrl = new URL(pdfjsWorkerUrl, window.location.href).href;
+    const bootstrap = [
+      `if(!Promise.try)Promise.try=function(f,...a){return new Promise(r=>r(f(...a)))};`,
+      `if(!Promise.withResolvers)Promise.withResolvers=function(){let resolve,reject;const promise=new Promise((r,j)=>{resolve=r;reject=j});return{promise,resolve,reject}};`,
+      `if(!Uint8Array.prototype.toHex)Uint8Array.prototype.toHex=function(){let s="";for(let i=0;i<this.length;i++)s+=this[i].toString(16).padStart(2,"0");return s};`,
+      `if(!Uint8Array.prototype.toBase64)Uint8Array.prototype.toBase64=function(){let b="";for(let i=0;i<this.length;i+=0x8000)b+=String.fromCharCode(...this.subarray(i,i+0x8000));return btoa(b)};`,
+      `if(!Uint8Array.fromBase64)Uint8Array.fromBase64=function(s){const b=atob(s.replace(/\\s+/g,"").replace(/-/g,"+").replace(/_/g,"/"));const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u};`,
+      `if(!Map.prototype.getOrInsert)Map.prototype.getOrInsert=function(k,v){if(this.has(k))return this.get(k);this.set(k,v);return v};`,
+      `if(!Map.prototype.getOrInsertComputed)Map.prototype.getOrInsertComputed=function(k,f){if(this.has(k))return this.get(k);const v=f(k);this.set(k,v);return v};`,
+      `import ${JSON.stringify(absUrl)};`,
+    ].join("");
+    workerSrc = URL.createObjectURL(new Blob([bootstrap], { type: "text/javascript" }));
+  }
+  (pdfjs as unknown as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc = workerSrc;
   _pdfjs = pdfjs;
   return pdfjs;
 }
 
-// ---------------- merge / split / rotate / remove ----------------
-export async function mergePdfs(files: File[]): Promise<ToolResult> {
-  const out = await PDFDocument.create();
-  for (const f of files) {
-    const src = await PDFDocument.load(await f.arrayBuffer(), { ignoreEncryption: true });
-    const pages = await out.copyPages(src, src.getPageIndices());
-    pages.forEach((p) => out.addPage(p));
-  }
-  const bytes = await out.save({ useObjectStreams: true });
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-merged.pdf" };
+export interface PdfOpOptions {
+  signal?: AbortSignal;
 }
 
-export async function splitPdf(file: File, ranges?: string): Promise<ToolResult> {
-  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+export interface AddPagesOptions extends PdfOpOptions {
+  mode?: "blank" | "import";
+  blankCount?: number;
+  /** 0 = insert at start (cover), basePageCount = append at end (default). */
+  insertAfterPage?: number;
+  importFile?: File;
+  /** 1-indexed pages from importFile; defaults to all pages when omitted. */
+  importPages?: number[];
+}
+
+// ---------------- merge / split / rotate / remove ----------------
+export async function mergePdfs(files: File[], options?: PdfOpOptions): Promise<ToolResult> {
+  if (!files || files.length < 2) {
+    throw new Error("Select at least 2 PDF files to merge.");
+  }
+  const out = await PDFDocument.create();
+  let expectedTotal = 0;
+
+  for (const f of files) {
+    throwIfAborted(options?.signal);
+    const inspected = await inspectPdfInput(f, { signal: options?.signal });
+    const src = await PDFDocument.load(inspected.bytes, { throwOnInvalidObject: false });
+    const indices = src.getPageIndices();
+    const pages = await out.copyPages(src, indices);
+    pages.forEach((p) => out.addPage(p));
+    expectedTotal += indices.length;
+    await yieldToMain(options?.signal);
+  }
+
+  const bytes = await out.save({ useObjectStreams: true });
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+  await verifyPdfOutput(blob, { expectedPageCount: expectedTotal });
+  return { blob, filename: "silentpdf-merged.pdf" };
+}
+
+export async function splitPdf(file: File, ranges?: string, options?: PdfOpOptions): Promise<ToolResult> {
+  const inspected = await inspectPdfInput(file, { signal: options?.signal });
+  const src = await PDFDocument.load(inspected.bytes, { throwOnInvalidObject: false });
   const total = src.getPageCount();
   const indices = parseRanges(ranges, total) ?? src.getPageIndices();
+  if (indices.length === 0) {
+    throw new Error("Select at least one page to extract.");
+  }
   const out = await PDFDocument.create();
   const pages = await out.copyPages(src, indices);
   pages.forEach((p) => out.addPage(p));
+  await yieldToMain(options?.signal);
   const bytes = await out.save({ useObjectStreams: true });
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-split.pdf" };
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+  await verifyPdfOutput(blob, { expectedPageCount: indices.length });
+  return { blob, filename: "silentpdf-split.pdf" };
 }
 
-export async function rotatePdf(file: File, deg: 90 | 180 | 270 = 90): Promise<ToolResult> {
-  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  src.getPages().forEach((p) => {
+export async function rotatePdf(
+  file: File,
+  degOrMap: 90 | 180 | 270 | Record<number, number> = 90,
+  options?: PdfOpOptions,
+): Promise<ToolResult> {
+  const inspected = await inspectPdfInput(file, { signal: options?.signal });
+  const src = await PDFDocument.load(inspected.bytes, { throwOnInvalidObject: false });
+  const pages = src.getPages();
+
+  if (typeof degOrMap === "object" && degOrMap !== null) {
+    for (const rawKey of Object.keys(degOrMap)) {
+      const pageNum = Number(rawKey);
+      if (!Number.isInteger(pageNum) || pageNum < 1 || pageNum > pages.length) {
+        throw new Error(`Page ${rawKey} is out of bounds. This PDF has ${pages.length} ${pages.length === 1 ? "page" : "pages"}.`);
+      }
+    }
+  }
+
+  const expectedRotations: Record<number, number> = {};
+  for (let idx = 0; idx < pages.length; idx++) {
+    const p = pages[idx];
     const current = p.getRotation().angle || 0;
-    p.setRotation(degrees((current + deg) % 360));
-  });
+    const delta = typeof degOrMap === "number" ? degOrMap : (degOrMap[idx + 1] ?? 0);
+    const nextAngle = (((current + delta) % 360) + 360) % 360;
+    p.setRotation(degrees(nextAngle));
+    expectedRotations[idx] = nextAngle;
+  }
+
+  await yieldToMain(options?.signal);
   const bytes = await src.save({ useObjectStreams: true });
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-rotated.pdf" };
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+  await verifyPdfOutput(blob, {
+    expectedPageCount: pages.length,
+    expectedRotations,
+  });
+  return { blob, filename: "silentpdf-rotated.pdf" };
 }
 
-export async function removePages(file: File, ranges: string): Promise<ToolResult> {
-  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+export async function removePages(file: File, ranges: string, options?: PdfOpOptions): Promise<ToolResult> {
+  if (!ranges || !ranges.trim()) {
+    throw new Error("Choose at least one page to remove.");
+  }
+  const inspected = await inspectPdfInput(file, { signal: options?.signal });
+  const src = await PDFDocument.load(inspected.bytes, { throwOnInvalidObject: false });
   const total = src.getPageCount();
-  const remove = new Set(parseRanges(ranges, total) ?? []);
+  const parsed = parseRanges(ranges, total);
+  if (!parsed || parsed.length === 0) {
+    throw new Error("Choose at least one page to remove.");
+  }
+  const remove = new Set(parsed);
   const keep = src.getPageIndices().filter((i) => !remove.has(i));
-  if (keep.length === 0) throw new Error("Cannot remove every page.");
+  if (keep.length === 0) throw new Error("Cannot remove every page. Keep at least one page.");
+
   const out = await PDFDocument.create();
   const pages = await out.copyPages(src, keep);
   pages.forEach((p) => out.addPage(p));
+  await yieldToMain(options?.signal);
   const bytes = await out.save({ useObjectStreams: true });
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-trimmed.pdf" };
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+  await verifyPdfOutput(blob, { expectedPageCount: keep.length });
+  return { blob, filename: "silentpdf-trimmed.pdf" };
 }
 
 // ---------------- compression ----------------
@@ -126,54 +240,91 @@ export async function compressPdf(
   file: File,
   config?: CompressionConfig,
   onProgress?: (pct: number) => void,
+  options?: PdfOpOptions,
 ): Promise<ToolResult> {
+  const inspected = await inspectPdfInput(file, { signal: options?.signal });
   const level: CompressionLevel = config?.level ?? getOptimalCompressionLevel(file.size);
+
+  // Strategy 1: Try structural optimization (re-saving with object streams & removing metadata).
+  // This preserves 100% of selectable text and vectors without rasterizing text.
+  try {
+    throwIfAborted(options?.signal);
+    const doc = await PDFDocument.load(inspected.bytes, { throwOnInvalidObject: false });
+    doc.setProducer("silentPDF");
+    doc.setSubject("");
+    doc.setKeywords([]);
+    await yieldToMain(options?.signal);
+    const structuralBytes = await doc.save({ useObjectStreams: true, addDefaultPage: false });
+    
+    // If structural optimization successfully reduced or maintained file size, return it.
+    if (structuralBytes.length <= inspected.bytes.length) {
+      const blob = new Blob([structuralBytes as BlobPart], { type: "application/pdf" });
+      await verifyPdfOutput(blob, { expectedPageCount: doc.getPageCount(), expectedMaxBytes: inspected.bytes.length });
+      onProgress?.(100);
+      return { blob, filename: "silentpdf-compressed.pdf" };
+    }
+  } catch (err) {
+    if (isJobCancelledError(err)) throw err;
+    // Fall through to raster compression if structural optimization didn't shrink text-heavy/image-heavy doc.
+  }
+
+  // Strategy 2: Image/page re-compression (needed when source is a giant scanned PDF).
   const preset = (() => {
     switch (level) {
-      case "light":  return { scale: 1.25, quality: 0.9 };
-      case "medium": return { scale: 1.0,  quality: 0.72 };
+      case "light":  return { scale: 1.0,  quality: 0.88 };
+      case "medium": return { scale: 0.95, quality: 0.72 };
       case "strong": return { scale: 0.85, quality: 0.5 };
       case "custom": {
         const q = Math.min(100, Math.max(20, config?.quality ?? 75)) / 100;
-        return { scale: 0.7 + q * 0.75, quality: q };
+        return { scale: 0.8 + q * 0.2, quality: q };
       }
     }
   })();
 
   const pdfjs = await getPdfJs();
-  const srcBuf = await file.arrayBuffer();
-  const srcPdf = await pdfjs.getDocument({ data: srcBuf }).promise;
+  const task = pdfjs.getDocument({ data: inspected.bytes });
+  const srcPdf = await task.promise;
   const out = await PDFDocument.create();
   out.setProducer("silentPDF");
 
-  for (let i = 1; i <= srcPdf.numPages; i++) {
-    const page = await srcPdf.getPage(i);
-    const viewport = page.getViewport({ scale: preset.scale });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.floor(viewport.width));
-    canvas.height = Math.max(1, Math.floor(viewport.height));
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Canvas not available");
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvasContext: ctx, viewport, canvas } as unknown as Parameters<typeof page.render>[0]).promise;
+  try {
+    for (let i = 1; i <= srcPdf.numPages; i++) {
+      throwIfAborted(options?.signal);
+      const page = await srcPdf.getPage(i);
+      const viewport = page.getViewport({ scale: preset.scale });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.floor(viewport.width));
+      canvas.height = Math.max(1, Math.floor(viewport.height));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas not available");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport, canvas } as unknown as Parameters<typeof page.render>[0]).promise;
 
-    const jpegBlob: Blob = await new Promise((resolve, reject) =>
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Encode failed"))), "image/jpeg", preset.quality)
-    );
-    const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
-    const embedded = await out.embedJpg(jpegBytes);
+      const jpegBlob: Blob = await new Promise((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Encode failed"))), "image/jpeg", preset.quality)
+      );
+      const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
+      const embedded = await out.embedJpg(jpegBytes);
+      canvas.width = 0;
+      canvas.height = 0;
 
-    const origViewport = page.getViewport({ scale: 1 });
-    const pdfPage = out.addPage([origViewport.width, origViewport.height]);
-    pdfPage.drawImage(embedded, { x: 0, y: 0, width: origViewport.width, height: origViewport.height });
-    onProgress?.(Math.round((i / srcPdf.numPages) * 100));
-    // yield so the UI thread can paint
-    await new Promise((r) => setTimeout(r, 0));
+      const origViewport = page.getViewport({ scale: 1 });
+      const pdfPage = out.addPage([origViewport.width, origViewport.height]);
+      pdfPage.drawImage(embedded, { x: 0, y: 0, width: origViewport.width, height: origViewport.height });
+      onProgress?.(Math.round((i / srcPdf.numPages) * 100));
+      await yieldToMain(options?.signal);
+    }
+  } finally {
+    await destroyPdfProxy(srcPdf, task);
   }
 
   const bytes = await out.save({ useObjectStreams: true, addDefaultPage: false });
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-compressed.pdf" };
+  // Size-never-grows guard: if rasterization somehow bloated a small text PDF, return original.
+  const finalBytes = bytes.length < inspected.bytes.length ? bytes : inspected.bytes;
+  const blob = new Blob([finalBytes as BlobPart], { type: "application/pdf" });
+  await verifyPdfOutput(blob, { expectedPageCount: srcPdf.numPages, expectedMaxBytes: inspected.bytes.length });
+  return { blob, filename: "silentpdf-compressed.pdf" };
 }
 
 // ---------------- protect (real AES via @cantoo/pdf-lib) ----------------
@@ -184,31 +335,45 @@ function randomOwnerPassword(): string {
   return Array.from(bytes, (b) => b.toString(36).padStart(2, "0")).join("").slice(0, 32);
 }
 
-export async function protectPdf(file: File, password: string): Promise<ToolResult> {
-  if (!password || password.length < 4) throw new Error("Password must be at least 4 characters.");
-  const src = await PDFDocumentEnc.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  // @cantoo/pdf-lib supports save({ encrypt: {...} })
-  const bytes = await (src as unknown as {
-    save: (opts: { encrypt: { userPassword: string; ownerPassword: string; permissions?: Record<string, boolean> } }) => Promise<Uint8Array>;
-  }).save({
-    encrypt: {
-      userPassword: password,
-      ownerPassword: randomOwnerPassword(),
-      permissions: { printing: true, modifying: false, copying: false, annotating: false },
+export async function protectPdf(
+  file: File,
+  password: string,
+  options?: PdfOpOptions,
+): Promise<ToolResult> {
+  if (!password || password.length < 4) {
+    throw new Error("Password must be at least 4 characters.");
+  }
+  const inspected = await inspectPdfInput(file, { signal: options?.signal });
+  const src = await PDFDocumentEnc.load(inspected.bytes, { throwOnInvalidObject: false });
+
+  // @cantoo/pdf-lib enforces encryption via doc.encrypt(...) BEFORE save(), not inside save options.
+  src.encrypt({
+    userPassword: password,
+    ownerPassword: randomOwnerPassword(),
+    algorithm: "AES-256",
+    permissions: {
+      printing: "highResolution",
+      modifying: false,
+      copying: false,
+      annotating: false,
+      fillingForms: false,
+      contentAccessibility: false,
+      documentAssembly: false,
     },
   });
 
-  // Verify the output is genuinely encrypted: loading without ignoreEncryption
-  // must fail. If it succeeds, encryption silently didn't apply.
-  try {
-    await PDFDocument.load(bytes);
-    throw new Error("Encryption isn't supported for this file in your browser. Try a different PDF.");
-  } catch (err) {
-    if (err instanceof Error && err.message.startsWith("Encryption isn't supported")) throw err;
-    // Any other error means the load failed as expected (i.e. it's encrypted). Good.
-  }
+  await yieldToMain(options?.signal);
+  const bytes = await src.save({ useObjectStreams: true });
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
 
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-protected.pdf" };
+  // Independently verify real AES encryption + unlockability + intact page count.
+  await verifyPdfOutput(blob, {
+    encrypted: true,
+    password,
+    expectedPageCount: inspected.pageCount,
+  });
+
+  return { blob, filename: "silentpdf-protected.pdf" };
 }
 
 // ---------------- image → PDF ----------------
@@ -373,43 +538,47 @@ export async function removeWatermarkPdf(
       const pdfjs = await getPdfJs();
       // Re-read from the freshly saved bytes so we're aligned with what will be output.
       const preview = await src.save({ useObjectStreams: false });
-      const doc = await pdfjs.getDocument({ data: preview.slice(0) as unknown as Uint8Array }).promise;
+      const task = pdfjs.getDocument({ data: preview.slice(0) as unknown as Uint8Array });
+      const doc = await task.promise;
+      try {
+        const pages = src.getPages();
+        for (let i = 1; i <= doc.numPages && i <= pages.length; i++) {
+          const jsPage = await doc.getPage(i);
+          const viewport = jsPage.getViewport({ scale: 1 });
+          const content = await jsPage.getTextContent();
+          const pdfPage = pages[i - 1];
+          const { height: pageH } = pdfPage.getSize();
+          // Coordinate delta between pdf.js viewport height and pdf-lib page height (rotation cases).
+          const yScale = pageH / viewport.height;
+          const xScale = pdfPage.getSize().width / viewport.width;
 
-      const pages = src.getPages();
-      for (let i = 1; i <= doc.numPages && i <= pages.length; i++) {
-        const jsPage = await doc.getPage(i);
-        const viewport = jsPage.getViewport({ scale: 1 });
-        const content = await jsPage.getTextContent();
-        const pdfPage = pages[i - 1];
-        const { height: pageH } = pdfPage.getSize();
-        // Coordinate delta between pdf.js viewport height and pdf-lib page height (rotation cases).
-        const yScale = pageH / viewport.height;
-        const xScale = pdfPage.getSize().width / viewport.width;
-
-        for (const item of content.items as Array<{
-          str: string; transform: number[]; width: number; height: number;
-        }>) {
-          const text = (item.str || "").toLowerCase();
-          if (!text.trim()) continue;
-          if (!cleaned.some((p) => text.includes(p))) continue;
-          // pdf.js transform: [a, b, c, d, e, f]. e,f = origin in top-down coords.
-          const tx = item.transform[4] * xScale;
-          const tyTop = item.transform[5] * yScale;
-          const w = (item.width || Math.abs(item.transform[0]) * item.str.length * 0.5) * xScale;
-          const h = (item.height || Math.abs(item.transform[3]) * 1.4) * yScale;
-          // pdf-lib origin = bottom-left; pdf.js origin returned = bottom-left too for text items,
-          // so we can draw directly with a small padding.
-          const pad = Math.max(1, h * 0.15);
-          pdfPage.drawRectangle({
-            x: Math.max(0, tx - pad),
-            y: Math.max(0, tyTop - pad),
-            width: w + pad * 2,
-            height: h + pad * 2,
-            color: rgb(1, 1, 1),
-            opacity: 1,
-            borderWidth: 0,
-          });
+          for (const item of content.items as Array<{
+            str: string; transform: number[]; width: number; height: number;
+          }>) {
+            const text = (item.str || "").toLowerCase();
+            if (!text.trim()) continue;
+            if (!cleaned.some((p) => text.includes(p))) continue;
+            // pdf.js transform: [a, b, c, d, e, f]. e,f = origin in top-down coords.
+            const tx = item.transform[4] * xScale;
+            const tyTop = item.transform[5] * yScale;
+            const w = (item.width || Math.abs(item.transform[0]) * item.str.length * 0.5) * xScale;
+            const h = (item.height || Math.abs(item.transform[3]) * 1.4) * yScale;
+            // pdf-lib origin = bottom-left; pdf.js origin returned = bottom-left too for text items,
+            // so we can draw directly with a small padding.
+            const pad = Math.max(1, h * 0.15);
+            pdfPage.drawRectangle({
+              x: Math.max(0, tx - pad),
+              y: Math.max(0, tyTop - pad),
+              width: w + pad * 2,
+              height: h + pad * 2,
+              color: rgb(1, 1, 1),
+              opacity: 1,
+              borderWidth: 0,
+            });
+          }
         }
+      } finally {
+        await destroyPdfProxy(doc, task);
       }
     }
   } catch (err) {
@@ -426,32 +595,121 @@ export async function removeWatermarkPdf(
 }
 
 // ---------------- reorder / addpages / export ----------------
-export async function reorderPdf(file: File, order: string): Promise<ToolResult> {
-  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+export async function reorderPdf(
+  file: File,
+  order: string,
+  options?: PdfOpOptions,
+): Promise<ToolResult> {
+  const inspected = await inspectPdfInput(file, { signal: options?.signal });
+  const src = await PDFDocument.load(inspected.bytes, { throwOnInvalidObject: false });
   const total = src.getPageCount();
   const indices = parseRanges(order, total);
   if (!indices || indices.length === 0) throw new Error("Enter a new page order, e.g. 3,1,2");
   const out = await PDFDocument.create();
   const pages = await out.copyPages(src, indices);
   pages.forEach((p) => out.addPage(p));
+  await yieldToMain(options?.signal);
   const bytes = await out.save({ useObjectStreams: true });
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-reordered.pdf" };
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+  await verifyPdfOutput(blob, { expectedPageCount: indices.length });
+  return { blob, filename: "silentpdf-reordered.pdf" };
 }
 
-export async function addBlankPages(file: File, count: number): Promise<ToolResult> {
-  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  const [first] = src.getPages();
-  const size: [number, number] = first ? [first.getWidth(), first.getHeight()] : [595.28, 841.89];
-  for (let i = 0; i < Math.max(1, count); i++) src.addPage(size);
-  const bytes = await src.save({ useObjectStreams: true });
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: "silentpdf-with-pages.pdf" };
+export async function addPagesToPdf(file: File, options: AddPagesOptions = {}): Promise<ToolResult> {
+  const baseInspected = await inspectPdfInput(file, { signal: options.signal });
+  const baseDoc = await PDFDocument.load(baseInspected.bytes, { throwOnInvalidObject: false });
+  const baseCount = baseDoc.getPageCount();
+
+  const rawPos = options.insertAfterPage ?? baseCount;
+  if (!Number.isInteger(rawPos) || rawPos < 0 || rawPos > baseCount) {
+    throw new Error(`Insert position must be between 0 and ${baseCount}.`);
+  }
+  const insertPos = rawPos;
+  const mode = options.mode ?? "blank";
+
+  const out = await PDFDocument.create();
+  const beforeIndices = Array.from({ length: insertPos }, (_, i) => i);
+  const afterIndices = Array.from({ length: baseCount - insertPos }, (_, i) => insertPos + i);
+
+  if (beforeIndices.length > 0) {
+    const beforePages = await out.copyPages(baseDoc, beforeIndices);
+    beforePages.forEach((p) => out.addPage(p));
+  }
+
+  let addedCount = 0;
+  if (mode === "import") {
+    if (!options.importFile) {
+      throw new Error("Choose a second PDF file to import pages from.");
+    }
+    const importInspected = await inspectPdfInput(options.importFile, { signal: options.signal });
+    const importDoc = await PDFDocument.load(importInspected.bytes, { throwOnInvalidObject: false });
+    const importTotal = importDoc.getPageCount();
+    const chosenOneBased =
+      options.importPages && options.importPages.length > 0
+        ? options.importPages
+        : Array.from({ length: importTotal }, (_, i) => i + 1);
+
+    const zeroIndices: number[] = [];
+    for (const pageNum of chosenOneBased) {
+      if (!Number.isInteger(pageNum) || pageNum < 1 || pageNum > importTotal) {
+        throw new Error(`Imported page ${pageNum} is out of bounds (${importTotal} pages in ${options.importFile.name}).`);
+      }
+      zeroIndices.push(pageNum - 1);
+    }
+    const importedPages = await out.copyPages(importDoc, zeroIndices);
+    importedPages.forEach((p) => out.addPage(p));
+    addedCount = importedPages.length;
+  } else {
+    const blankCount = Math.floor(options.blankCount ?? 1);
+    if (!Number.isFinite(blankCount) || blankCount < 1 || blankCount > 200) {
+      throw new Error("Blank page count must be between 1 and 200.");
+    }
+    const refIdx = Math.max(0, insertPos - 1);
+    const refPage = baseDoc.getPages()[refIdx] ?? baseDoc.getPages()[0];
+    const size: [number, number] = refPage
+      ? [refPage.getWidth(), refPage.getHeight()]
+      : [595.28, 841.89];
+    for (let i = 0; i < blankCount; i++) {
+      out.addPage(size);
+    }
+    addedCount = blankCount;
+  }
+
+  if (afterIndices.length > 0) {
+    const afterPages = await out.copyPages(baseDoc, afterIndices);
+    afterPages.forEach((p) => out.addPage(p));
+  }
+
+  await yieldToMain(options.signal);
+  const bytes = await out.save({ useObjectStreams: true });
+  const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+  await verifyPdfOutput(blob, { expectedPageCount: baseCount + addedCount });
+  return { blob, filename: "silentpdf-with-pages.pdf" };
 }
 
-export async function exportPdf(file: File, newName: string): Promise<ToolResult> {
-  const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  const bytes = await src.save({ useObjectStreams: true });
-  const clean = (newName || "silentpdf-export").replace(/[^\w\-. ]+/g, "").trim() || "silentpdf-export";
-  return { blob: new Blob([bytes as BlobPart], { type: "application/pdf" }), filename: clean.endsWith(".pdf") ? clean : `${clean}.pdf` };
+export async function addBlankPages(
+  file: File,
+  count: number,
+  options?: PdfOpOptions,
+): Promise<ToolResult> {
+  return addPagesToPdf(file, { mode: "blank", blankCount: count, signal: options?.signal });
+}
+
+export async function exportPdf(
+  file: File,
+  newName: string,
+  options?: PdfOpOptions,
+): Promise<ToolResult> {
+  const inspected = await inspectPdfInput(file, { signal: options?.signal });
+  await yieldToMain(options?.signal);
+  // Preserve original validated PDF bytes intact while giving it a clean sanitized filename.
+  const blob = new Blob([inspected.bytes as BlobPart], { type: "application/pdf" });
+  await verifyPdfOutput(blob, { expectedPageCount: inspected.pageCount });
+
+  const stripped = (newName || "").replace(/[/\\]+/g, "-").replace(/[^\w\-. ]+/g, "").trim();
+  const base = stripped.replace(/^[.-]+/, "").trim() || "silentpdf-export";
+  const filename = base.toLowerCase().endsWith(".pdf") ? base : `${base}.pdf`;
+  return { blob, filename };
 }
 
 // ---------------- sign (image or typed, positioned) ----------------
@@ -529,101 +787,106 @@ export async function pdfToWord(file: File): Promise<ToolResult> {
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, PageBreak } = await import("docx");
   const pdfjs = await getPdfJs();
   const buf = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: new Uint8Array(buf) }).promise;
+  const task = pdfjs.getDocument({ data: new Uint8Array(buf) });
+  const pdf = await task.promise;
 
   const paragraphs: InstanceType<typeof Paragraph>[] = [];
 
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const content = await page.getTextContent();
-    const items = (content.items as Array<{ str: string; transform: number[]; width: number; fontName?: string }>)
-      .filter((it) => it.str !== undefined);
+  try {
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const content = await page.getTextContent();
+      const items = (content.items as Array<{ str: string; transform: number[]; width: number; fontName?: string }>)
+        .filter((it) => it.str !== undefined);
 
-    // Group into lines using a y tolerance.
-    const rawLines: PdfLine[] = [];
-    const Y_TOL = 2.5;
-    for (const item of items) {
-      const y = item.transform[5];
-      const height = Math.abs(item.transform[3]) || 10;
-      let line = rawLines.find((l) => Math.abs(l.y - y) <= Y_TOL);
-      if (!line) {
-        line = { y, height, minX: item.transform[4], maxX: item.transform[4] + item.width, items: [] };
-        rawLines.push(line);
-      }
-      line.items.push(item);
-      line.minX = Math.min(line.minX, item.transform[4]);
-      line.maxX = Math.max(line.maxX, item.transform[4] + item.width);
-      line.height = Math.max(line.height, height);
-    }
-    // Sort lines top-to-bottom (pdf coords: higher y = higher on page).
-    rawLines.sort((a, b) => b.y - a.y);
-    // Sort items within each line left-to-right.
-    for (const line of rawLines) line.items.sort((a, b) => a.transform[4] - b.transform[4]);
-
-    if (rawLines.length === 0) continue;
-
-    const pageMinX = Math.min(...rawLines.map((l) => l.minX));
-    const heights = rawLines.map((l) => l.height).sort((a, b) => a - b);
-    const medianHeight = heights[Math.floor(heights.length / 2)] || 10;
-    const avgLineGap = (() => {
-      const gaps: number[] = [];
-      for (let i = 1; i < rawLines.length; i++) gaps.push(rawLines[i - 1].y - rawLines[i].y);
-      if (!gaps.length) return medianHeight * 1.2;
-      return gaps.reduce((a, b) => a + b, 0) / gaps.length;
-    })();
-
-    let prevY: number | null = null;
-    for (const line of rawLines) {
-      // Build line text, inserting spaces based on horizontal gaps.
-      let text = "";
-      const runs: { text: string; bold?: boolean; italics?: boolean }[] = [];
-      let prevEndX: number | null = null;
-      for (const item of line.items) {
-        const startX = item.transform[4];
-        const fontSize = Math.abs(item.transform[3]) || 10;
-        if (prevEndX !== null) {
-          const gap = startX - prevEndX;
-          if (gap > fontSize * 0.25) text += " ";
+      // Group into lines using a y tolerance.
+      const rawLines: PdfLine[] = [];
+      const Y_TOL = 2.5;
+      for (const item of items) {
+        const y = item.transform[5];
+        const height = Math.abs(item.transform[3]) || 10;
+        let line = rawLines.find((l) => Math.abs(l.y - y) <= Y_TOL);
+        if (!line) {
+          line = { y, height, minX: item.transform[4], maxX: item.transform[4] + item.width, items: [] };
+          rawLines.push(line);
         }
-        text += item.str;
-        const fontName = (item.fontName ?? "").toLowerCase();
-        runs.push({ text: item.str, bold: /bold|black|heavy|semibold/.test(fontName), italics: /italic|oblique/.test(fontName) });
-        prevEndX = startX + item.width;
+        line.items.push(item);
+        line.minX = Math.min(line.minX, item.transform[4]);
+        line.maxX = Math.max(line.maxX, item.transform[4] + item.width);
+        line.height = Math.max(line.height, height);
       }
-      text = text.trim();
-      if (!text) { prevY = line.y; continue; }
+      // Sort lines top-to-bottom (pdf coords: higher y = higher on page).
+      rawLines.sort((a, b) => b.y - a.y);
+      // Sort items within each line left-to-right.
+      for (const line of rawLines) line.items.sort((a, b) => a.transform[4] - b.transform[4]);
 
-      // Paragraph break detection from vertical gaps.
-      if (prevY !== null) {
-        const gap = prevY - line.y;
-        if (gap > avgLineGap * 1.5) {
-          paragraphs.push(new Paragraph({ children: [] }));
+      if (rawLines.length === 0) continue;
+
+      const pageMinX = Math.min(...rawLines.map((l) => l.minX));
+      const heights = rawLines.map((l) => l.height).sort((a, b) => a - b);
+      const medianHeight = heights[Math.floor(heights.length / 2)] || 10;
+      const avgLineGap = (() => {
+        const gaps: number[] = [];
+        for (let i = 1; i < rawLines.length; i++) gaps.push(rawLines[i - 1].y - rawLines[i].y);
+        if (!gaps.length) return medianHeight * 1.2;
+        return gaps.reduce((a, b) => a + b, 0) / gaps.length;
+      })();
+
+      let prevY: number | null = null;
+      for (const line of rawLines) {
+        // Build line text, inserting spaces based on horizontal gaps.
+        let text = "";
+        const runs: { text: string; bold?: boolean; italics?: boolean }[] = [];
+        let prevEndX: number | null = null;
+        for (const item of line.items) {
+          const startX = item.transform[4];
+          const fontSize = Math.abs(item.transform[3]) || 10;
+          if (prevEndX !== null) {
+            const gap = startX - prevEndX;
+            if (gap > fontSize * 0.25) text += " ";
+          }
+          text += item.str;
+          const fontName = (item.fontName ?? "").toLowerCase();
+          runs.push({ text: item.str, bold: /bold|black|heavy|semibold/.test(fontName), italics: /italic|oblique/.test(fontName) });
+          prevEndX = startX + item.width;
         }
+        text = text.trim();
+        if (!text) { prevY = line.y; continue; }
+
+        // Paragraph break detection from vertical gaps.
+        if (prevY !== null) {
+          const gap = prevY - line.y;
+          if (gap > avgLineGap * 1.5) {
+            paragraphs.push(new Paragraph({ children: [] }));
+          }
+        }
+        prevY = line.y;
+
+        const isHeading = line.height > medianHeight * 1.25;
+        const indentLeft = Math.max(0, Math.round((line.minX - pageMinX) * 20)); // pt -> twips
+        const bulletMatch = text.match(/^\s*([•●▪◦‣]|[-*])\s+(.*)$/);
+        const numberedMatch = text.match(/^\s*(\d+[.)])\s+(.*)$/);
+        const bodyText = bulletMatch?.[2] ?? numberedMatch?.[2] ?? text;
+        const children = runs.length
+          ? runs.map((run) => new TextRun({ text: sanitizeForWinAnsi(run.text), bold: run.bold, italics: run.italics }))
+          : [new TextRun(sanitizeForWinAnsi(bodyText))];
+
+        paragraphs.push(new Paragraph({
+          heading: isHeading ? HeadingLevel.HEADING_2 : undefined,
+          bullet: bulletMatch ? { level: 0 } : undefined,
+          numbering: numberedMatch ? { reference: "pdf-numbered", level: 0 } : undefined,
+          indent: indentLeft > 0 ? { left: indentLeft } : undefined,
+          children,
+        }));
       }
-      prevY = line.y;
 
-      const isHeading = line.height > medianHeight * 1.25;
-      const indentLeft = Math.max(0, Math.round((line.minX - pageMinX) * 20)); // pt -> twips
-      const bulletMatch = text.match(/^\s*([•●▪◦‣]|[-*])\s+(.*)$/);
-      const numberedMatch = text.match(/^\s*(\d+[.)])\s+(.*)$/);
-      const bodyText = bulletMatch?.[2] ?? numberedMatch?.[2] ?? text;
-      const children = runs.length
-        ? runs.map((run) => new TextRun({ text: sanitizeForWinAnsi(run.text), bold: run.bold, italics: run.italics }))
-        : [new TextRun(sanitizeForWinAnsi(bodyText))];
-
-      paragraphs.push(new Paragraph({
-        heading: isHeading ? HeadingLevel.HEADING_2 : undefined,
-        bullet: bulletMatch ? { level: 0 } : undefined,
-        numbering: numberedMatch ? { reference: "pdf-numbered", level: 0 } : undefined,
-        indent: indentLeft > 0 ? { left: indentLeft } : undefined,
-        children,
-      }));
+      // Page break between pages (not after the last one).
+      if (pageNum < pdf.numPages) {
+        paragraphs.push(new Paragraph({ children: [new PageBreak()] }));
+      }
     }
-
-    // Page break between pages (not after the last one).
-    if (pageNum < pdf.numPages) {
-      paragraphs.push(new Paragraph({ children: [new PageBreak()] }));
-    }
+  } finally {
+    await destroyPdfProxy(pdf, task);
   }
 
   const doc = new Document({ numbering: { config: [{ reference: "pdf-numbered", levels: [{ level: 0, format: "decimal", text: "%1.", alignment: "left" }] }] }, sections: [{ children: paragraphs }] });
@@ -750,13 +1013,27 @@ export async function wordToPdf(file: File): Promise<ToolResult> {
   };
 
   let first = true;
+  let orderedListCounter = 0;
   for (const block of blocks) {
     const size = sizeFor(block.tag);
     const isHeading = /^h[1-4]$/.test(block.tag);
     const font = isHeading || block.bold ? fontBold : block.italic ? fontItalic : fontRegular;
     const lineHeight = size * 1.35;
     const indent = block.tag === "li" ? 18 : 0;
-    const prefix = block.tag === "li" ? (block.listKind === "number" ? "" : "• ") : "";
+    
+    let prefix = "";
+    if (block.tag === "li") {
+      if (block.listKind === "number") {
+        orderedListCounter += 1;
+        prefix = `${orderedListCounter}. `;
+      } else {
+        orderedListCounter = 0;
+        prefix = "• ";
+      }
+    } else {
+      orderedListCounter = 0;
+    }
+
     const availWidth = maxWidth - indent - fontRegular.widthOfTextAtSize(prefix, size);
 
     if (!first) y -= lineHeight * 0.6; // blank-line gap between blocks
@@ -821,14 +1098,24 @@ function dataUrlToUint8(dataUrl: string): Uint8Array {
   return out;
 }
 
-function parseRanges(input: string | undefined, total: number): number[] | null {
+export function parseRanges(input: string | undefined, total: number): number[] | null {
   if (!input || !input.trim()) return null;
+  const parts = input.split(",").map((s) => s.trim()).filter(Boolean);
+  if (parts.length === 0) {
+    throw new Error("Enter valid page numbers (for example: 1-3, 5).");
+  }
   const out: number[] = [];
-  for (const part of input.split(",").map((s) => s.trim()).filter(Boolean)) {
+  for (const part of parts) {
     const m = part.match(/^(\d+)(?:-(\d+))?$/);
-    if (!m) throw new Error(`Invalid range: ${part}`);
-    const a = Math.max(1, Math.min(total, parseInt(m[1], 10)));
-    const b = m[2] ? Math.max(1, Math.min(total, parseInt(m[2], 10))) : a;
+    if (!m) {
+      throw new Error(`Invalid range "${part}". Use numbers or spans like 1-3, 5.`);
+    }
+    const a = parseInt(m[1], 10);
+    const b = m[2] ? parseInt(m[2], 10) : a;
+    if (a < 1 || a > total || b < 1 || b > total) {
+      const bad = a < 1 || a > total ? a : b;
+      throw new Error(`Page ${bad} is out of bounds. This PDF has ${total} ${total === 1 ? "page" : "pages"}.`);
+    }
     const [lo, hi] = a <= b ? [a, b] : [b, a];
     for (let i = lo; i <= hi; i++) out.push(i - 1);
   }

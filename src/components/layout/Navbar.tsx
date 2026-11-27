@@ -11,7 +11,6 @@ const navGroups = [
       { to: "/tools", label: "All PDF tools" },
       { to: "/pdf-editor", label: "PDF editor" },
       { to: "/merge-pdf-online", label: "Merge PDF online" },
-      { to: "/video-tools", label: "Video tools" },
     ],
   },
   {

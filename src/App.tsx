@@ -28,8 +28,6 @@ import Contact from "./pages/legal/Contact";
 import Cookies from "./pages/legal/Cookies";
 
 import ToolPage from "./pages/tools/ToolPage";
-import RemoveVideoWatermark from "./pages/tools/RemoveVideoWatermark";
-import VideoTools from "./pages/VideoTools";
 import NotFound from "./pages/NotFound";
 import ProgrammaticPage from "./pages/ProgrammaticPage";
 
@@ -44,9 +42,6 @@ import MergePdfOnline from "./pages/MergePdfOnline";
 import Workflows from "./pages/workflows/Workflows";
 import CustomWorkflowBuilder from "./pages/workflows/CustomWorkflowBuilder";
 import WorkflowRunner from "./pages/workflows/WorkflowRunner";
-
-// Custom PDF Tools
-
 
 // Root slug resolver for programmatic landing pages & tools
 const RootSlugHandler = () => {
@@ -102,11 +97,6 @@ const App = () => (
               <Route path="/workflows" element={<Workflows />} />
               <Route path="/workflows/custom" element={<CustomWorkflowBuilder />} />
               <Route path="/workflows/run/:id" element={<WorkflowRunner />} />
-
-              {/* Video tools (must be registered BEFORE the /:slug catch-all) */}
-              <Route path="/video-tools" element={<VideoTools />} />
-              <Route path="/remove-video-watermark" element={<RemoveVideoWatermark />} />
-
 
               {/* Dynamic root-level slug handler for programmatic SEO pages & tools */}
               <Route path="/:slug" element={<RootSlugHandler />} />

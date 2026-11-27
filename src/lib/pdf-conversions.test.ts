@@ -86,7 +86,8 @@ async function makeWordFixture(includePaginationContent = false): Promise<File> 
 async function extractPdfText(blob: Blob): Promise<{ pageCount: number; pages: string[] }> {
   await preparePdfJs();
   const pdfjs = await getPdfJs();
-  const pdf = await pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise;
+  const task = pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) });
+  const pdf = await task.promise;
   const pages: string[] = [];
 
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
@@ -95,7 +96,7 @@ async function extractPdfText(blob: Blob): Promise<{ pageCount: number; pages: s
     pages.push(content.items.map((item) => "str" in item ? item.str : "").join(" "));
   }
 
-  await pdf.destroy();
+  await task.destroy();
   return { pageCount: pages.length, pages };
 }
 

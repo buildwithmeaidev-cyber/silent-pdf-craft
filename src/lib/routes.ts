@@ -21,7 +21,6 @@ function build(): RouteEntry[] {
   const entries: RouteEntry[] = [
     { path: "/", changefreq: "daily", priority: "1.0" },
     { path: "/tools", changefreq: "daily", priority: "0.9" },
-    { path: "/video-tools", changefreq: "weekly", priority: "0.9" },
     { path: "/workflows", changefreq: "weekly", priority: "0.8" },
     { path: "/workflows/custom", changefreq: "monthly", priority: "0.6" },
     { path: "/templates", changefreq: "weekly", priority: "0.8" },
@@ -45,9 +44,6 @@ function build(): RouteEntry[] {
 
   // Every PDF tool gets its own indexable page.
   for (const t of TOOLS) entries.push({ path: `/${t.slug}`, changefreq: "weekly", priority: "0.9" });
-
-  // Video tools (standalone pages, not part of the PDF TOOLS registry).
-  entries.push({ path: "/remove-video-watermark", changefreq: "weekly", priority: "0.9" });
 
   for (const p of PROGRAMMATIC) entries.push({ path: `/${p.slug}`, changefreq: "monthly", priority: "0.7" });
   for (const p of POSTS) entries.push({ path: `/blog/${p.slug}`, changefreq: "monthly", priority: "0.7" });

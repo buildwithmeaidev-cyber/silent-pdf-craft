@@ -126,19 +126,6 @@ const STATIC_META: Record<string, RouteMeta> = {
   "/templates/career": { title: "Career PDF Templates — Free Resume & Cover Letter PDFs | SilentPDF", description: "Download free career PDF templates including resumes and cover letters, generated privately in your browser." },
   "/templates/business": { title: "Business PDF Templates — Free Invoices & Proposals | SilentPDF", description: "Download free business PDF templates for invoices, proposals, and meeting notes. No signup required." },
   "/templates/legal": { title: "Legal PDF Templates — Free NDA & Agreement PDFs | SilentPDF", description: "Download free legal PDF templates for NDAs and simple agreements, created in your browser without uploads." },
-  "/video-tools": {
-    title: "Private Browser Video Tools — SilentPDF",
-    description: "Remove watermarks and edit video entirely in your browser. Nothing is uploaded — every file stays on your device.",
-    jsonLd: [
-      {
-        "@context": "https://schema.org",
-        "@type": "CollectionPage",
-        name: "Video Tools",
-        url: `${SITE_URL}/video-tools`,
-        description: "Browser-based video tools that process files locally with WebAssembly.",
-      },
-    ],
-  },
 
   "/workflows": {
     title: "Automated Multi-Step PDF Workflows — SilentPDF",
@@ -207,33 +194,6 @@ const STATIC_META: Record<string, RouteMeta> = {
           { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
           { "@type": "ListItem", position: 2, name: "Workflows", item: `${SITE_URL}/workflows` },
           { "@type": "ListItem", position: 3, name: "Custom workflow", item: `${SITE_URL}/workflows/custom` },
-        ],
-      },
-    ],
-  },
-  "/remove-video-watermark": {
-    title: "Remove Watermark from Video Online Free — SilentPDF",
-    description:
-      "Remove watermarks from videos directly in your browser. Draw a box over the watermark and export a clean MP4 — private, free, no upload required.",
-    jsonLd: [
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        name: "Remove Video Watermark",
-        applicationCategory: "MultimediaApplication",
-        operatingSystem: "Web Browser",
-        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-        description:
-          "Remove watermarks from videos entirely in your browser using WebAssembly-based FFmpeg processing.",
-        url: `${SITE_URL}/remove-video-watermark`,
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
-          { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
-          { "@type": "ListItem", position: 3, name: "Remove Video Watermark", item: `${SITE_URL}/remove-video-watermark` },
         ],
       },
     ],

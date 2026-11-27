@@ -2,7 +2,7 @@
  * Real, downloadable PDF templates generated in the browser with pdf-lib.
  * Nothing is fetched from a server — the file is built on the user's device.
  */
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, PDFFont, StandardFonts, rgb } from "pdf-lib";
 
 type Block =
   | { type: "title"; text: string }
@@ -197,7 +197,7 @@ const PAGE_H = 841.89;
 const MARGIN = 56;
 const MAX_W = PAGE_W - MARGIN * 2;
 
-function wrap(text: string, font: any, size: number): string[] {
+function wrap(text: string, font: PDFFont, size: number): string[] {
   const out: string[] = [];
   for (const paragraph of text.split("\n")) {
     const words = paragraph.split(" ");
